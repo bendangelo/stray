@@ -69,7 +69,13 @@ if response != "n"
   puts "Generated SECRET_KEY_BASE (128 hex chars)"
 else
   value = prompt("SECRET_KEY_BASE", echo: false)
-  env_content = update_env(env_content, "SECRET_KEY_BASE", value)
+  if value.empty?
+    secret = SecureRandom.hex(64)
+    env_content = update_env(env_content, "SECRET_KEY_BASE", secret)
+    puts "SECRET_KEY_BASE left blank - generated one (128 hex chars)"
+  else
+    env_content = update_env(env_content, "SECRET_KEY_BASE", value)
+  end
 end
 
 # AI provider
