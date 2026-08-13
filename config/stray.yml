@@ -1,0 +1,17 @@
+# Application configuration defaults.
+#
+# Development and test values are defined here. Production intentionally has
+# NO values for instance_domain and rails_log_level in this file: they must be
+# provided via STRAY_* environment variables at runtime, and AppConfig raises a
+# validation error at boot if any are missing.
+#
+# Secrets (e.g. SMTP credentials, AI provider API keys) must never live here.
+development:
+  instance_name: Stray (Dev)
+  instance_domain: localhost
+  rails_log_level: debug
+
+test:
+  instance_name: Stray (Test)
+  instance_domain: localhost
+  rails_log_level: warn

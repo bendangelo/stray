@@ -54,11 +54,11 @@ puts
 
 # Instance name
 value = prompt("Instance name", default: "Stray")
-env_content = update_env(env_content, "INSTANCE_NAME", value.empty? ? "Stray" : value)
+env_content = update_env(env_content, "STRAY_INSTANCE_NAME", value.empty? ? "Stray" : value)
 
 # Instance domain
 value = prompt("Instance domain", default: "localhost")
-env_content = update_env(env_content, "INSTANCE_DOMAIN", value.empty? ? "localhost" : value)
+env_content = update_env(env_content, "STRAY_INSTANCE_DOMAIN", value.empty? ? "localhost" : value)
 
 # Secret key base
 print "Generate SECRET_KEY_BASE automatically? [Y/n]: "
@@ -90,15 +90,15 @@ until %w[NONE OLLAMA OPENAI_COMPATIBLE].include?(provider)
   value = prompt("AI provider (NONE, OLLAMA, OPENAI_COMPATIBLE)", default: "NONE")
   provider = value.empty? ? "NONE" : value.upcase
 end
-env_content = update_env(env_content, "AI_PROVIDER", provider)
+env_content = update_env(env_content, "STRAY_AI_PROVIDER__NAME", provider)
 
 if provider != "NONE"
   value = prompt("AI provider URL", default: provider == "OLLAMA" ? "http://localhost:11434" : nil)
-  env_content = update_env(env_content, "AI_PROVIDER_URL", value)
+  env_content = update_env(env_content, "STRAY_AI_PROVIDER__URL", value)
 
   if provider == "OPENAI_COMPATIBLE"
     value = prompt("AI provider API key", echo: false)
-    env_content = update_env(env_content, "AI_PROVIDER_API_KEY", value)
+    env_content = update_env(env_content, "STRAY_AI_PROVIDER__API_KEY", value)
   end
 end
 
@@ -109,13 +109,13 @@ puts "Leave blank to skip. Passwords can be reset via rails console."
 smtp_host = prompt("SMTP host", default: "")
 
 unless smtp_host.empty?
-  env_content = update_env(env_content, "SMTP_HOST", smtp_host)
+  env_content = update_env(env_content, "STRAY_SMTP__HOST", smtp_host)
   value = prompt("SMTP port", default: "587")
-  env_content = update_env(env_content, "SMTP_PORT", value)
+  env_content = update_env(env_content, "STRAY_SMTP__PORT", value)
   value = prompt("SMTP username", default: "")
-  env_content = update_env(env_content, "SMTP_USERNAME", value)
+  env_content = update_env(env_content, "STRAY_SMTP__USERNAME", value)
   value = prompt("SMTP password", echo: false)
-  env_content = update_env(env_content, "SMTP_PASSWORD", value)
+  env_content = update_env(env_content, "STRAY_SMTP__PASSWORD", value)
 else
   puts "Skipping SMTP configuration."
 end

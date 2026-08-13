@@ -38,7 +38,7 @@ Rails.application.configure do
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
-  config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+  config.log_level = AppConfig.rails_log_level.to_sym
 
   # Prevent health checks from clogging up the logs.
   config.silence_healthcheck_path = "/up"
@@ -58,15 +58,15 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: ENV.fetch("INSTANCE_DOMAIN", "localhost") }
+  config.action_mailer.default_url_options = { host: AppConfig.instance_domain }
 
-  # Configure SMTP from env vars (optional - needed for password reset emails)
-  if ENV["SMTP_HOST"].present?
+  # Configure SMTP from config (optional - needed for password reset emails)
+  if AppConfig.smtp_configured?
     config.action_mailer.smtp_settings = {
-      address: ENV["SMTP_HOST"],
-      port: ENV.fetch("SMTP_PORT", 587),
-      user_name: ENV["SMTP_USERNAME"],
-      password: ENV["SMTP_PASSWORD"],
+      address: AppConfig.smtp["host"],
+      port: AppConfig.smtp["port"],
+      user_name: AppConfig.smtp["username"],
+      password: AppConfig.smtp["password"],
       authentication: :plain,
       enable_starttls_auto: true
     }
