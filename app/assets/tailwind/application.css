@@ -1,1 +1,127 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../fonts/space-grotesk/SpaceGrotesk-Variable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --border-width-3: 3px;
+  --border-width-6: 6px;
+  --border-width-8: 8px;
+
+  --color-charcoal-50: #868686;
+  --color-charcoal-100: #7C7C7C;
+  --color-charcoal-200: #676767;
+  --color-charcoal-300: #535353;
+  --color-charcoal-400: #3E3E3E;
+  --color-charcoal-500: #2A2A2A;
+  --color-charcoal-600: #0E0E0E;
+  --color-charcoal-700: #000000;
+  --color-charcoal-800: #000000;
+  --color-charcoal-900: #000000;
+  --color-charcoal-950: #000000;
+
+  --color-champagne-50: #FFFFFF;
+  --color-champagne-100: #FFFFFF;
+  --color-champagne-200: #FFFFFF;
+  --color-champagne-300: #FFFFFF;
+  --color-champagne-400: #FFFFFF;
+  --color-champagne-500: #F8F2E8;
+  --color-champagne-600: #EBDABD;
+  --color-champagne-700: #DEC192;
+  --color-champagne-800: #D1A967;
+  --color-champagne-900: #C4913C;
+  --color-champagne-950: #AE8135;
+
+  --color-athens-50: #FFFFFF;
+  --color-athens-100: #FFFFFF;
+  --color-athens-200: #FFFFFF;
+  --color-athens-300: #FFFFFF;
+  --color-athens-400: #fffffe;
+  --color-athens-500: #EFF0F3;
+  --color-athens-600: #CFD2DB;
+  --color-athens-700: #AFB4C3;
+  --color-athens-800: #8F96AB;
+  --color-athens-900: #6F7893;
+  --color-athens-950: #626B83;
+
+  --color-carrot-50: #FFF8F4;
+  --color-carrot-100: #FFEDDF;
+  --color-carrot-200: #FFD5B6;
+  --color-carrot-300: #FFBD8E;
+  --color-carrot-400: #FFA665;
+  --color-carrot-500: #FF8E3C;
+  --color-carrot-600: #FF6D04;
+  --color-carrot-700: #CB5500;
+  --color-carrot-800: #933E00;
+  --color-carrot-900: #5B2600;
+  --color-carrot-950: #3F1A00;
+
+  --color-cerise-50: #F6D1DE;
+  --color-cerise-100: #F3C0D1;
+  --color-cerise-200: #ED9EB9;
+  --color-cerise-300: #E67CA0;
+  --color-cerise-400: #E05987;
+  --color-cerise-500: #D9376E;
+  --color-cerise-600: #B52254;
+  --color-cerise-700: #861A3E;
+  --color-cerise-800: #571129;
+  --color-cerise-900: #280813;
+  --color-cerise-950: #100308;
+
+  --color-amber-100: #fef2d3;
+  --color-amber-200: #fde5a7;
+  --color-amber-300: #fdd77b;
+  --color-amber-400: #fcca4f;
+  --color-amber-500: #fbbd23;
+  --color-amber-600: #c9971c;
+  --color-amber-700: #977115;
+  --color-amber-800: #644c0e;
+  --color-amber-900: #322607;
+
+  --color-mint-100: #e7f7eb;
+  --color-mint-200: #ceefd6;
+  --color-mint-300: #b6e6c2;
+  --color-mint-400: #9ddead;
+  --color-mint-500: #85d699;
+  --color-mint-600: #6aab7a;
+  --color-mint-700: #50805c;
+  --color-mint-800: #35563d;
+  --color-mint-900: #1b2b1f;
+
+  --color-teal-100: #d6ebe7;
+  --color-teal-200: #aed8cf;
+  --color-teal-300: #85c4b6;
+  --color-teal-400: #5db19e;
+  --color-teal-500: #349d86;
+  --color-teal-600: #2a7e6b;
+  --color-teal-700: #1f5e50;
+  --color-teal-800: #153f36;
+  --color-teal-900: #0a1f1b;
+
+  --color-sky-100: #e5eafc;
+  --color-sky-200: #cbd6fa;
+  --color-sky-300: #b1c1f7;
+  --color-sky-400: #97adf5;
+  --color-sky-500: #7d98f2;
+  --color-sky-600: #647ac2;
+  --color-sky-700: #4b5b91;
+  --color-sky-800: #323d61;
+  --color-sky-900: #191e30;
+
+  --color-cotton-100: #f6defc;
+  --color-cotton-200: #ecbcf8;
+  --color-cotton-300: #e39bf5;
+  --color-cotton-400: #d979f1;
+  --color-cotton-500: #d058ee;
+  --color-cotton-600: #a646be;
+  --color-cotton-700: #7d358f;
+  --color-cotton-800: #53235f;
+  --color-cotton-900: #2a1230;
+}
