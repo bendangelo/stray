@@ -1,9 +1,18 @@
 <nav class="pb-2 md:pt-2 md:pl-2 pt-1 border-b-3 border-charcoal">
-  <div class="flex pl-2 mx-auto md:pl-4 lg:pl-16 lg:ml-2">
+  <div class="flex pl-2 mx-auto md:pl-4 lg:pl-16 lg:ml-2 items-center justify-between">
     <div class="flex items-center lg:mr-4 md:mr-2 mr-1">
       <%= link_to root_path, tabindex: "-1" do %>
         <%= image_tag "stray-logo.svg", alt: "Stray Logo", class: "w-0 md:w-20 lg:w-28" %>
         <span class="hidden">Stray</span>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-4 pr-4 text-sm">
+      <% if authenticated? %>
+        <span class="text-charcoal"><%= current_user.username %></span>
+        <%= button_to "Log out", session_path, method: :delete, class: "text-charcoal hover:text-carrot-600 underline cursor-pointer bg-transparent border-none" %>
+      <% else %>
+        <%= link_to "Log in", new_session_path, class: "text-charcoal hover:text-carrot-600 underline" %>
       <% end %>
     </div>
   </div>
