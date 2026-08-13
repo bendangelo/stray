@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+require "readline"
+require "securerandom"
+require "fileutils"
+
+CONTAINER_MARKER = "/.dockerenv"
+ENV_EXAMPLE = File.expand_path("../.env.example", __dir__)
+ENV_FILE = File.expand_path("../.env", __dir__)
+
+def read_input
+  $stdin.gets&.chomp.to_s
+end
+
+def prompt(message, default: nil, echo: true)
+  suffix = default ? " [#{default}]: " : ": "
+  if echo
+    Readline.readline("#{message}#{suffix}", false) || ""
+  else
+    print "#{message}#{suffix}"
+    input = read_input
+    puts
+    input
+  end
+end
+
+def update_env(content, key, value)
+  if value.to_s.empty?
+    content
+  else
+    content.gsub(/^#{key}=.*$/, "#{key}=#{value}")
+  end
+end
+
+if File.exist?(CONTAINER_MARKER)
+  abort "This wizard must run on the host, not inside a container."
+end
+
+if File.exist?(ENV_FILE)
+  print ".env already exists. Overwrite? [y/N]: "
+  response = read_input.downcase
+  exit 0 unless response == "y"
+end
+
+unless File.exist?(ENV_EXAMPLE)
+  abort ".env.example not found. Are you running this from the project root?"
+end
+
+FileUtils.cp(ENV_EXAMPLE, ENV_FILE) unless File.exist?(ENV_FILE)
+env_content = File.read(ENV_FILE)
+
+puts "Stray setup wizard"
+puts "=" * 40
+puts
+
+# Instance name
+value = prompt("Instance name", default: "Stray")
+env_content = update_env(env_content, "INSTANCE_NAME", value.empty? ? "Stray" : value)
+
+# Instance domain
+value = prompt("Instance domain", default: "localhost")
+env_content = update_env(env_content, "INSTANCE_DOMAIN", value.empty? ? "localhost" : value)
+
+# Secret key base
+print "Generate SECRET_KEY_BASE automatically? [Y/n]: "
+response = read_input.downcase
+if response != "n"
+  secret = SecureRandom.hex(64)
+  env_content = update_env(env_content, "SECRET_KEY_BASE", secret)
+  puts "Generated SECRET_KEY_BASE (128 hex chars)"
+else
+  value = prompt("SECRET_KEY_BASE", echo: false)
+  env_content = update_env(env_content, "SECRET_KEY_BASE", value)
+end
+
+# AI provider
+puts
+puts "AI provider options: NONE, OLLAMA, OPENAI_COMPATIBLE"
+puts "  NONE = zero-shot embedding tagging only (local model, no external AI)"
+puts "  OLLAMA = local Ollama instance for LLM tagging"
+puts "  OPENAI_COMPATIBLE = any OpenAI-compatible API endpoint"
+value = prompt("AI provider", default: "NONE")
+provider = value.empty? ? "NONE" : value.upcase
+until %w[NONE OLLAMA OPENAI_COMPATIBLE].include?(provider)
+  value = prompt("AI provider (NONE, OLLAMA, OPENAI_COMPATIBLE)", default: "NONE")
+  provider = value.empty? ? "NONE" : value.upcase
+end
+env_content = update_env(env_content, "AI_PROVIDER", provider)
+
+if provider != "NONE"
+  value = prompt("AI provider URL", default: provider == "OLLAMA" ? "http://localhost:11434" : nil)
+  env_content = update_env(env_content, "AI_PROVIDER_URL", value)
+
+  if provider == "OPENAI_COMPATIBLE"
+    value = prompt("AI provider API key", echo: false)
+    env_content = update_env(env_content, "AI_PROVIDER_API_KEY", value)
+  end
+end
+
+# SMTP
+puts
+puts "SMTP (optional - needed for password reset emails)"
+puts "Leave blank to skip. Passwords can be reset via rails console."
+smtp_host = prompt("SMTP host", default: "")
+
+unless smtp_host.empty?
+  env_content = update_env(env_content, "SMTP_HOST", smtp_host)
+  value = prompt("SMTP port", default: "587")
+  env_content = update_env(env_content, "SMTP_PORT", value)
+  value = prompt("SMTP username", default: "")
+  env_content = update_env(env_content, "SMTP_USERNAME", value)
+  value = prompt("SMTP password", echo: false)
+  env_content = update_env(env_content, "SMTP_PASSWORD", value)
+else
+  puts "Skipping SMTP configuration."
+end
+
+File.write(ENV_FILE, env_content)
+puts
+puts "=" * 40
+puts ".env written successfully."
+puts
+puts "Next steps:"
+puts "  1. Run: docker compose up -d  (or: kamal deploy)"
+puts "  2. Visit /setup to create your admin account"
+puts "  3. Log in and start using Stray"
