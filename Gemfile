@@ -22,6 +22,9 @@ gem "jbuilder"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
+# SQLite FTS5 full-text search for Rails/ActiveRecord
+gem "full_search", "~> 0.4"
+
 # Centralized, typed configuration from ENV/YAML with boot-time validation
 # [https://github.com/palkan/anyway_config]
 gem "anyway_config", "~> 2.6"
