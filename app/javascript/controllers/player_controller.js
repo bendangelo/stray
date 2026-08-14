@@ -85,7 +85,7 @@ export default class extends Controller {
     }
 
     if (this.detailPaneOpen && videoTarget) {
-      const minWidths = [ 640, 768, 1024 ]
+      const minWidths = [ 640, 768 ]
       const matchedWidths = minWidths.filter((width) => {
         return window.matchMedia(`(min-width: ${width}px)`).matches
       })
