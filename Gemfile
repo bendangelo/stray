@@ -25,6 +25,8 @@ gem "bcrypt", "~> 3.1.7"
 # SQLite FTS5 full-text search for Rails/ActiveRecord
 gem "full_search", "~> 0.4"
 
+gem "pagy"
+
 gem "faraday", "~> 2.0"
 gem "faraday-follow_redirects"
 gem "faraday-retry"
