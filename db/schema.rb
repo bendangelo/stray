@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_015150) do
   create_table "follows", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "source_id", null: false
@@ -65,6 +65,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
     t.string "external_id"
     t.string "icon_url"
     t.integer "kind", null: false
+    t.string "last_error"
+    t.datetime "last_error_at"
     t.datetime "last_polled_at"
     t.string "name"
     t.datetime "next_crawl_at"
