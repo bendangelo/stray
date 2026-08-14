@@ -1,8 +1,8 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
-  test "GET root renders homepage with logo" do
-    get root_path
+  test "GET about renders homepage with logo" do
+    get about_path
 
     assert_response :success
     assert_select "img[alt=?]", "Stray Logo"
