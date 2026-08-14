@@ -57,4 +57,32 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   test "default timeout is 30" do
     assert_equal 30, @runner.timeout
   end
+
+  test "channel_listings parses multiple JSON lines" do
+    fixture1 = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1"}'
+    fixture2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2"}'
+    multi_json = "#{fixture1}\n#{fixture2}\n"
+
+    Open3.stub(:capture3, [multi_json, "", status_success]) do
+      result = @runner.channel_listings("https://bitchute.com/channel/abc")
+      assert_equal 2, result.size
+      assert_equal "vid1", result[0]["id"]
+      assert_equal "vid2", result[1]["id"]
+    end
+  end
+
+  test "channel_listings returns empty array for no output" do
+    Open3.stub(:capture3, ["", "", status_success]) do
+      result = @runner.channel_listings("https://example.com/channel/empty")
+      assert_equal [], result
+    end
+  end
+
+  test "channel_listings raises ExtractionFailed on non-zero exit" do
+    Open3.stub(:capture3, ["", "", status_failure]) do
+      assert_raises(Stray::YtDlp::ExtractionFailed) do
+        @runner.channel_listings("https://example.com/channel/bad")
+      end
+    end
+  end
 end
