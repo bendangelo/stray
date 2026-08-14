@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_010138) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
+  create_table "follows", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "source_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.float "weight", default: 1.0
+    t.index ["source_id"], name: "index_follows_on_source_id"
+    t.index ["user_id", "source_id"], name: "index_follows_on_user_id_and_source_id", unique: true
+    t.index ["user_id"], name: "index_follows_on_user_id"
+  end
+
   create_table "items", force: :cascade do |t|
     t.text "content_html"
     t.text "content_text"
@@ -61,6 +72,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010138) do
     t.index ["user_id"], name: "index_sources_on_user_id"
   end
 
+  create_table "taggings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "item_id", null: false
+    t.integer "source", default: 0, null: false
+    t.integer "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id", "tag_id", "source"], name: "index_taggings_on_item_id_and_tag_id_and_source", unique: true
+    t.index ["item_id"], name: "index_taggings_on_item_id"
+    t.index ["tag_id"], name: "index_taggings_on_tag_id"
+  end
+
+  create_table "tags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.binary "embedding"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "name"], name: "index_tags_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_tags_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -70,8 +102,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010138) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "follows", "sources"
+  add_foreign_key "follows", "users"
   add_foreign_key "items", "sources"
   add_foreign_key "items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "sources", "users"
+  add_foreign_key "taggings", "items"
+  add_foreign_key "taggings", "tags"
+  add_foreign_key "tags", "users"
 end
