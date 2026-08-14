@@ -1,0 +1,14 @@
+one:
+  user: one
+  source: youtube
+  weight: 1.0
+
+two:
+  user: one
+  source: bitchute
+  weight: 0.5
+
+three:
+  user: two
+  source: youtube
+  weight: 1.0

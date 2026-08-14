@@ -1,0 +1,49 @@
+video_one:
+  source: youtube
+  user: one
+  external_id: "vid1"
+  title: "First Video"
+  url: "https://www.youtube.com/watch?v=vid1"
+  content_text: "A test video about Ruby"
+  published_at: <%= 2.days.ago %>
+  state: 0
+
+video_two:
+  source: youtube
+  user: one
+  external_id: "vid2"
+  title: "Second Video"
+  url: "https://www.youtube.com/watch?v=vid2"
+  content_text: "Another video about Rails"
+  published_at: <%= 1.day.ago %>
+  state: 0
+
+video_saved:
+  source: bitchute
+  user: one
+  external_id: "vid3"
+  title: "Saved Video"
+  url: "https://bitchute.com/video/vid3"
+  content_text: "A saved video"
+  published_at: <%= 3.days.ago %>
+  state: 2
+
+video_hidden:
+  source: bitchute
+  user: one
+  external_id: "vid4"
+  title: "Hidden Video"
+  url: "https://bitchute.com/video/vid4"
+  content_text: "Should not appear"
+  published_at: <%= 4.days.ago %>
+  state: 3
+
+video_user_two:
+  source: youtube
+  user: two
+  external_id: "vid5"
+  title: "User Two Video"
+  url: "https://www.youtube.com/watch?v=vid5"
+  content_text: "Belongs to user two"
+  published_at: <%= 1.hour.ago %>
+  state: 0

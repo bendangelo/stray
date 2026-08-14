@@ -1,0 +1,23 @@
+youtube:
+  user: one
+  kind: 0
+  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCtest123"
+  name: "Test Channel"
+  external_id: "UCtest123"
+  active: true
+
+bitchute:
+  user: one
+  kind: 1
+  url: "https://bitchute.com/channel/abc"
+  name: "BC Channel"
+  external_id: "abc"
+  active: true
+
+inactive:
+  user: one
+  kind: 0
+  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCold"
+  name: "Dead Channel"
+  external_id: "UCold"
+  active: false
