@@ -393,43 +393,215 @@ bin/rails test
 bin/rubocop
 ```
 
-## Phase 2 — Background jobs + polling (preview)
+## Phase 2 — Background jobs + polling
 
-- `LinkIntakeJob(user_id, url)` — classify URL, extract, resolve creator, `Source.find_or_create` + `Follow.find_or_create` + `Item.upsert_all`, broadcast Turbo Stream
-- `SourcePollJob(source_id)` — dispatch to extractor, `Item.upsert_all` (dedup), `source.recalculate_next_crawl!`, `source.update(last_polled_at: now)`
-- `SourcePollSweepJob` (recurring hourly) — `Source.due_for_poll.in_batches` → enqueue `SourcePollJob` per source
-- `config/recurring.yml` entries
-- `config/queue.yml`: add `:polling` queue with dedicated worker
-- `Procfile.dev`: add `jobs: bin/jobs`
-- Tests: job tests with mocked subprocess/RSS
+### Architecture
 
-## Phase 3 — Add-link UI + homepage feed (preview)
+```
+User adds URL (Phase 3 UI) → LinkIntakeJob.perform_later(user_id, url)
+  → Stray::ExtractorRegistry.find_for(url) → extractor.extract(url)
+  → resolve creator_identity → Source.find_or_create + Follow.find_or_create
+  → Item.upsert_all (dedup via external_id + source_id)
+  → Turbo::StreamsChannel.broadcast_replace_to("user_#{user_id}_intake", ...)
+  → UI updates live with "Following X — N new videos"
 
-- `SourcesController` (new/create — paste URL, enqueue intake job, show "checking..." via Turbo Stream)
-- `FeedController#index` — homepage, logged-in only, Items from followed sources reverse-chron
-- `SourcesController#show` — per-creator feed view
-- Item state transitions (seen/saved/hide) — minimal interactions
-- Follow weight display + reset
-- "Why is this here" expandable per item
-- Tests: controller + system tests
+Hourly cron → SourcePollSweepJob
+  → Source.due_for_poll.in_batches → enqueue SourcePollJob per source
+  → SourcePollJob dispatches to extractor:
+      YouTube channel → YoutubeRss (RSS fetch, fast path)
+      Other video site → YtDlp#extract_channel (--flat-playlist)
+  → per-domain mutex acquired before fetch, released after
+  → Item.upsert_all (dedup)
+  → source.recalculate_next_crawl!
+  → source.update(last_polled_at: now)
+```
 
-## Phase 4 — Tagging + search (preview)
+### Components
 
-- Embedding job (async, populates `Item.embedding` and `Tag.embedding`)
-- Zero-shot tagging job (cosine similarity against Tag embeddings)
-- Optional LLM tagging via Ollama/OpenAI-compatible (async, `Taggings.source = :ai_llm`)
-- FTS5 index via `full_search` (already wired in `config/initializers/full_search.rb`)
-- Semantic search toggle
-- Tag provenance UI (`:ai_embedding` / `:ai_llm` / `:user`)
-- Manual tagging UI
-- "Uncategorized" items → seed new tag embeddings
+**LinkIntakeJob** (`app/jobs/link_intake_job.rb`)
+- Args: `user_id, url`
+- Class: `queue_as :default`
+- Retry: `retry_on` once after 1 minute, then discard
+- Flow: classify URL → extract → resolve creator → create Source + Follow + Items → broadcast result
+- YouTube channel URL (`/@handle`, `/channel/UC...`, `/c/name`, `/user/name`): `Stray::Youtube::ChannelResolver.resolve(url)` → returns `channel_id` + `rss_url` → `YoutubeRss` extracts videos → Source with `kind: youtube_channel`, `url: rss_url`
+- YouTube video URL (`watch?v=`, `youtu.be/`): `YtDlp` single-video → extract `channel_id` from metadata → `ChannelResolver` builds RSS URL → create channel Source (RSS poll URL) + auto-follow + single video Item
+- Any other video URL: `YtDlp` → extract creator → create Source (`kind: video_channel`, `url: channel_url`) + auto-follow + Items
+- Broadcast on success: `Turbo::StreamsChannel.broadcast_replace_to("user_#{user_id}_intake", target: "intake_status", html: rendered_source_partial)`
+- Broadcast on failure: same target, html with error message + retry button
+- No `PendingSource` model — the job IS the pending state. The UI shows "checking..." immediately on submit; the broadcast replaces it.
 
-## Phase 5 — Future adapters (preview)
+**SourcePollJob** (`app/jobs/source_poll_job.rb`)
+- Args: `source_id`
+- Class: `queue_as :polling`
+- Retry: `retry_on` once after 1 minute, then discard with `last_error` recorded
+- Flow: find source → acquire domain mutex → dispatch to extractor by kind → `Item.upsert_all` (dedup via `[:source_id, :external_id]`) → `source.recalculate_next_crawl!` → `source.update(last_polled_at: Time.current, last_error: nil, last_error_at: nil)`
+- For `youtube_channel`: instantiate `YoutubeRss` → `extract(source.url)` (the RSS feed URL)
+- For `video_channel`: instantiate `YtDlp` → `extract_channel(source.url)` (channel page URL, yt-dlp --flat-playlist)
+- On failure: `source.update(last_error: error.message, last_error_at: Time.current)`
+- Domain mutex: `Stray::DomainMutex.with_lock(source_domain) { ... }` — skip if can't acquire (another poll for same domain in progress)
 
-- `Stray::Extractors::RssAtom` (feedjira, generic RSS/Atom feeds)
-- `Stray::Extractors::GenericPage` (readability-style content extraction)
-- `Stray::Extractors::GithubAwesomeList` (README link list → items)
-- Each: new class + one registry line. No changes to ranking/tagging/feed code.
+**SourcePollSweepJob** (`app/jobs/source_poll_sweep_job.rb`)
+- No args. Recurring hourly via `config/recurring.yml`.
+- Class: `queue_as :default`
+- Flow: `Source.due_for_poll.in_batches(of: 100) { |batch| batch.each { |s| SourcePollJob.perform_later(s.id) } }`
+- Lightweight — just enqueues, doesn't fetch
+- Idempotent — running it twice just enqueues duplicate poll jobs (Solid Queue handles via job arguments)
+
+**Stray::Youtube::ChannelResolver** (`lib/stray/youtube/channel_resolver.rb`)
+- `resolve(url)` → returns struct `{ channel_id:, rss_url:, channel_name:, channel_url: }`
+- For `/channel/UC...` URLs: parse channel ID from URL path directly, no subprocess
+- For `/@handle`, `/c/name`, `/user/name` URLs: `Stray::YtDlp::Runner.new.single_video(url)` → extract `channel_id`, `channel`, `channel_url` from JSON → construct `https://www.youtube.com/feeds/videos.xml?channel_id=UC...`
+- Pure coordination logic, no Rails deps (could live in the future gem)
+
+**Stray::DomainMutex** (`lib/stray/domain_mutex.rb`)
+- `with_lock(domain, timeout: 10) { ... }` — uses `Rails.cache` with a short TTL key
+- Key: `stray:domain_lock:{domain}`
+- Before fetch: `Rails.cache.write(key, Process.pid, expires_in: 5.minutes, unless_exist: true)` — if returns false, sleep 1s + retry up to `timeout` seconds, then raise `Stray::DomainMutex::LockTimeout`
+- After fetch (ensure block): `Rails.cache.delete(key)` (only if our PID owns it)
+- TTL ensures stale locks auto-expire if a worker crashes
+- Simple, no external deps, fine for single-user scale
+
+### Queue topology
+
+`config/queue.yml` updated:
+- `polling` queue: 1 thread (limits concurrent fetches — be polite to upstream sites)
+- `default` queue: 2 threads (intake jobs, sweep jobs, broadcasts)
+
+### Recurring schedule
+
+`config/recurring.yml` production additions:
+```yaml
+  source_poll_sweep:
+    class: SourcePollSweepJob
+    schedule: every hour at minute 0
+```
+
+### Procfile.dev
+
+Add: `worker: bin/jobs` so Solid Queue runs in development alongside web + CSS.
+
+### Migration: error tracking on sources
+
+```ruby
+class AddErrorTrackingToSources < ActiveRecord::Migration[8.1]
+  def change
+    add_column :sources, :last_error, :string
+    add_column :sources, :last_error_at, :datetime
+  end
+end
+```
+
+### Error handling strategy
+
+- **LinkIntakeJob**: `retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2`. After max attempts: `discard` and broadcast error to user's Turbo Stream channel.
+- **SourcePollJob**: `retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2`. After max attempts: `discard` and record `last_error` + `last_error_at` on source. Source stays active (will be retried on next sweep). Three consecutive failures → consider auto-pausing (future, not Phase 2).
+- **SourcePollSweepJob**: no retry — if it fails, next hourly cron picks it up.
+
+### Testing strategy
+
+- **LinkIntakeJob test**: mock `ExtractorRegistry.find_for` + extractor `extract` to return fixture `ExtractedContent` structs. Assert Source + Follow + Items created. Assert Turbo broadcast called (mock `Turbo::StreamsChannel.broadcast_replace_to`). Test YouTube channel URL flow (mock `ChannelResolver`). Test YouTube video URL flow. Test generic video URL flow. Test failure path (extractor raises → broadcast error).
+- **SourcePollJob test**: create a Source with mocked extractor. Assert Items upserted. Assert `recalculate_next_crawl!` called. Assert `last_polled_at` updated. Test failure path (extractor raises → `last_error` set). Test domain mutex (mock `DomainMutex.with_lock` to yield).
+- **SourcePollSweepJob test**: create due + not-due sources. Assert `SourcePollJob` enqueued only for due sources. Use `assert_enqueued_with`.
+- **ChannelResolver test**: test `/channel/UC...` direct parsing (no subprocess). Test `/@handle` flow (mock `YtDlp::Runner`). Assert RSS URL constructed correctly.
+- **DomainMutex test**: mock `Rails.cache`. Assert lock acquired + released. Assert timeout raises `LockTimeout`. Assert stale lock (wrong PID) not released by another process.
+
+### What's NOT in Phase 2
+
+- No UI (controllers, views, routes) — that's Phase 3
+- No tagging/embedding — that's Phase 4
+- No auto-pause on consecutive failures — future enhancement
+- No enrichment (duration, full stats for non-YouTube) — future
+
+## Phase 3 — Add-link UI + homepage feed
+
+### Add-link flow
+- `SourcesController#new` — form with URL input field, submits to `#create`
+- `SourcesController#create` — enqueues `LinkIntakeJob.perform_later(current_user.id, url)`, responds immediately with a Turbo Stream replacing the form with a "checking..." status div (`id="intake_status"`)
+- `LinkIntakeJob` broadcasts result via `Turbo::StreamsChannel.broadcast_replace_to("user_#{user_id}_intake", target: "intake_status", ...)`
+- On success: status div replaced with source card (name, icon, "following" badge, video count)
+- On failure: status div replaced with error message + "retry" link
+- Client-side: `<turbo-stream-source>` subscribes to `user_#{user_id}_intake` channel via Solid Cable
+
+### Homepage feed
+- `FeedController#index` — root route (replaces `pages#index` for authenticated users)
+- Requires authentication (no `allow_unauthenticated_access`)
+- Query: `Item.joins(:source).joins(:follow).where(follows: { user_id: current_user.id }).where.not(state: :hidden).order(published_at: :desc).limit(50)`
+- Each item rendered as a card: thumbnail, title, source name, published time, state buttons
+
+### Per-source feed view
+- `SourcesController#show` — all items for a source, reverse-chron
+- Shows source name, icon, poll status (last_polled_at, next_crawl_at, last_error if any)
+- Follow weight visible + "reset weight" button
+
+### Item interactions
+- `ItemsController#update` — PATCH to change state (seen/saved/hidden)
+- Turbo Stream response updates the item card in place
+- No separate `Interaction` model in Phase 3 — state changes on `Item` are sufficient for v1
+- "Why is this here" expandable: shows source name, follow weight, published time
+
+### Routes
+```ruby
+root "feed#index"
+resources :sources, only: [:index, :new, :create, :show]
+resources :items, only: [:update]
+```
+
+### Follow weight management
+- `FollowsController#update` — adjust weight (mute/boost/reset)
+- Visible weight value on source show page
+
+### Tests
+- Controller tests: sources#create enqueues job, feed#index shows items, items#update changes state
+- System tests: full add-link flow, homepage feed, save/hide interactions
+
+## Phase 4 — Tagging + search
+
+### Embedding pipeline
+- `EmbeddingJob(item_id)` — async, populates `Item.embedding` blob
+- Provider abstraction: `Stray::Embeddings::Provider` with `NONE` (no-op), `OLLAMA`, `OPENAI_COMPATIBLE`
+- `NONE` provider: job is a no-op (app works without AI, per Principle 3)
+- Model: `all-MiniLM-L6-v2` via Ollama, or OpenAI-compatible API
+- `Stray::Embeddings::Cosine` — brute-force cosine similarity in Ruby
+
+### Zero-shot tagging
+- `TaggingJob(item_id)` — runs after `EmbeddingJob`
+- Flow: embed item → cosine similarity against `Tag` embeddings → assign top-N above threshold → `Tagging` with `source: :ai_embedding`
+- Sub-threshold → "uncategorized" → user manually tags → seeds new `Tag` embedding
+
+### LLM tagging (optional)
+- `LlmTaggingJob(item_id)` — only if `AppConfig.ai_provider.name != "NONE"`
+- Small instruct model reads `content_text` → proposes tags → `Tagging` with `source: :ai_llm`
+
+### Search
+- FTS5 via `full_search` (already wired — `Item.search(query)`)
+- Semantic search: embed query → cosine against `Item.embedding` → top-N
+- UI: FTS results first, semantic as "related" section, "search by meaning" toggle
+
+### Tag provenance UI
+- Each tag badge shows source: colored dot (blue=ai_embedding, green=ai_llm, gray=user)
+- Manual tagging with autocomplete, creates `Tagging` with `source: :user`
+
+## Phase 5 — Future adapters
+
+### Generic RSS/Atom (`Stray::Extractors::RssAtom`)
+- Uses `feedjira` (already in Gemfile)
+- `matches?` — true for URLs returning RSS/Atom content-type or with `/feed`, `/rss`, `.xml` in path
+- Source kind: `rss_feed`
+
+### Generic page (`Stray::Extractors::GenericPage`)
+- Readability-style content extraction (Ruby port or shell-out)
+- Fallback for any non-video, non-feed URL
+- Source kind: `generic_page`
+
+### GitHub awesome list (`Stray::Extractors::GithubAwesomeList`)
+- Parse README markdown link list into individual items
+- `matches?` — true for `github.com/*/awesome-*` URLs
+- Source kind: `github_user` (needs adding to enum)
+
+### Adding a new adapter
+1. Create `lib/stray/extractors/my_adapter.rb` with `matches?` + `extract`
+2. Add one line to `config/initializers/extractors.rb`
+3. No changes to jobs, models, ranking, tagging, or feed code
 
 ## Future: yt-dlp gem extraction
 
