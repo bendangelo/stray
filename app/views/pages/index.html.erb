@@ -1,7 +1,11 @@
-<main class="flex flex-col items-center justify-center mt-[24vh]">
+<main class="flex flex-col items-center justify-center mt-[24vh] px-5">
   <%= image_tag "stray-logo.svg", alt: "Stray Logo", class: "lg:w-5/12 md:w-6/12 w-7/12" %>
 
   <div class="mt-7 flex lg:w-7/12 md:w-8/12 w-11/12">
     <p class="px-2 py-1 text-sm text-charcoal">Your personal feed, ranked and tagged, your way.</p>
+  </div>
+
+  <div class="mt-6">
+    <%= link_to "Log in", new_session_path, class: "h-12 px-8 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal inline-flex items-center" %>
   </div>
 </main>
