@@ -1,0 +1,45 @@
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <div class="mb-4">
+    <%= link_to "← Sources", sources_path, class: "text-sm text-charcoal underline hover:no-underline" %>
+    <h1 class="font-display text-2xl font-bold text-charcoal mt-2"><%= @source.name %></h1>
+    <div class="flex items-center gap-3 mt-1 text-xs text-charcoal-300">
+      <span><%= @source.kind.humanize %></span>
+      <% if @source.last_polled_at %>
+        <span>· polled <%= time_ago(@source.last_polled_at) %></span>
+      <% end %>
+      <% if @source.next_crawl_at %>
+        <span>· next poll <%= time_ago(@source.next_crawl_at) %></span>
+      <% end %>
+      <% if @source.last_error %>
+        <span class="text-cerise">· error: <%= @source.last_error %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-4 flex items-center gap-3 border-3 border-charcoal rounded-md bg-athens-400 p-3">
+    <span id="<%= dom_id(@source, :weight) %>" class="text-sm text-charcoal">Weight: <%= @follow.weight %></span>
+    <% if @follow.weight != 1.0 %>
+      <%= button_to "Reset", source_path(@source), method: :patch, params: { reset_weight: true },
+        form: { data: { turbo_stream: true } },
+        class: "text-sm text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+    <% end %>
+  </div>
+
+  <div id="source_items">
+    <% @items.each do |item| %>
+      <%= render "items/item", item: item %>
+    <% end %>
+  </div>
+
+  <% if @pagy.pages > 1 %>
+    <div class="mt-4 flex justify-center gap-2 text-sm">
+      <% if @pagy.previous %>
+        <%= link_to "← Newer", source_path(@source, page: @pagy.previous), class: "text-charcoal underline hover:no-underline" %>
+      <% end %>
+      <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
+      <% if @pagy.next %>
+        <%= link_to "Older →", source_path(@source, page: @pagy.next), class: "text-charcoal underline hover:no-underline" %>
+      <% end %>
+    </div>
+  <% end %>
+</main>
