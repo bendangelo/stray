@@ -9,6 +9,19 @@
 
     <div class="flex items-center gap-4 pr-4 text-sm">
       <% if authenticated? %>
+        <%= turbo_stream_from "user_#{current_user.id}_intake" %>
+
+        <%= form_with url: links_path, class: "flex gap-1", data: { turbo_stream: true } do |form| %>
+          <%= form.url_field :url,
+            placeholder: "Paste a link...",
+            class: "h-9 w-40 md:w-64 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+          <%= form.submit "+",
+            class: "h-9 w-9 bg-carrot-500 hover:bg-carrot-600 text-white font-bold rounded-md cursor-pointer border-3 border-charcoal" %>
+        <% end %>
+
+        <span id="intake_status" class="text-charcoal"></span>
+
+        <%= link_to "Sources", sources_path, class: "text-charcoal hover:text-carrot-600 underline" %>
         <span class="text-charcoal"><%= current_user.username %></span>
         <%= button_to "Log out", session_path, method: :delete, class: "text-charcoal hover:text-carrot-600 underline cursor-pointer bg-transparent border-none" %>
       <% else %>
