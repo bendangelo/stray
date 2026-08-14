@@ -11,7 +11,7 @@ class ItemsController < ApplicationController
     item.update!(state: state)
 
     respond_to do |format|
-      format.turbo_stream { render "items/update", locals: { item: } }
+      format.turbo_stream { render "items/update", locals: { item:, state: } }
       format.html { redirect_to root_path }
     end
   end

@@ -1,3 +1,7 @@
-<%= turbo_stream.replace dom_id(item) do %>
-  <%= render "items/item", item: item %>
+<% if state == "hidden" %>
+  <%= turbo_stream.remove dom_id(item) %>
+<% else %>
+  <%= turbo_stream.replace dom_id(item) do %>
+    <%= render "items/item", item: item %>
+  <% end %>
 <% end %>
