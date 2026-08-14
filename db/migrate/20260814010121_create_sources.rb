@@ -2,7 +2,7 @@ class CreateSources < ActiveRecord::Migration[8.1]
   def change
     create_table :sources do |t|
       t.references :user, null: false, foreign_key: true
-      t.string :kind, null: false
+      t.integer :kind, null: false
       t.string :url, null: false
       t.string :name
       t.string :icon_url

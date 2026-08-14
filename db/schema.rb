@@ -22,6 +22,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
     t.index ["user_id"], name: "index_follows_on_user_id"
   end
 
+  create_table "full_search_index_versions", primary_key: "table_name", id: :text, force: :cascade do |t|
+    t.text "config_hash", null: false
+    t.datetime "rebuilt_at", precision: nil, null: false
+  end
+
   create_table "items", force: :cascade do |t|
     t.text "content_html"
     t.text "content_text"
@@ -59,7 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
     t.datetime "created_at", null: false
     t.string "external_id"
     t.string "icon_url"
-    t.string "kind", null: false
+    t.integer "kind", null: false
     t.datetime "last_polled_at"
     t.string "name"
     t.datetime "next_crawl_at"
@@ -111,4 +116,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010155) do
   add_foreign_key "taggings", "items"
   add_foreign_key "taggings", "tags"
   add_foreign_key "tags", "users"
+
+  # Virtual tables defined in this database.
+  # Note that virtual tables may not work with other database engines. Be careful if changing database.
+  create_virtual_table "items_fts", "fts5", ["\"title\"", "\"content_text\"", "tokenize='porter'"]
 end
