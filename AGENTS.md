@@ -8,7 +8,7 @@ A self-hosted, personal feed you control. Stray pulls content from RSS feeds, ge
 
 ## Principles (non-negotiable)
 
-1. **Single user first.** Multi-user/groups is v3, not v1. Do not add user-scoping complexity unless v3 explicitly asks for it.
+1. **Single user first.** The app is built for one user to self-host and dogfood. Models carry `user_id` from v1 to avoid a painful v3 migration, but no multi-user UI, per-user isolation, or access control is built until v3. Treat the `user_id` as a forward-compatible schema decision, not an active feature.
 2. **Explainable over clever.** Every ranking decision must trace to a visible rule or similarity score. No opaque black-box behavior, ever.
 3. **Works with zero AI configured.** AI (LLM tagging, semantic search) is an enhancement, never a dependency. The app must be fully usable with `STRAY_AI_PROVIDER__NAME=NONE`.
 4. **One-command self-host.** `docker compose up -d` or `kamal deploy` must work from a fresh clone with only `.env` filled in.
