@@ -28,11 +28,18 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "https://www.youtube.com/embed/#{item.external_id}", url
   end
 
-  test "embed_url returns nil for unknown source kind" do
+  test "embed_url constructs Bitchute embed URL" do
     source = sources(:bitchute)
     item = items(:video_saved)
     url = embed_url(item)
     assert_equal "https://www.bitchute.com/embed/#{item.external_id}", url
+  end
+
+  test "embed_url returns nil for unknown source kind" do
+    source = Source.create!(user: users(:one), kind: :rss_feed, url: "https://example.com/feed", external_id: "feed1")
+    item = Item.create!(source: source, user: users(:one), external_id: "e1", title: "Post", url: "https://example.com/post")
+
+    assert_nil embed_url(item)
   end
 
   test "missing_thumb returns a data URI" do
