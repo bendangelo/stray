@@ -10,5 +10,7 @@ Rails.application.routes.draw do
 
   resources :links, only: [ :create ]
   resources :sources, only: [ :index, :show, :update ]
-  resources :items, only: [ :update ]
+  resources :items, only: [ :update ] do
+    member { get :player }
+  end
 end

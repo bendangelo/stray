@@ -1,6 +1,13 @@
 class ItemsController < ApplicationController
   ALLOWED_STATES = %w[ unseen saved hidden ].freeze
 
+  def player
+    item = Item.find_by(id: params[:id], user_id: current_user.id)
+    return head :not_found unless item
+
+    render partial: "items/player", locals: { item: }, layout: false
+  end
+
   def update
     item = Item.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless item
