@@ -15,4 +15,38 @@ module ApplicationHelper
       time.strftime("%b %d, %Y")
     end
   end
+
+  def pretty_duration(seconds)
+    return "" if seconds.nil? || seconds <= 0
+
+    if seconds >= 3600
+      "%d:%02d:%02d" % [ seconds / 3600, (seconds / 60) % 60, seconds % 60 ]
+    else
+      "%d:%02d" % [ seconds / 60, seconds % 60 ]
+    end
+  end
+
+  def embed_url(item)
+    case item.source.kind
+    when "youtube_channel"
+      "https://www.youtube.com/embed/#{item.external_id}"
+    when "video_channel"
+      uri = begin
+        URI.parse(item.url)
+      rescue URI::InvalidURIError
+        nil
+      end
+      if uri&.host&.include?("bitchute.com")
+        "https://www.bitchute.com/embed/#{item.external_id}"
+      else
+        nil
+      end
+    else
+      nil
+    end
+  end
+
+  def missing_thumb
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' fill='%233E3E3E'%3E%3Crect width='320' height='180'/%3E%3C/svg%3E"
+  end
 end
