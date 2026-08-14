@@ -1,41 +1,43 @@
-<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
   <div class="mb-4">
     <h1 class="font-display text-2xl font-bold text-charcoal">Your Feed</h1>
   </div>
 
-  <%= turbo_frame_tag "feed_search" do %>
-    <%= render "search" %>
+  <%= render "search" %>
 
-    <div id="feed_items">
-      <% if @items.any? %>
-        <% @items.each do |item| %>
-          <%= render "items/item", item: item %>
+  <% if @items.any? %>
+    <div class="grid grid-cols-12 gap-y-4 max-w-screen-xl mx-auto mb-4 gap-x-2"
+         data-controller="player">
+      <div class="col-span-12 hidden border-y-3 border-charcoal"
+           data-player-target="playerBox">
+        <p class="p-4 text-center text-charcoal-300">Loading...</p>
+      </div>
+
+      <%= render partial: "items/item", collection: @items, as: :item %>
+    </div>
+  <% else %>
+    <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
+      <p class="text-charcoal-300">
+        <% if @q.present? %>
+          No results for "<%= @q %>"
+        <% else %>
+          Your feed is empty. Add a link above to start following sources.
         <% end %>
-      <% else %>
-        <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
-          <p class="text-charcoal-300">
-            <% if @q.present? %>
-              No results for "<%= @q %>"
-            <% else %>
-              Your feed is empty. Add a link above to start following sources.
-            <% end %>
-          </p>
-        </div>
+      </p>
+    </div>
+  <% end %>
+
+  <% if @pagy.pages > 1 %>
+    <div class="mt-4 flex justify-center gap-2 text-sm">
+      <% if @pagy.previous %>
+        <%= link_to "← Newer", root_path(page: @pagy.previous, q: @q),
+          class: "text-charcoal underline hover:no-underline" %>
+      <% end %>
+      <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
+      <% if @pagy.next %>
+        <%= link_to "Older →", root_path(page: @pagy.next, q: @q),
+          class: "text-charcoal underline hover:no-underline" %>
       <% end %>
     </div>
-
-    <% if @pagy.pages > 1 %>
-      <div class="mt-4 flex justify-center gap-2 text-sm" data-controller="pagination">
-        <% if @pagy.previous %>
-          <%= link_to "← Newer", root_path(page: @pagy.previous, q: @q),
-            class: "text-charcoal underline hover:no-underline" %>
-        <% end %>
-        <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
-        <% if @pagy.next %>
-          <%= link_to "Older →", root_path(page: @pagy.next, q: @q),
-            class: "text-charcoal underline hover:no-underline" %>
-        <% end %>
-      </div>
-    <% end %>
   <% end %>
 </main>
