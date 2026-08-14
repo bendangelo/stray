@@ -1,0 +1,20 @@
+module Stray
+  ExtractedContent = Data.define(
+    :title, :content_text, :content_html,
+    :thumbnail_url, :published_at,
+    :external_id, :duration,
+    :creator_identity
+  )
+
+  CreatorIdentity = Data.define(:name, :url, :external_id, :thumbnail_url)
+
+  class Extractor
+    def self.matches?(url)
+      raise NotImplementedError
+    end
+
+    def extract(url)
+      raise NotImplementedError
+    end
+  end
+end
