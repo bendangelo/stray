@@ -1,10 +1,10 @@
 <div class="flex relative py-10 max-w-screen-lg mx-auto">
-  <% if embed_url(item) %>
-    <iframe width="400" height="230"
-            src="<%= embed_url(item) %>"
+  <% embed = embed_url(item) %>
+  <% if embed %>
+    <iframe src="<%= embed %>"
             title="<%= item.title %>"
             frameborder="0"
-            class="rounded-md border-3 border-charcoal"
+            class="w-full lg:w-1/2 aspect-video lg:mx-6 rounded-md border-3 border-charcoal"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen>
     </iframe>
