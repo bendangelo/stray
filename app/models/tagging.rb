@@ -4,5 +4,5 @@ class Tagging < ApplicationRecord
 
   enum :source, { ai_embedding: 0, ai_llm: 1, user: 2 }
 
-  validates :tag_id, uniqueness: { scope: [:item_id, :source] }
+  validates :tag_id, uniqueness: { scope: [ :item_id, :source ] }
 end

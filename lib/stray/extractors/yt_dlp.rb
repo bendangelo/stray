@@ -1,5 +1,7 @@
 require "time"
 
+require_relative "../yt_dlp/error"
+
 module Stray
   module Extractors
     class YtDlp < Stray::Extractor

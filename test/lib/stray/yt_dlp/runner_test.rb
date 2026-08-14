@@ -19,7 +19,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video parses JSON output" do
-    Open3.stub(:capture3, [@json, "", status_success]) do
+    Open3.stub(:capture3, [ @json, "", status_success ]) do
       result = @runner.single_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
       assert_equal "dQw4w9WgXcQ", result["id"]
       assert_equal "Rick Astley - Never Gonna Give You Up (Official Music Video)", result["title"]
@@ -29,7 +29,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video raises ExtractionFailed on non-zero exit" do
-    Open3.stub(:capture3, ["", "", status_failure]) do
+    Open3.stub(:capture3, [ "", "", status_failure ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -37,7 +37,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video raises ExtractionFailed on invalid JSON" do
-    Open3.stub(:capture3, ["", "not json", status_success]) do
+    Open3.stub(:capture3, [ "", "not json", status_success ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -63,7 +63,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
     fixture2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2"}'
     multi_json = "#{fixture1}\n#{fixture2}\n"
 
-    Open3.stub(:capture3, [multi_json, "", status_success]) do
+    Open3.stub(:capture3, [ multi_json, "", status_success ]) do
       result = @runner.channel_listings("https://bitchute.com/channel/abc")
       assert_equal 2, result.size
       assert_equal "vid1", result[0]["id"]
@@ -72,14 +72,14 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "channel_listings returns empty array for no output" do
-    Open3.stub(:capture3, ["", "", status_success]) do
+    Open3.stub(:capture3, [ "", "", status_success ]) do
       result = @runner.channel_listings("https://example.com/channel/empty")
       assert_equal [], result
     end
   end
 
   test "channel_listings raises ExtractionFailed on non-zero exit" do
-    Open3.stub(:capture3, ["", "", status_failure]) do
+    Open3.stub(:capture3, [ "", "", status_failure ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.channel_listings("https://example.com/channel/bad")
       end

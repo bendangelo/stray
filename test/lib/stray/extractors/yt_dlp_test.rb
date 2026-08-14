@@ -25,7 +25,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract returns ExtractedContent with video metadata" do
-    Open3.stub(:capture3, [@json, "", status_success]) do
+    Open3.stub(:capture3, [ @json, "", status_success ]) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
 
@@ -39,7 +39,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract includes creator_identity" do
-    Open3.stub(:capture3, [@json, "", status_success]) do
+    Open3.stub(:capture3, [ @json, "", status_success ]) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
 
@@ -51,7 +51,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract raises ExtractionFailed when yt-dlp fails" do
-    Open3.stub(:capture3, ["", "", OpenStruct.new(success?: false)]) do
+    Open3.stub(:capture3, [ "", "", OpenStruct.new(success?: false) ]) do
       extractor = Stray::Extractors::YtDlp.new
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         extractor.extract("https://example.com/video")
@@ -64,7 +64,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
     listing2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
     multi_json = "#{listing1}\n#{listing2}\n"
 
-    Open3.stub(:capture3, [multi_json, "", status_success]) do
+    Open3.stub(:capture3, [ multi_json, "", status_success ]) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://bitchute.com/channel/abc")
 

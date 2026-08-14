@@ -14,7 +14,7 @@ class CreateSources < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :sources, [:user_id, :external_id, :kind], unique: true
-    add_index :sources, [:next_crawl_at, :active], where: "active = true"
+    add_index :sources, [ :user_id, :external_id, :kind ], unique: true
+    add_index :sources, [ :next_crawl_at, :active ], where: "active = true"
   end
 end

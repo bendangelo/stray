@@ -18,7 +18,7 @@ class CreateItems < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :items, [:source_id, :external_id], unique: true
-    add_index :items, [:user_id, :state, :published_at]
+    add_index :items, [ :source_id, :external_id ], unique: true
+    add_index :items, [ :user_id, :state, :published_at ]
   end
 end
