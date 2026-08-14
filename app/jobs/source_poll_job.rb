@@ -57,7 +57,7 @@ class SourcePollJob < ApplicationJob
       }
     end
 
-    Item.upsert_all(rows, unique_by: [:source_id, :external_id])
+    Item.upsert_all(rows, unique_by: [ :source_id, :external_id ])
   end
 
   def build_item_url(source, content)
