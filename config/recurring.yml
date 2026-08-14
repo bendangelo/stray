@@ -16,3 +16,6 @@ production:
   full_search_optimize:
     class: FullSearch::OptimizeJob
     schedule: every day at 3am
+  source_poll_sweep:
+    class: SourcePollSweepJob
+    schedule: every hour at minute 0
