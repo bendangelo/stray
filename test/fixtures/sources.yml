@@ -1,18 +1,20 @@
 youtube:
   user: one
   kind: 0
-  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCtest123"
+  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCfeed"
   name: "Test Channel"
-  external_id: "UCtest123"
+  external_id: "UCfeed"
   active: true
+  next_crawl_at: <%= 1.hour.from_now %>
 
 bitchute:
   user: one
   kind: 1
-  url: "https://bitchute.com/channel/abc"
+  url: "https://bitchute.com/channel/feedbc"
   name: "BC Channel"
-  external_id: "abc"
+  external_id: "feedbc"
   active: true
+  next_crawl_at: <%= 1.hour.from_now %>
 
 inactive:
   user: one
