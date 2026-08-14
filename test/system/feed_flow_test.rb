@@ -2,31 +2,41 @@ require "test_helper"
 require "application_system_test_case"
 
 class FeedFlowTest < ApplicationSystemTestCase
-  test "view feed and hide an item" do
+  test "view feed shows video grid" do
     sign_in_as(users(:one))
     visit root_path
 
     assert_text "Your Feed"
     assert_text "First Video"
     assert_text "Second Video"
+    assert_selector ".grid.grid-cols-12"
+    assert_selector "[data-player-target='video']", count: 3
+  end
 
+  test "hide an item removes it from grid" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    assert_text "Second Video"
     within "##{dom_id(items(:video_two))}" do
-      find("button[title='Hide']").click
+      click_on "✕ Hide"
     end
 
     assert_no_text "Second Video"
     assert_text "First Video"
   end
 
-  test "save an item and see it highlighted" do
+  test "save an item shows saved state" do
     sign_in_as(users(:one))
     visit root_path
 
     within "##{dom_id(items(:video_one))}" do
-      find("button[title='Save']").click
+      click_on "☆ Save"
     end
 
-    assert_selector "##{dom_id(items(:video_one))} svg[fill='currentColor']"
+    within "##{dom_id(items(:video_one))}" do
+      assert_text "★ Saved"
+    end
   end
 
   test "search filters items" do
@@ -49,12 +59,34 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "BC Channel"
   end
 
-  test "view source detail page" do
+  test "view source detail page shows grid" do
     sign_in_as(users(:one))
     source = sources(:youtube)
     visit source_path(source)
 
     assert_text "Test Channel"
     assert_text "First Video"
+    assert_selector ".grid.grid-cols-12"
+  end
+
+  test "clicking thumbnail opens inline player" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    first("[data-player-target='video'] a[data-action*='player#toggle']").click
+
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+    assert_selector "iframe"
+  end
+
+  test "closing inline player hides it" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    first("[data-player-target='video'] a[data-action*='player#toggle']").click
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    find("[data-action*='player#close']").click
+    assert_selector "[data-player-target='playerBox'].hidden", visible: false
   end
 end
