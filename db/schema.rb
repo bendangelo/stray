@@ -10,7 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_010121) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_010138) do
+  create_table "items", force: :cascade do |t|
+    t.text "content_html"
+    t.text "content_text"
+    t.datetime "created_at", null: false
+    t.integer "duration"
+    t.binary "embedding"
+    t.string "external_id", null: false
+    t.datetime "fetched_at"
+    t.datetime "published_at"
+    t.integer "source_id", null: false
+    t.integer "state", default: 0
+    t.text "summary"
+    t.string "thumbnail_url"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.integer "user_id", null: false
+    t.index ["source_id", "external_id"], name: "index_items_on_source_id_and_external_id", unique: true
+    t.index ["source_id"], name: "index_items_on_source_id"
+    t.index ["user_id", "state", "published_at"], name: "index_items_on_user_id_and_state_and_published_at"
+    t.index ["user_id"], name: "index_items_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -47,6 +70,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_010121) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "items", "sources"
+  add_foreign_key "items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "sources", "users"
 end
