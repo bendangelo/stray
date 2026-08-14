@@ -25,6 +25,12 @@ gem "bcrypt", "~> 3.1.7"
 # SQLite FTS5 full-text search for Rails/ActiveRecord
 gem "full_search", "~> 0.4"
 
+gem "faraday", "~> 2.0"
+gem "faraday-follow_redirects"
+gem "faraday-retry"
+gem "nokogiri"
+gem "feedjira"
+
 # Centralized, typed configuration from ENV/YAML with boot-time validation
 # [https://github.com/palkan/anyway_config]
 gem "anyway_config", "~> 2.6"
@@ -76,4 +82,5 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "webmock"
 end
