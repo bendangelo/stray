@@ -1,4 +1,4 @@
-<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
   <div class="mb-4">
     <%= link_to "← Sources", sources_path, class: "text-sm text-charcoal underline hover:no-underline" %>
     <h1 class="font-display text-2xl font-bold text-charcoal mt-2"><%= @source.name %></h1>
@@ -25,21 +25,31 @@
     <% end %>
   </div>
 
-  <div id="source_items">
-    <% @items.each do |item| %>
-      <%= render "items/item", item: item %>
-    <% end %>
-  </div>
+  <% if @items.any? %>
+    <div class="grid grid-cols-12 gap-y-4 max-w-screen-xl mx-auto mb-4 gap-x-2"
+         data-controller="player">
+      <div class="col-span-12 hidden border-y-3 border-charcoal"
+           data-player-target="playerBox">
+        <p class="p-4 text-center text-charcoal-300">Loading...</p>
+      </div>
 
-  <% if @pagy.pages > 1 %>
-    <div class="mt-4 flex justify-center gap-2 text-sm">
-      <% if @pagy.previous %>
-        <%= link_to "← Newer", source_path(@source, page: @pagy.previous), class: "text-charcoal underline hover:no-underline" %>
-      <% end %>
-      <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
-      <% if @pagy.next %>
-        <%= link_to "Older →", source_path(@source, page: @pagy.next), class: "text-charcoal underline hover:no-underline" %>
-      <% end %>
+      <%= render partial: "items/item", collection: @items, as: :item %>
+    </div>
+
+    <% if @pagy.pages > 1 %>
+      <div class="mt-4 flex justify-center gap-2 text-sm">
+        <% if @pagy.previous %>
+          <%= link_to "← Newer", source_path(@source, page: @pagy.previous), class: "text-charcoal underline hover:no-underline" %>
+        <% end %>
+        <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
+        <% if @pagy.next %>
+          <%= link_to "Older →", source_path(@source, page: @pagy.next), class: "text-charcoal underline hover:no-underline" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
+      <p class="text-charcoal-300">No items from this source yet.</p>
     </div>
   <% end %>
 </main>
