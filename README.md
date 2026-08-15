@@ -29,13 +29,24 @@ docker compose up -d
 
 Then open your instance and create your admin account at `/setup`.
 
+> **HTTPS:** Docker Compose serves plain HTTP on port 80. Put it behind a reverse
+> proxy (Caddy/Nginx) for TLS. The app assumes it sits behind an SSL-terminating
+> proxy (`config.assume_ssl` / `config.force_ssl` are on in production).
+
 Prefer a VPS/production-style deploy? `config/deploy.yml` ships for **Kamal**:
 
 ```sh
 kamal deploy
 ```
 
+Kamal terminates TLS automatically via Let's Encrypt. Set your domain in
+`config/deploy.yml` (`proxy.host`) and make sure it matches `STRAY_INSTANCE_DOMAIN`.
+
 > **⚠️ Volumes are critical.** SQLite databases (primary/cache/queue/cable) and ActiveStorage files live on mounted volumes in both Compose and Kamal. If you remove or forget the volumes, redeploys **wipe your data**. This is the #1 self-hosting footgun — don't skip it.
+
+> **Secrets are ENV-only.** Stray never uses Rails credentials. `SECRET_KEY_BASE`
+> and all `STRAY_*` settings come from `.env` (Compose) or `.kamal/secrets`
+> (Kamal). `bin/setup-wizard` generates a `SECRET_KEY_BASE` for you.
 
 The app is fully functional with **zero AI configured**. LLM tagging and semantic search are optional, additive enhancements.
 

@@ -1,0 +1,30 @@
+# Stray — single-container self-host via Docker Compose.
+#
+# Prereqs:
+#   1. Fill in .env (run `bin/setup-wizard` on the host, or copy .env.example).
+#      Production requires at least SECRET_KEY_BASE and STRAY_INSTANCE_DOMAIN.
+#   2. Put this behind a reverse proxy (Caddy/Nginx) for HTTPS. Compose has no
+#      built-in TLS; the app serves plain HTTP on port 80.
+#
+# Volumes are critical: /rails/storage holds the SQLite databases and any
+# ActiveStorage files. Removing the volume wipes your data.
+services:
+  app:
+    build: .
+    image: stray:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    volumes:
+      - stray_storage:/rails/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  stray_storage:
