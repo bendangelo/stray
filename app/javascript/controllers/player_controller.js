@@ -85,11 +85,7 @@ export default class extends Controller {
     }
 
     if (this.detailPaneOpen && videoTarget) {
-      const minWidths = [ 640, 768 ]
-      const matchedWidths = minWidths.filter((width) => {
-        return window.matchMedia(`(min-width: ${width}px)`).matches
-      })
-      const videosPerRow = 2 + matchedWidths.length
+      const videosPerRow = this.computeColumnsPerRow()
       const moveToRow = 1 + Math.ceil((this.currentVideo + 1) / videosPerRow)
       playerBox.style.gridRow = moveToRow
 
@@ -103,6 +99,23 @@ export default class extends Controller {
         img.classList.toggle(activeClass, i === this.currentVideo && this.detailPaneOpen)
       }
     })
+  }
+
+  computeColumnsPerRow() {
+    if (this.videoTargets.length === 0) return 1
+
+    const first = this.videoTargets[0]
+    const grid = first.parentElement
+    if (!grid) return 1
+
+    const gridRect = grid.getBoundingClientRect()
+    const itemRect = first.getBoundingClientRect()
+    const columnGap = parseFloat(getComputedStyle(grid).columnGap) || 0
+    const itemWidth = itemRect.width + columnGap
+
+    if (itemWidth === 0) return 1
+
+    return Math.max(1, Math.round(gridRect.width / itemWidth))
   }
 
   fetchPlayer(url) {

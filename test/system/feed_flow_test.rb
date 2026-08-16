@@ -9,7 +9,7 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "First Video"
     assert_text "Second Video"
     assert_selector ".grid.grid-cols-12"
-    assert_selector "[data-player-target='video']", count: 3
+    assert_selector "[data-player-target='video']", count: 5
   end
 
   test "hide an item removes it from grid" do

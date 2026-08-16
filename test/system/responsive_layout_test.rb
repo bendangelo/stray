@@ -103,4 +103,41 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
             "action buttons should not overflow the right edge of the viewport"
     end
   end
+
+  test "player box appears in correct grid row on mobile (2 columns)" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    resize_to_mobile
+
+    # Click the second item (index 1) — in a 2-column grid it should be in row 2
+    all("[data-player-target='video'] a[data-action*='player#toggle']")[1].click
+
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    # The player box should be in grid row 2 (after the first row of 2 items)
+    player_box = find("[data-player-target='playerBox']")
+    grid_row = player_box.style("grid-row")["grid-row"]
+    assert_equal "2", grid_row,
+           "player box should be in row 2 on mobile (2-column grid)"
+  end
+
+  test "player box appears in correct grid row on desktop (6 columns)" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    resize_to_desktop
+
+    # Click the 5th item (index 4) — in a 6-column grid it sits in row 1,
+    # so the player box lands in row 2 (below it). The old hardcoded 4-column
+    # math would have placed it in row 3.
+    all("[data-player-target='video'] a[data-action*='player#toggle']")[4].click
+
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    player_box = find("[data-player-target='playerBox']")
+    grid_row = player_box.style("grid-row")["grid-row"]
+    assert_equal "2", grid_row,
+           "player box should be in row 2 on desktop (6-column grid, 5th item)"
+  end
 end

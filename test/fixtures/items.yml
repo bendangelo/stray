@@ -42,6 +42,30 @@ video_hidden:
   published_at: <%= 4.days.ago %>
   state: 3
 
+video_three:
+  source: youtube
+  user: one
+  external_id: "vid6"
+  title: "Third Video"
+  url: "https://www.youtube.com/watch?v=vid6"
+  content_text: "A third video about Hotwire"
+  thumbnail_url: "https://example.com/thumb6.jpg"
+  duration: 240
+  published_at: <%= 5.hours.ago %>
+  state: 0
+
+video_four:
+  source: youtube
+  user: one
+  external_id: "vid7"
+  title: "Fourth Video"
+  url: "https://www.youtube.com/watch?v=vid7"
+  content_text: "A fourth video about Stimulus"
+  thumbnail_url: "https://example.com/thumb7.jpg"
+  duration: 120
+  published_at: <%= 6.hours.ago %>
+  state: 0
+
 video_user_two:
   source: youtube
   user: two
