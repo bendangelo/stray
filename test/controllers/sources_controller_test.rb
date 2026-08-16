@@ -334,6 +334,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "First Video"
     assert_includes response.body, "Old Video"
+    assert_not_includes response.body, "Showing"
   end
 
   test "show with since filter excludes items with nil published_at" do

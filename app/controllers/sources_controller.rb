@@ -11,8 +11,9 @@ class SourcesController < ApplicationController
     @source = scoped_source
     @follow = @source.follows.find_by(user_id: current_user.id)
     @since = params[:since].presence || "all"
-    scope = @source.items.order(published_at: :desc)
     cutoff = since_cutoff(@since)
+    @since = "all" unless cutoff
+    scope = @source.items.order(published_at: :desc)
     scope = scope.where("published_at >= ?", cutoff) if cutoff
     @total_count = @source.items.count
     @pagy, @items = pagy(scope, limit: 20)
