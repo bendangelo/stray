@@ -1,0 +1,32 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://stray.example.com/c/abc/manifest.json
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - stray.example.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '412'
+    body:
+      encoding: UTF-8
+      string: '{"format":"stray-collection","version":1,"collection":{"name":"Econ","slug":"abc","item_count":3},"producer":{"instance_name":"Alice","instance_domain":"stray.example.com","stray_version":"0.1.0"},"sources":[{"url":"https://feeds.example.com/econ1","kind":"rss_feed","name":"Econ Blog","icon_url":null}],"items":[{"external_id":"item1","title":"First Item","url":"https://stray.example.com/posts/1","content_text":"content","content_html":"<p>content</p>","thumbnail_url":"https://stray.example.com/1.jpg","published_at":"2026-08-15T10:00:00Z","duration":null,"tags":["econ","policy"]},{"external_id":"item2","title":"Second Item","url":"https://stray.example.com/posts/2","content_text":"more","content_html":null,"thumbnail_url":null,"published_at":"2026-08-14T10:00:00Z","duration":null,"tags":[]}],"pagination":{"next_cursor":"page2cursor","next_url":"https://stray.example.com/c/abc/manifest.json?cursor=page2cursor","has_more":true}}'
+    http_version:
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.0.0

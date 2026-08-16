@@ -1,0 +1,32 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://stray.example.com/c/abc/manifest.json?cursor=abc
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - stray.example.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '280'
+    body:
+      encoding: UTF-8
+      string: '{"format":"stray-collection","version":1,"collection":{"name":"Econ","slug":"abc","item_count":3},"producer":{"instance_name":"Alice","instance_domain":"stray.example.com","stray_version":"0.1.0"},"sources":[],"items":[{"external_id":"item3","title":"Third Item","url":"https://stray.example.com/posts/3","content_text":"last","content_html":null,"thumbnail_url":null,"published_at":"2026-08-13T10:00:00Z","duration":null,"tags":[]}],"pagination":{"next_cursor":null,"next_url":null,"has_more":false}}'
+    http_version:
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.0.0
