@@ -1,0 +1,35 @@
+<% title "Preview collection" %>
+
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <h1 class="font-display text-2xl font-bold text-charcoal mb-4">Preview collection</h1>
+
+  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-4 mb-4">
+    <h2 class="font-display text-lg font-bold text-charcoal"><%= @preview[:collection_name] %></h2>
+    <div class="text-xs text-charcoal-300 mt-1">
+      From <%= @preview[:producer_instance_name] || "unknown instance" %>
+      · <%= @preview[:source_count] %> sources
+      · <%= @preview[:item_count] %> items
+    </div>
+  </div>
+
+  <% if @preview[:item_samples].any? %>
+    <h3 class="font-bold text-charcoal mb-2">Latest items</h3>
+    <ul class="space-y-1 mb-4">
+      <% @preview[:item_samples].each do |item| %>
+        <li class="text-sm text-charcoal">
+          <%= link_to item[:title], item[:url], target: "_blank", rel: "noopener",
+                class: "underline hover:no-underline" %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <%= form_with url: subscribe_remote_collection_path, method: :post, scope: :remote_collection do |form| %>
+    <%= form.hidden_field :manifest_url, value: @manifest_url %>
+    <%= form.hidden_field :collection_name, value: @preview[:collection_name] %>
+    <%= form.hidden_field :producer_instance_name, value: @preview[:producer_instance_name] %>
+    <%= form.submit "Subscribe",
+          class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+    <%= link_to "Cancel", sources_path, class: "text-sm text-charcoal underline hover:no-underline ml-2" %>
+  <% end %>
+</main>

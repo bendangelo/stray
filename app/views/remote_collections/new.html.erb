@@ -1,0 +1,27 @@
+<% title "Subscribe to remote collection" %>
+
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <h1 class="font-display text-2xl font-bold text-charcoal mb-4">Subscribe to remote collection</h1>
+
+  <% if @error %>
+    <div class="mb-4 border-3 border-cerise rounded-md bg-athens-400 p-3">
+      <p class="text-sm text-cerise"><%= @error %></p>
+    </div>
+  <% end %>
+
+  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-4">
+    <%= form_with url: remote_collection_path, method: :post, scope: :remote_collection, local: true do |form| %>
+      <div>
+        <%= form.label :manifest_url, "Manifest URL", class: "block text-sm font-bold text-charcoal mb-1" %>
+        <%= form.url_field :manifest_url, placeholder: "https://stray.example.com/c/abc123.../manifest",
+              class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+        <p class="text-xs text-charcoal-300 mt-1">Paste the share URL you received from another Stray instance.</p>
+      </div>
+      <div class="mt-3">
+        <%= form.submit "Preview",
+              class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+        <%= link_to "Cancel", sources_path, class: "text-sm text-charcoal underline hover:no-underline ml-2" %>
+      </div>
+    <% end %>
+  </div>
+</main>
