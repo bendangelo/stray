@@ -1,0 +1,40 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://example.com/rss
+    body: ''
+    headers:
+      Accept:
+      - "*/*"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/rss+xml
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <rss version="2.0">
+          <channel>
+            <title>Test</title>
+            <link>https://example.com</link>
+            <description>Test</description>
+            <item>
+              <title>Post</title>
+              <link>https://example.com/p1</link>
+              <description>Desc</description>
+              <guid>https://example.com/p1</guid>
+            </item>
+          </channel>
+        </rss>
+    http_version: "1.1"
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.4.0

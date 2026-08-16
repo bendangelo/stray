@@ -1,0 +1,48 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://example.com/feed.xml
+    body: ''
+    headers:
+      Accept:
+      - "*/*"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/rss+xml
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <rss version="2.0">
+          <channel>
+            <title>Test Blog</title>
+            <link>https://example.com</link>
+            <description>A test blog</description>
+            <item>
+              <title>First Post</title>
+              <link>https://example.com/posts/1</link>
+              <description>Content of first post</description>
+              <pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate>
+              <guid>https://example.com/posts/1</guid>
+            </item>
+            <item>
+              <title>Second Post</title>
+              <link>https://example.com/posts/2</link>
+              <description>Content of second post</description>
+              <pubDate>Tue, 02 Jan 2024 00:00:00 GMT</pubDate>
+              <guid>https://example.com/posts/2</guid>
+            </item>
+          </channel>
+        </rss>
+    http_version: "1.1"
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.4.0
