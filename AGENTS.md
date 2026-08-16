@@ -13,7 +13,7 @@ A self-hosted, personal feed you control. Stray pulls content from RSS feeds, ge
 3. **Works with zero AI configured.** AI (LLM tagging, semantic search) is an enhancement, never a dependency. The app must be fully usable with `STRAY_AI_PROVIDER__NAME=NONE`.
 4. **One-command self-host.** `docker compose up -d` or `kamal deploy` must work from a fresh clone with only `.env` filled in.
 5. **Scrape adapters are plugins, not core code.** New site support is addable without touching ranking, tagging, or feed logic.
-6. **Ship interoperability before inventing a protocol.** Shared feeds output plain RSS/Atom in v1. A Stray-specific cross-instance protocol is v4+, only after v3.5 proves the pull/export model.
+6. **Ship interoperability before inventing a protocol.** Collections output plain RSS/Atom (for any reader) AND a Stray-specific paginated JSON manifest (for Stray-to-Stray relay). Real-time federation (ActivityPub or bespoke) is still deferred.
 
 ## Tech stack
 
@@ -101,7 +101,7 @@ v1 adapters: `GenericPageExtractor` (readability-style), `RssAtomExtractor` (`fe
 - **Taggings** — `item_id`, `tag_id`, `source` enum (`ai_embedding`/`ai_llm`/`user`).
 - **Follow** — `user_id`, `source_id`, `weight` (float, default 1.0, adjusted by mute/boost).
 - **Interaction** — `item_id`, `user_id`, `kind` (`opened`/`starred`/`hidden`/`muted_source`).
-- **Collection** — v3 (sharing): `name`, `visibility` (`private`/`unlisted`/`public`), `tag_filter`.
+- **Collection** — `name`, `description`, `visibility` (`private`/`unlisted`; `public` reserved), long-random `slug`. Membership is an explicit source list via `CollectionMembership` (no `tag_filter` in v1).
 
 ## Tagging & embeddings
 
@@ -128,8 +128,8 @@ The same embedding model powers semantic search (complementing FTS5) and the v2 
 ## Out of scope until later
 
 - Multi-user / per-user isolation → v3.
-- `Collection`s, sharing, RSS/Atom export → v3 / v3.5.
-- Cross-instance pull → v4. Real-time federation protocol (ActivityPub or bespoke) → v5, only after v4 validates the model. Do not build federation early.
+- `public` Collection visibility, per-recipient share tokens, item-deletion propagation across instances → later.
+- Real-time federation protocol (ActivityPub or bespoke) → later. The v1 relay model (poll a JSON manifest) must validate first.
 - `sqlite-vec` migration → only when brute-force cosine is a real bottleneck.
 - No implicit behavioral tracking in v1/v2.
 

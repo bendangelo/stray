@@ -58,7 +58,7 @@ The app is fully functional with **zero AI configured**. LLM tagging and semanti
 - **Search** — full-text (SQLite FTS5) always available; semantic "search by meaning" as a toggle once embeddings exist.
 - **Per-creator view** — browse a single source's feed directly.
 - **Save, hide, mute** — `unseen`/`seen`/`saved`/`hidden` item states plus mute/boost that adjusts a source's weight.
-- **Share as plain RSS/Atom** — public collections export to standard feeds any reader can pull (v3.5).
+- **Share as plain RSS/Atom or Stray manifest** — collections export to standard feeds any reader can pull, plus a paginated JSON manifest for Stray-to-Stray relay.
 - **One-command self-host** — Docker Compose or Kamal, SQLite + Solid Queue, no external services.
 
 <!-- TODO: screenshots per feature -->
@@ -73,8 +73,9 @@ Full plan lives in [`docs/PLAN.md`](docs/PLAN.md).
 
 - **v1 (current)** — single-user auth, follow by URL, background polling, extractor adapters, FTS5 search, zero-shot + optional LLM tagging, transparent ranking, save/hide/mute, setup wizards, Docker Compose + Kamal, CI.
 - **v2** — "similar to what I save" taste-vector ranking, tag-vocabulary growth, near-duplicate dedup, import (OPML / Pocket / Raindrop / Pinboard).
-- **v3 / v3.5** — multi-user, `Collection`s with visibility, public collection RSS/Atom export.
-- **v4+** — cross-instance pull; real-time federation only after v4 validates the model.
+- **v3** — multi-user.
+- **Built** — `Collection`s with visibility, RSS/Atom export, and cross-instance pull via JSON manifest relay.
+- **Later** — `public` visibility, real-time federation (ActivityPub or bespoke).
 
 ## Contributing
 
