@@ -52,6 +52,38 @@ class SourcesController < ApplicationController
     redirect_back_or_to source_path(source), notice: "Pull started for #{source.name}."
   end
 
+  def mute
+    source = scoped_source
+    follow = source.follows.find_by(user_id: current_user.id)
+    return head :not_found unless follow
+
+    item = source.items.first
+    if item
+      Stray::Ranking.apply_interaction!(user: current_user, item: item, kind: :muted_source)
+    else
+      follow.update!(weight: Stray::Ranking.clamp(follow.weight - Stray::Ranking::MUTE_PENALTY))
+    end
+    follow.update!(muted: true)
+
+    respond_to do |format|
+      format.turbo_stream { render "sources/update_weight", locals: { source: } }
+      format.html { redirect_to source_path(source) }
+    end
+  end
+
+  def unmute
+    source = scoped_source
+    follow = source.follows.find_by(user_id: current_user.id)
+    return head :not_found unless follow
+
+    follow.update!(muted: false)
+
+    respond_to do |format|
+      format.turbo_stream { render "sources/update_weight", locals: { source: } }
+      format.html { redirect_to source_path(source) }
+    end
+  end
+
   def edit
     @source = scoped_source
   end

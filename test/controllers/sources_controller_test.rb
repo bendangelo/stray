@@ -444,4 +444,45 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     post pull_source_path(sources(:youtube))
     assert_redirected_to new_session_path
   end
+
+  test "mute sets follow muted and nudges weight down" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    follow = follows(:one)
+    assert_equal 1.0, follow.weight
+    assert_not follow.muted
+
+    assert_difference -> { Interaction.count }, 1 do
+      post mute_source_path(source), as: :turbo_stream
+    end
+
+    assert_response :success
+    follow.reload
+    assert follow.muted
+    assert_in_delta 0.7, follow.weight, 0.001
+  end
+
+  test "unmute clears follow muted" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    follow = follows(:one)
+    follow.update!(muted: true)
+
+    post unmute_source_path(source), as: :turbo_stream
+
+    assert_response :success
+    follow.reload
+    assert_not follow.muted
+  end
+
+  test "mute returns 404 for unfollowed source" do
+    sign_in_as(users(:two))
+    post mute_source_path(sources(:bitchute)), as: :turbo_stream
+    assert_response :not_found
+  end
+
+  test "mute requires authentication" do
+    post mute_source_path(sources(:youtube))
+    assert_redirected_to new_session_path
+  end
 end

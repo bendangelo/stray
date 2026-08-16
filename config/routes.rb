@@ -23,6 +23,8 @@ Rails.application.routes.draw do
   resources :sources do
     member do
       post :pull
+      post :mute
+      post :unmute
     end
   end
   resources :tags do
