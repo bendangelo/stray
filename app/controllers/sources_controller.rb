@@ -34,7 +34,6 @@ class SourcesController < ApplicationController
   end
 
   def update
-    debug_log
     source = scoped_source
 
     if params[:reset_weight]
@@ -65,13 +64,5 @@ class SourcesController < ApplicationController
 
   def source_params
     params.require(:source).permit(:name, :url, :kind, :icon_url, :active)
-  end
-end
-
-private
-
-def debug_log
-  File.open("/tmp/accept_debug.log", "a") do |f|
-    f.puts "method=#{request.method} accept=#{request.headers['Accept'].inspect} tf=#{request.headers['Turbo-Frame'].inspect} fmt=#{request.format.inspect} reset=#{params[:reset_weight].inspect}"
   end
 end
