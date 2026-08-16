@@ -3,7 +3,8 @@ module Stray
     :title, :content_text, :content_html,
     :thumbnail_url, :published_at,
     :external_id, :duration,
-    :creator_identity
+    :creator_identity,
+    :tags
   )
 
   CreatorIdentity = Data.define(:name, :url, :external_id, :thumbnail_url)

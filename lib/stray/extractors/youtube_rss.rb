@@ -23,7 +23,8 @@ module Stray
             published_at: entry.published,
             external_id: entry.entry_id.sub("yt:video:", ""),
             duration: nil,
-            creator_identity: extract_creator(feed)
+            creator_identity: extract_creator(feed),
+            tags: []
           )
         end
       end

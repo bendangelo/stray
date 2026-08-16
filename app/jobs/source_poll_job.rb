@@ -57,7 +57,26 @@ class SourcePollJob < ApplicationJob
       }
     end
 
-    Item.upsert_all(rows, unique_by: [ :source_id, :external_id ])
+    Item.upsert_all(rows, unique_by: [ :source_id, :external_id ], returning: :id).then do |result|
+      item_ids = result.to_a.map { |row| row["id"] }
+
+      contents.each_with_index do |content, i|
+        item_id = item_ids[i]
+        apply_extractor_tags(source, item_id, content)
+        EmbeddingJob.perform_later("Item", item_id)
+      end
+    end
+  end
+
+  def apply_extractor_tags(source, item_id, content)
+    return unless content.tags&.any?
+
+    item = Item.find(item_id)
+    content.tags.each do |name|
+      tag = Tag.find_or_create_by!(user_id: source.user_id, name: name)
+      Tagging.find_or_create_by!(item: item, tag: tag, source: :user)
+      EmbeddingJob.perform_later("Tag", tag.id) if tag.embedding.nil?
+    end
   end
 
   def build_item_url(source, content)

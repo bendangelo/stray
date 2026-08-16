@@ -14,7 +14,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
         creator_identity: Stray::CreatorIdentity.new(
           name: "Test Channel", url: "https://www.youtube.com/channel/UC123",
           external_id: "UC123", thumbnail_url: nil
-        )
+        ),
+        tags: []
       )
     ]
 
@@ -55,7 +56,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       creator_identity: Stray::CreatorIdentity.new(
         name: "Test Channel", url: "https://www.youtube.com/channel/UC123",
         external_id: "UC123", thumbnail_url: nil
-      )
+      ),
+      tags: []
     )
 
     ytdlp_extractor = Minitest::Mock.new
@@ -91,7 +93,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       creator_identity: Stray::CreatorIdentity.new(
         name: "BC Channel", url: "https://bitchute.com/channel/abc",
         external_id: "abc", thumbnail_url: nil
-      )
+      ),
+      tags: []
     )
 
     extractor = Minitest::Mock.new
@@ -117,7 +120,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       creator_identity: Stray::CreatorIdentity.new(
         name: "Chan", url: "https://bitchute.com/channel/abc",
         external_id: "abc", thumbnail_url: nil
-      )
+      ),
+      tags: []
     )
 
     extractor = Minitest::Mock.new
@@ -145,5 +149,29 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     end
 
     assert broadcast_called
+  end
+
+  test "applies extractor tags from single video" do
+    content = Stray::ExtractedContent.new(
+      title: "Tagged Video", content_text: "desc", content_html: nil,
+      thumbnail_url: nil, published_at: 1.day.ago,
+      external_id: "tagvid1", duration: 300,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "Chan", url: "https://bitchute.com/channel/abc",
+        external_id: "abc", thumbnail_url: nil
+      ),
+      tags: [ "python", "tutorial" ]
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://bitchute.com/video/tagvid1" ])
+
+    Stray::ExtractorRegistry.stub(:find_for, extractor) do
+      LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/tagvid1")
+    end
+
+    tag = Tag.find_by(user: @user, name: "python")
+    assert tag
+    assert Tagging.joins(:item).where(tag: tag).exists?
   end
 end

@@ -95,6 +95,28 @@ class SettingTest < ActiveSupport::TestCase
     assert_equal "sk-abc123", Setting.current.ai_provider_api_key
   end
 
+  test "get returns zero_shot_threshold from DB" do
+    Setting.current.update!(zero_shot_threshold: 0.42)
+    assert_equal 0.42, Setting.get(:zero_shot_threshold)
+  end
+
+  test "get returns llm_tagging_enabled from DB" do
+    Setting.current.update!(llm_tagging_enabled: true)
+    assert_equal true, Setting.get(:llm_tagging_enabled)
+  end
+
+  test "set updates zero_shot_threshold" do
+    Setting.set(:zero_shot_threshold, 0.5)
+    assert_equal 0.5, Setting.current.zero_shot_threshold
+  end
+
+  test "get returns embedding_model from env" do
+    Setting.current.update!(embedding_model: nil)
+    with_env("STRAY_EMBEDDING__MODEL" => "custom-embed") do
+      assert_equal "custom-embed", Setting.get(:embedding_model)
+    end
+  end
+
   private
 
   def with_env(vars)

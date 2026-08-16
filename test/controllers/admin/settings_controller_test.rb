@@ -48,4 +48,12 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "smtp.new.com", Setting.current.smtp_host
     assert_equal "existingpass", Setting.current.smtp_password
   end
+
+  test "download_model enqueues job" do
+    sign_in_as(@admin)
+    assert_enqueued_with(job: DownloadEmbeddingModelJob) do
+      post download_model_admin_settings_path
+    end
+    assert_redirected_to admin_settings_path
+  end
 end

@@ -1,0 +1,3 @@
+<%= turbo_stream.append "item_#{@tagging.item_id}_tags" do %>
+  <%= render "tags/tag_chip", tagging: @tagging %>
+<% end %>

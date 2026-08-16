@@ -1,0 +1,19 @@
+<tr id="<%= dom_id(tag) %>">
+  <td class="px-4 py-2">
+    <%= link_to tag.name, root_path(tag: tag.name), class: "text-charcoal hover:underline font-medium" %>
+  </td>
+  <td class="px-4 py-2 text-charcoal-300"><%= tag.taggings_count %></td>
+  <td class="px-4 py-2">
+    <% if tag.embedding.present? %>
+      <span class="text-mint-700 text-xs">Embedded</span>
+    <% else %>
+      <span class="text-charcoal-300 text-xs">No embedding</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-2 text-right space-x-2">
+    <%= link_to "Rename", edit_tag_path(tag), class: "text-charcoal hover:underline text-xs" %>
+    <%= button_to "Delete", tag_path(tag), method: :delete,
+      data: { turbo_confirm: "Delete tag '#{tag.name}'? This removes all its taggings." },
+      class: "text-cerise hover:underline text-xs bg-transparent border-none cursor-pointer" %>
+  </td>
+</tr>

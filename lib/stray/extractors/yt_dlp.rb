@@ -25,7 +25,8 @@ module Stray
           published_at: parse_upload_date(data["upload_date"]),
           external_id: data["id"],
           duration: data["duration"],
-          creator_identity: extract_creator(data)
+          creator_identity: extract_creator(data),
+          tags: extract_tags(data)
         )
       end
 
@@ -41,7 +42,8 @@ module Stray
             published_at: parse_upload_date(data["upload_date"]),
             external_id: data["id"],
             duration: data["duration"],
-            creator_identity: extract_creator(data)
+            creator_identity: extract_creator(data),
+            tags: []
           )
         end
       end
@@ -61,6 +63,13 @@ module Stray
           external_id: data["channel_id"],
           thumbnail_url: nil
         )
+      end
+
+      def extract_tags(data)
+        cats = Array(data["categories"])
+        tags = Array(data["tags"])
+        combined = (cats + tags).map { |t| t.to_s.downcase.strip }.reject(&:empty?).uniq
+        combined.first(5)
       end
 
       def parse_upload_date(date_str)

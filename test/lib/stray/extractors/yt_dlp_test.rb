@@ -50,6 +50,22 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
     end
   end
 
+  test "extracts tags from yt-dlp JSON" do
+    data = @data.merge(
+      "categories" => [ "Education", "Technology" ],
+      "tags" => [ "ruby", "rails", "web" ]
+    )
+    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      content = extractor.extract("https://bitchute.com/video/abc123")
+
+      assert_includes content.tags, "education"
+      assert_includes content.tags, "technology"
+      assert_includes content.tags, "ruby"
+      assert content.tags.length <= 5
+    end
+  end
+
   test "extract raises ExtractionFailed when yt-dlp fails" do
     Open3.stub(:capture3, [ "", "", OpenStruct.new(success?: false) ]) do
       extractor = Stray::Extractors::YtDlp.new

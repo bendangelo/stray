@@ -10,7 +10,7 @@ class Stray::ExtractorRegistryTest < ActiveSupport::TestCase
 
     def extract(url)
       Stray::ExtractedContent.new(title: "test", content_text: nil, content_html: nil,
-        thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil)
+        thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
     end
   end
 
@@ -21,7 +21,7 @@ class Stray::ExtractorRegistryTest < ActiveSupport::TestCase
 
     def extract(url)
       Stray::ExtractedContent.new(title: "test", content_text: nil, content_html: nil,
-        thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil)
+        thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
     end
   end
 

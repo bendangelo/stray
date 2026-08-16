@@ -51,6 +51,13 @@
           ✕ Hide
         <% end %>
       </div>
+
+      <div id="item_<%= item.id %>_tags" class="flex flex-wrap gap-1 mt-1">
+        <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
+      </div>
+      <%= button_to "+tag", "#",
+        data: { controller: "tag-input", action: "tag-input#toggle", tag_input_item_id_value: item.id },
+        class: "text-charcoal-300 hover:text-carrot-500 text-xs bg-transparent border-none cursor-pointer mt-1" %>
     </div>
   </div>
 </div>

@@ -25,7 +25,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
         title: "Integration Test Video", content_text: "Test description",
         content_html: nil, thumbnail_url: "https://example.com/t.jpg",
         published_at: 1.hour.ago, external_id: "inttest1", duration: 60,
-        creator_identity: nil
+        creator_identity: nil, tags: []
       )
     ]
 

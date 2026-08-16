@@ -125,3 +125,7 @@
   --color-cotton-800: #53235f;
   --color-cotton-900: #2a1230;
 }
+
+.dot-ai_embedding { background-color: #3b82f6; }
+.dot-ai_llm { background-color: #22c55e; }
+.dot-user { background-color: #9ca3af; }

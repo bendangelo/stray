@@ -84,3 +84,5 @@ group :test do
   gem "webmock"
   gem "minitest-mock"
 end
+
+gem "onnxruntime", "~> 0.11.6"

@@ -9,7 +9,12 @@ class Setting < ApplicationRecord
     smtp_password:       "STRAY_SMTP__PASSWORD",
     ai_provider_name:    "STRAY_AI_PROVIDER__NAME",
     ai_provider_url:     "STRAY_AI_PROVIDER__URL",
-    ai_provider_api_key: "STRAY_AI_PROVIDER__API_KEY"
+    ai_provider_api_key: "STRAY_AI_PROVIDER__API_KEY",
+    zero_shot_threshold: "STRAY_ZERO_SHOT__THRESHOLD",
+    zero_shot_top_n:     "STRAY_ZERO_SHOT__TOP_N",
+    llm_tagging_enabled: "STRAY_LLM_TAGGING__ENABLED",
+    llm_tagging_model:   "STRAY_LLM_TAGGING__MODEL",
+    embedding_model:     "STRAY_EMBEDDING__MODEL"
   }.freeze
 
   VALID_AI_PROVIDERS = %w[NONE OLLAMA OPENAI_COMPATIBLE].freeze

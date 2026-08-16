@@ -26,4 +26,14 @@ class TaggingTest < ActiveSupport::TestCase
     other = Tagging.new(item:, tag:, source: :ai_embedding)
     assert other.valid?
   end
+
+  test "score is nullable" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    item = Item.create!(source:, user: users(:one), external_id: "v1", title: "A", url: "https://example.com/a")
+    tag = Tag.create!(user: users(:one), name: "score_tag")
+    tagging = Tagging.create!(item:, tag:, source: :ai_embedding, score: 0.42)
+    assert_equal 0.42, tagging.score
+    tagging2 = Tagging.create!(item:, tag: Tag.create!(user: users(:one), name: "other"), source: :user)
+    assert_nil tagging2.score
+  end
 end

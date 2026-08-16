@@ -12,11 +12,22 @@ Rails.application.routes.draw do
 
   resources :links, only: [ :create ]
   resources :sources, only: [ :index, :show, :update ]
+  resources :tags do
+    member do
+      patch :merge
+    end
+    collection do
+      get :search
+    end
+  end
+  resources :taggings, only: [ :create, :destroy ]
   resources :items, only: [ :update ] do
     member { get :player }
   end
 
   namespace :admin do
-    resource :settings, only: %i[show update]
+    resource :settings, only: %i[show update] do
+      post :download_model
+    end
   end
 end

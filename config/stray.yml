@@ -10,8 +10,12 @@ development:
   instance_name: Stray (Dev)
   instance_domain: localhost
   rails_log_level: debug
+  embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quantized.onnx"
+  embedding_model_sha256: "PLACEHOLDER_FILL_AFTER_FIRST_DOWNLOAD"
 
 test:
   instance_name: Stray (Test)
   instance_domain: localhost
   rails_log_level: warn
+  embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quantized.onnx"
+  embedding_model_sha256: "PLACEHOLDER_FILL_AFTER_FIRST_DOWNLOAD"

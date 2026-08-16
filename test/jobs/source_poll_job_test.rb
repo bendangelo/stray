@@ -28,12 +28,12 @@ class SourcePollJobTest < ActiveJob::TestCase
       Stray::ExtractedContent.new(
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
-        external_id: "vid1", duration: 120, creator_identity: nil
+        external_id: "vid1", duration: 120, creator_identity: nil, tags: [],
       ),
       Stray::ExtractedContent.new(
         title: "Video 2", content_text: "Desc 2", content_html: nil,
         thumbnail_url: "https://example.com/t2.jpg", published_at: 2.days.ago,
-        external_id: "vid2", duration: 180, creator_identity: nil
+        external_id: "vid2", duration: 180, creator_identity: nil, tags: []
       )
     ]
 
@@ -64,7 +64,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       Stray::ExtractedContent.new(
         title: "New Title", content_text: "Updated", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
-        external_id: "vid1", duration: nil, creator_identity: nil
+        external_id: "vid1", duration: nil, creator_identity: nil, tags: []
       )
     ]
 
@@ -99,6 +99,50 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "skips non-existent source gracefully" do
     assert_nothing_raised do
       SourcePollJob.perform_now(99999)
+    end
+  end
+
+  test "applies extractor tags to items" do
+    contents = [
+      Stray::ExtractedContent.new(
+        title: "Tagged Video", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: Time.current, external_id: "tagvid1",
+        duration: nil, creator_identity: nil, tags: [ "ruby", "education" ]
+      )
+    ]
+
+    @extractor.expect(:extract, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    item = Item.find_by(source: @source, external_id: "tagvid1")
+    assert item
+    ruby_tag = Tag.find_by(user: @user, name: "ruby")
+    assert ruby_tag
+    assert Tagging.find_by(item: item, tag: ruby_tag, source: :user)
+  end
+
+  test "enqueues EmbeddingJob for new items" do
+    contents = [
+      Stray::ExtractedContent.new(
+        title: "New Vid", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: Time.current, external_id: "newvid1",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+      without_lock do
+        assert_enqueued_with(job: EmbeddingJob) do
+          SourcePollJob.perform_now(@source.id)
+        end
+      end
     end
   end
 end

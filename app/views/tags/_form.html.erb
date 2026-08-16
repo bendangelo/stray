@@ -1,0 +1,20 @@
+<%= form_with model: tag, url: tag.persisted? ? tag_path(tag) : tags_path, method: tag.persisted? ? :patch : :post, class: "space-y-4" do |form| %>
+  <% if tag.errors.any? %>
+    <div class="px-4 py-3 border-3 border-cerise text-cerise text-sm">
+      <% tag.errors.full_messages.each do |msg| %>
+        <div><%= msg %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, class: "block text-sm font-medium text-charcoal mb-1" %>
+    <%= form.text_field :name,
+      class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.submit tag.persisted? ? "Update tag" : "Create tag",
+      class: "h-12 px-6 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+  </div>
+<% end %>

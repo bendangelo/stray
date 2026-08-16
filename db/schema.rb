@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_023222) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_033851) do
   create_table "follows", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "source_id", null: false
@@ -64,13 +64,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_023222) do
     t.string "ai_provider_name", default: "NONE"
     t.string "ai_provider_url"
     t.datetime "created_at", null: false
+    t.string "embedding_model"
+    t.boolean "embedding_model_present", default: false
     t.string "instance_domain"
     t.string "instance_name"
+    t.boolean "llm_tagging_enabled", default: false
+    t.string "llm_tagging_model", default: "qwen2.5:1.5b"
     t.string "smtp_host"
     t.string "smtp_password"
     t.integer "smtp_port", default: 587
     t.string "smtp_username"
     t.datetime "updated_at", null: false
+    t.float "zero_shot_threshold", default: 0.35
+    t.integer "zero_shot_top_n", default: 5
   end
 
   create_table "sources", force: :cascade do |t|
@@ -96,6 +102,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_023222) do
   create_table "taggings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "item_id", null: false
+    t.float "score"
     t.integer "source", default: 0, null: false
     t.integer "tag_id", null: false
     t.datetime "updated_at", null: false
