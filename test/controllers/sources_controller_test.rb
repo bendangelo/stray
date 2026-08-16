@@ -114,7 +114,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_content
-    assert_includes response.body, "can't be blank"
+    assert_includes response.body, "can&#39;t be blank"
   end
 
   test "create requires authentication" do

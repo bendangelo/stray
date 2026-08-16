@@ -1,0 +1,46 @@
+<%= form_with model: source, url: source.new_record? ? sources_path : source_path(source),
+      data: { turbo_frame: "_top" } do |form| %>
+  <% if source.errors.any? %>
+    <div class="mb-4 border-3 border-cerise rounded-md bg-athens-400 p-3">
+      <% source.errors.full_messages.each do |message| %>
+        <p class="text-sm text-cerise"><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="space-y-3">
+    <div>
+      <%= form.label :url, class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.url_field :url, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :kind, class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.select :kind, Source.kinds.keys.map { |k| [k.humanize, k] }, {},
+            class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :name, class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.text_field :name, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :icon_url, "Icon URL (optional)", class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.url_field :icon_url, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <%= form.check_box :active, class: "h-4 w-4 border-3 border-charcoal" %>
+      <%= form.label :active, "Active (polling enabled)", class: "text-sm text-charcoal" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= form.submit source.new_record? ? "Add source" : "Save",
+            class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+      <%= link_to "Cancel", sources_path,
+            class: "text-sm text-charcoal underline hover:no-underline",
+            data: { turbo_frame: "_top" } %>
+    </div>
+  </div>
+<% end %>
