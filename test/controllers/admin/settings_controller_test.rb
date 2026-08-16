@@ -43,7 +43,7 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
   test "blank password fields preserve existing value" do
     sign_in_as(@admin)
     Setting.current.update!(smtp_password: "existingpass")
-    patch admin_settings_path, params: { setting: { smtp_host: "smtp.new.com", smtp_password: "" } }
+    patch admin_settings_path, params: { setting: { smtp_host: "smtp.new.com", smtp_username: "user", smtp_password: "" } }
     Setting.current.reload
     assert_equal "smtp.new.com", Setting.current.smtp_host
     assert_equal "existingpass", Setting.current.smtp_password

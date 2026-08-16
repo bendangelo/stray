@@ -22,6 +22,9 @@
         <span id="intake_status" class="text-charcoal"></span>
 
         <%= link_to "Sources", sources_path, class: "text-charcoal hover:text-carrot-600 underline" %>
+        <% if current_user&.admin? %>
+          <%= link_to "Admin", admin_settings_path, class: "text-charcoal hover:text-carrot-600 underline" %>
+        <% end %>
         <span class="text-charcoal"><%= current_user.username %></span>
         <%= button_to "Log out", session_path, method: :delete, class: "text-charcoal hover:text-carrot-600 underline cursor-pointer bg-transparent border-none" %>
       <% else %>

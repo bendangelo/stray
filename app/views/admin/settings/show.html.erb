@@ -1,0 +1,89 @@
+<main class="max-w-2xl mx-auto px-5 py-8">
+  <h1 class="font-display text-2xl font-bold text-charcoal mb-6">Settings</h1>
+
+  <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: "space-y-8" do |form| %>
+    <% if @setting.errors.any? %>
+      <div class="px-4 py-3 border-3 border-cerise text-cerise text-sm">
+        <% @setting.errors.full_messages.each do |msg| %>
+          <div><%= msg %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <section class="space-y-4">
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">Instance</h2>
+
+      <div>
+        <%= form.label :instance_name, class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.text_field :instance_name,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :instance_domain, class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.text_field :instance_domain,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+        <p class="text-xs text-charcoal-300 mt-1">Changes to instance domain require an app restart to take effect for host validation.</p>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">AI Provider</h2>
+
+      <div>
+        <%= form.label :ai_provider_name, "Provider", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.select :ai_provider_name,
+          options_for_select(Setting::VALID_AI_PROVIDERS, @setting.ai_provider_name),
+          {},
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :ai_provider_url, "URL", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.text_field :ai_provider_url,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :ai_provider_api_key, "API key", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.password_field :ai_provider_api_key,
+          placeholder: @setting.ai_provider_api_key.present? ? "••••••••" : "",
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">SMTP</h2>
+
+      <div>
+        <%= form.label :smtp_host, "Host", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.text_field :smtp_host,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :smtp_port, "Port", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.number_field :smtp_port,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :smtp_username, "Username", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.text_field :smtp_username,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :smtp_password, "Password", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.password_field :smtp_password,
+          placeholder: @setting.smtp_password.present? ? "••••••••" : "",
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+      </div>
+    </section>
+
+    <div>
+      <%= form.submit "Save settings",
+        class: "h-12 px-6 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+    </div>
+  <% end %>
+</main>
