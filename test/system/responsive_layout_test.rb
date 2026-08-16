@@ -78,4 +78,17 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     assert_match /span 2/, grid_column,
            "items should use 2-column spans (6 per row) on xl viewports"
   end
+
+  test "source detail action buttons wrap on narrow screens" do
+    sign_in_as(users(:one))
+    visit source_path(sources(:youtube))
+
+    resize_to_mobile
+
+    action_cluster = find("[data-test='source-actions']")
+    action_classes = action_cluster[:class]
+
+    assert_includes action_classes, "flex-wrap",
+           "source action buttons should wrap on mobile"
+  end
 end
