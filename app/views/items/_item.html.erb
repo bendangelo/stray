@@ -40,6 +40,7 @@
           <% end %>
           <span><%= time_ago(item.published_at) %></span>
         </div>
+        <%= render "items/why", item: item %>
       </div>
 
       <%= render "items/actions_menu", item: item %>

@@ -41,6 +41,8 @@
       </div>
     <% end %>
 
+    <%= render "items/why", item: item %>
+
     <% if item.content_text.present? %>
       <p class="text-sm text-gray-500 md:text-sm whitespace-pre-line">
         <%= truncate(item.content_text, length: 500) %>
