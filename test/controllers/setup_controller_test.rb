@@ -2,7 +2,7 @@ require "test_helper"
 
 class SetupControllerTest < ActionDispatch::IntegrationTest
   setup do
-    [ Tagging, Item, Tag, Follow, Source, Session, User ].each(&:delete_all)
+    [ Tagging, CollectionMembership, RemoteCollection, Item, Follow, Tag, Source, Collection, Session, User ].each(&:delete_all)
   end
 
   test "GET new returns 200 when no users exist" do
