@@ -25,3 +25,13 @@ inactive:
   name: "Dead Channel"
   external_id: "UCold"
   active: false
+
+remote:
+  user: one
+  kind: 4
+  url: "https://stray.example.com/c/econblogssecrettoken1234/manifest.json"
+  name: "Economics Blogs (remote)"
+  external_id: "econblogssecrettoken1234"
+  active: true
+  next_crawl_at: <%= 1.hour.from_now %>
+

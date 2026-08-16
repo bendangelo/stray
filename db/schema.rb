@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_194146) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_194236) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -73,6 +73,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_194146) do
     t.index ["source_id"], name: "index_items_on_source_id"
     t.index ["user_id", "state", "published_at"], name: "index_items_on_user_id_and_state_and_published_at"
     t.index ["user_id"], name: "index_items_on_user_id"
+  end
+
+  create_table "remote_collections", force: :cascade do |t|
+    t.string "collection_name"
+    t.datetime "created_at", null: false
+    t.integer "item_count", default: 0
+    t.string "last_cursor"
+    t.string "last_error"
+    t.datetime "last_error_at"
+    t.datetime "last_synced_at"
+    t.string "manifest_url", null: false
+    t.string "producer_instance_name"
+    t.integer "source_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["source_id"], name: "index_remote_collections_on_source_id", unique: true
+    t.index ["user_id", "manifest_url"], name: "index_remote_collections_on_user_id_and_manifest_url", unique: true
+    t.index ["user_id"], name: "index_remote_collections_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -164,6 +182,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_194146) do
   add_foreign_key "follows", "users"
   add_foreign_key "items", "sources"
   add_foreign_key "items", "users"
+  add_foreign_key "remote_collections", "sources"
+  add_foreign_key "remote_collections", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "sources", "users"
   add_foreign_key "taggings", "items"

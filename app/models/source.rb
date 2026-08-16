@@ -2,8 +2,9 @@ class Source < ApplicationRecord
   belongs_to :user
   has_many :items, dependent: :destroy
   has_many :follows, dependent: :destroy
+  has_one :remote_collection, dependent: :destroy
 
-  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3 }
+  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4 }
 
   validates :url, :kind, presence: true
   validates :external_id, uniqueness: { scope: [ :user_id, :kind ] }

@@ -132,4 +132,17 @@ class SourceTest < ActiveSupport::TestCase
     source = Source.new(url: "not-a-url", external_id: "abc123")
     assert_equal "abc123", source.display_name
   end
+
+  test "stray_collection kind is a valid enum value" do
+    source = Source.new(user: users(:one), kind: :stray_collection, url: "https://x/c/y/manifest.json")
+    assert source.valid?
+    assert_equal "stray_collection", source.kind
+  end
+
+  test "has_one remote_collection" do
+    source = Source.create!(user: users(:one), kind: :stray_collection,
+      url: "https://x/c/y/manifest.json", external_id: "y")
+    rc = RemoteCollection.create!(source: source, user: users(:one), manifest_url: source.url)
+    assert_equal rc, source.remote_collection
+  end
 end

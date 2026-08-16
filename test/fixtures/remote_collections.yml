@@ -1,0 +1,6 @@
+one:
+  source: remote
+  user: one
+  manifest_url: "https://stray.example.com/c/econblogssecrettoken1234/manifest.json"
+  collection_name: "Economics Blogs"
+  producer_instance_name: "Alice's Stray"
