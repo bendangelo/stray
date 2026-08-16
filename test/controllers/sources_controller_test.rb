@@ -1,14 +1,24 @@
 require "test_helper"
 
 class SourcesControllerTest < ActionDispatch::IntegrationTest
-  test "index shows followed sources for current user" do
+  test "index shows followed active and inactive sources for current user" do
     sign_in_as(users(:one))
     get sources_path
 
     assert_response :success
     assert_includes response.body, "Test Channel"
     assert_includes response.body, "BC Channel"
-    assert_not_includes response.body, "Dead Channel"
+    assert_includes response.body, "Dead Channel"
+    assert_includes response.body, "Paused"
+  end
+
+  test "index with q param filters sources by name" do
+    sign_in_as(users(:one))
+    get sources_path, params: { q: "Test Channel" }
+
+    assert_response :success
+    assert_includes response.body, "Test Channel"
+    assert_not_includes response.body, "BC Channel"
   end
 
   test "show displays source items" do
