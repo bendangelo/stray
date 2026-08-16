@@ -17,8 +17,9 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get sources_path, params: { q: "Test Channel" }
 
     assert_response :success
-    assert_includes response.body, "Test Channel"
-    assert_not_includes response.body, "BC Channel"
+    list = Nokogiri::HTML(response.body).at_css("#sources_list").to_s
+    assert_includes list, "Test Channel"
+    assert_not_includes list, "BC Channel"
   end
 
   test "show displays source items" do

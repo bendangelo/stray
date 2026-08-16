@@ -1,31 +1,33 @@
-<div class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
-  <h1 class="font-display text-2xl font-bold text-charcoal mb-4">Sources</h1>
-
-  <div class="space-y-2">
-    <% @sources.each do |source| %>
-      <%= link_to source_path(source), class: "block border-3 border-charcoal rounded-md bg-athens-400 p-4 hover:bg-athens-500" do %>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="<%= source_icon_url(source) || missing_thumb %>"
-                 alt=""
-                 class="w-8 h-8 rounded border-2 border-charcoal object-cover shrink-0"
-                 loading="lazy">
-            <div>
-              <span class="font-display font-bold text-charcoal"><%= source.name %></span>
-              <span class="text-xs text-charcoal-300 ml-2"><%= source.kind.humanize %></span>
-            </div>
-          </div>
-          <div class="text-xs text-charcoal-300">
-            <%= source.items.count %> items
-            <% if source.last_polled_at %>
-              · polled <%= time_ago(source.last_polled_at) %>
-            <% end %>
-            <% if source.last_error %>
-              · <span class="text-cerise">error</span>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    <% end %>
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Sources</h1>
+    <%= link_to "+ Add source", new_source_path,
+          class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal" %>
   </div>
-</div>
+
+  <%= form_with url: sources_path, method: :get, class: "mb-4 flex gap-1",
+        data: { turbo_frame: "sources_list", turbo_action: "advance" } do |form| %>
+    <%= form.text_field :q, placeholder: "Search sources...",
+          value: params[:q],
+          class: "h-9 w-full px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+  <% end %>
+
+  <%= turbo_frame_tag "sources_list" do %>
+    <% if @active_sources.any? %>
+      <div class="space-y-2 mb-8">
+        <%= render partial: "sources/source", collection: @active_sources, as: :source %>
+      </div>
+    <% else %>
+      <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center mb-8">
+        <p class="text-charcoal-300">No sources yet. Paste a link in the navbar or click "Add source".</p>
+      </div>
+    <% end %>
+
+    <% if @inactive_sources.any? %>
+      <h2 class="font-display text-lg font-bold text-charcoal-300 mb-2">Paused</h2>
+      <div class="space-y-2">
+        <%= render partial: "sources/source", collection: @inactive_sources, as: :source %>
+      </div>
+    <% end %>
+  <% end %>
+</main>
