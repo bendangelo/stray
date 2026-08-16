@@ -19,4 +19,22 @@ class FollowTest < ActiveSupport::TestCase
     follow = Follow.create!(user: users(:one), source:)
     assert_equal 1.0, follow.weight
   end
+
+  test "default muted is false" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed2", external_id: "UC2")
+    follow = Follow.create!(user: users(:one), source:)
+    assert_not follow.muted
+  end
+
+  test "clamp_weight clamps on save when above max" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed3", external_id: "UC3")
+    follow = Follow.create!(user: users(:one), source:, weight: 10.0)
+    assert_equal 3.0, follow.weight
+  end
+
+  test "clamp_weight clamps on save when below min" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed4", external_id: "UC4")
+    follow = Follow.create!(user: users(:one), source:, weight: 0.0)
+    assert_equal 0.1, follow.weight
+  end
 end
