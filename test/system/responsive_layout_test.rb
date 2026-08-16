@@ -73,9 +73,9 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     page.driver.browser.manage.window.resize_to(1536, 1024)
 
     first_item = first("[data-player-target='video']")
-    classes = first_item[:class]
+    grid_column = first_item.evaluate_script("getComputedStyle(this).gridColumn")
 
-    assert_includes classes, "xl:col-span-2",
-           "items should use xl:col-span-2 for 6-column density on large monitors"
+    assert_match /span 2/, grid_column,
+           "items should use 2-column spans (6 per row) on xl viewports"
   end
 end
