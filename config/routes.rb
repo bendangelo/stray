@@ -13,4 +13,8 @@ Rails.application.routes.draw do
   resources :items, only: [ :update ] do
     member { get :player }
   end
+
+  namespace :admin do
+    resource :settings, only: %i[show update]
+  end
 end
