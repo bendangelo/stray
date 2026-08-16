@@ -2,6 +2,7 @@ class Item < ApplicationRecord
   belongs_to :source
   belongs_to :user
   has_many :taggings, dependent: :destroy
+  has_many :tags, through: :taggings
 
   enum :state, { unseen: 0, seen: 1, saved: 2, hidden: 3 }
 
