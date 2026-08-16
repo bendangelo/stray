@@ -379,7 +379,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get source_path(source, since: "1m")
 
     assert_response :success
-    assert_equal 4, assigns(:total_count)
+    assert_equal 6, assigns(:total_count)
   end
 
   test "show renders date filter pills" do
@@ -402,7 +402,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get source_path(source)
 
     assert_response :success
-    assert_includes response.body, "3 items"
+    assert_includes response.body, "5 items"
   end
 
   test "show renders showing X of Y when filter is active" do
@@ -417,7 +417,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get source_path(source, since: "1m")
 
     assert_response :success
-    assert_includes response.body, "Showing 3 of 4 items"
+    assert_includes response.body, "Showing 5 of 6 items"
   end
 
   test "pull enqueues SourcePollJob and redirects to the source" do
