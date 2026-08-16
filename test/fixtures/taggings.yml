@@ -1,0 +1,14 @@
+video_one_ruby:
+  item: video_one
+  tag: ruby
+  source: 0
+
+video_one_rails:
+  item: video_one
+  tag: rails
+  source: 0
+
+video_two_ai:
+  item: video_two
+  tag: ai
+  source: 0

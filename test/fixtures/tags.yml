@@ -1,0 +1,11 @@
+ruby:
+  user: one
+  name: "ruby"
+
+rails:
+  user: one
+  name: "rails"
+
+ai:
+  user: one
+  name: "ai"
