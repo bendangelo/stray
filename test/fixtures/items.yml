@@ -5,6 +5,8 @@ video_one:
   title: "First Video"
   url: "https://www.youtube.com/watch?v=vid1"
   content_text: "A test video about Ruby"
+  thumbnail_url: "https://example.com/thumb1.jpg"
+  duration: 300
   published_at: <%= 2.days.ago %>
   state: 0
 
@@ -15,6 +17,8 @@ video_two:
   title: "Second Video"
   url: "https://www.youtube.com/watch?v=vid2"
   content_text: "Another video about Rails"
+  thumbnail_url: "https://example.com/thumb2.jpg"
+  duration: 180
   published_at: <%= 1.day.ago %>
   state: 0
 

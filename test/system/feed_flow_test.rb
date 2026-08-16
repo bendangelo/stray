@@ -18,7 +18,8 @@ class FeedFlowTest < ApplicationSystemTestCase
 
     assert_text "Second Video"
     within "##{dom_id(items(:video_two))}" do
-      click_on "✕ Hide"
+      find("button[aria-controls^='item-actions-']").click
+      click_on "Hide"
     end
 
     assert_no_text "Second Video"
@@ -30,11 +31,13 @@ class FeedFlowTest < ApplicationSystemTestCase
     visit root_path
 
     within "##{dom_id(items(:video_one))}" do
-      click_on "☆ Save"
+      find("button[aria-controls^='item-actions-']").click
+      click_on "Save"
     end
 
     within "##{dom_id(items(:video_one))}" do
-      assert_text "★ Saved"
+      find("button[aria-controls^='item-actions-']").click
+      assert_text "Unsave"
     end
   end
 

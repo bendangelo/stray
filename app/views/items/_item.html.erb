@@ -5,59 +5,48 @@
   <div class="flex flex-col">
     <div class="relative overflow-hidden">
       <a href="#" data-action="click->player#toggle:prevent">
-        <img class="group-hover:border-2 border-carrot-400 object-cover w-full h-40 rounded-md border-3 border-charcoal"
+        <img class="group-hover:border-2 border-carrot-400 object-cover w-full <%= video?(item) ? "aspect-video" : "h-40" %> rounded-md border-3 border-charcoal"
              src="<%= item.thumbnail_url || missing_thumb %>"
-             alt="<%= item.title %>">
+             alt="<%= item.title %>"
+             loading="lazy">
       </a>
+      <% if video?(item) %>
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition">
+          <%= phosphor_icon "play", style: :fill, class: "w-10 h-10 text-white/80" %>
+        </div>
+      <% end %>
+      <% if (icon = source_icon_url(item.source)) %>
+        <img src="<%= icon %>" alt="" loading="lazy"
+             class="absolute left-2 bottom-2 w-5 h-5 rounded border-2 border-charcoal bg-charcoal/80 object-cover">
+      <% end %>
       <% if item.duration.present? %>
-        <p class="absolute right-2 bottom-2 bg-gray-900 text-gray-100 text-xs px-1 py rounded">
+        <p class="absolute right-2 bottom-2 bg-charcoal text-champagne text-xs px-1.5 py-0.5 rounded">
           <%= pretty_duration(item.duration) %>
         </p>
       <% end %>
     </div>
 
-    <div class="flex mt-1 flex-col">
-      <a href="<%= item.url %>" target="_blank" rel="noopener"
-         class="hover:underline break-all text-charcoal text-sm font-semibold line-clamp-2">
-        <%= item.title %>
-      </a>
+    <div class="flex mt-1 items-start gap-1">
+      <div class="flex-1 min-w-0 flex flex-col">
+        <a href="<%= item.url %>" target="_blank" rel="noopener"
+           class="hover:underline break-all text-charcoal text-sm font-semibold line-clamp-2">
+          <%= item.title %>
+        </a>
 
-      <div class="flex items-center gap-2 mt-1 text-xs text-charcoal-300">
-        <% if item.source.name.present? %>
-          <%= link_to item.source.name, source_path(item.source), class: "hover:text-carrot-600 underline" %>
-          <span>·</span>
-        <% end %>
-        <span><%= time_ago(item.published_at) %></span>
-      </div>
-
-      <div class="flex gap-1 mt-1">
-        <% if item.saved? %>
-          <%= button_to item_path(item), method: :patch, params: { state: "unseen" },
-            form: { data: { turbo_stream: true } },
-            class: "text-amber-500 hover:text-amber-600 cursor-pointer bg-transparent border-none text-xs" do %>
-            <%= phosphor_icon "star", style: :fill, class: "w-3.5 h-3.5 inline-block" %> Saved
+        <div class="flex items-center gap-2 mt-1 text-xs text-charcoal-300">
+          <% if item.source.name.present? %>
+            <%= link_to item.source.name, source_path(item.source), class: "hover:text-carrot-600 underline" %>
+            <span>·</span>
           <% end %>
-        <% else %>
-          <%= button_to item_path(item), method: :patch, params: { state: "saved" },
-            form: { data: { turbo_stream: true } },
-            class: "text-charcoal-300 hover:text-amber-500 cursor-pointer bg-transparent border-none text-xs" do %>
-            <%= phosphor_icon "star", class: "w-3.5 h-3.5 inline-block" %> Save
-          <% end %>
-        <% end %>
-
-        <%= button_to item_path(item), method: :patch, params: { state: "hidden" },
-          form: { data: { turbo_stream: true } },
-          class: "text-charcoal-300 hover:text-cerise cursor-pointer bg-transparent border-none text-xs" do %>
-          <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
-        <% end %>
+          <span><%= time_ago(item.published_at) %></span>
+        </div>
       </div>
 
-      <div id="item_<%= item.id %>_tags" class="flex flex-wrap gap-1 mt-1">
-        <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
-      </div>
-      <%= button_to "+tag", "#",
-        data: { controller: "tag-input", action: "tag-input#toggle", tag_input_item_id_value: item.id },
-        class: "text-charcoal-300 hover:text-carrot-500 text-xs bg-transparent border-none cursor-pointer mt-1" %>
+      <%= render "items/actions_menu", item: item %>
+    </div>
+
+    <div id="item_<%= item.id %>_tags" class="flex flex-wrap gap-1 mt-1">
+      <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
     </div>
   </div>
 </div>

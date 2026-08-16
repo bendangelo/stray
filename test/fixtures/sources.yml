@@ -4,6 +4,7 @@ youtube:
   url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCfeed"
   name: "Test Channel"
   external_id: "UCfeed"
+  icon_url: "https://example.com/youtube-avatar.png"
   active: true
   next_crawl_at: <%= 1.hour.from_now %>
 
@@ -13,6 +14,7 @@ bitchute:
   url: "https://bitchute.com/channel/feedbc"
   name: "BC Channel"
   external_id: "feedbc"
+  icon_url: "https://example.com/bitchute-avatar.png"
   active: true
   next_crawl_at: <%= 1.hour.from_now %>
 

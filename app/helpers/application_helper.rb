@@ -49,4 +49,10 @@ module ApplicationHelper
   def missing_thumb
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' fill='%233E3E3E'%3E%3Crect width='320' height='180'/%3E%3C/svg%3E"
   end
+
+  def video?(item = nil)
+    item ||= @item
+    return false unless item&.source
+    item.source.kind.in?(%w[youtube_channel video_channel])
+  end
 end

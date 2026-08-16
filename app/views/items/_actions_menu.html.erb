@@ -1,0 +1,37 @@
+<div data-controller="dropdown" class="relative shrink-0">
+  <button type="button"
+          data-dropdown-target="button"
+          data-action="dropdown#toggle click@window->dropdown#hide"
+          aria-expanded="false"
+          aria-controls="item-actions-<%= item.id %>"
+          class="text-charcoal-300 hover:text-carrot-500 bg-transparent border-none cursor-pointer p-1 -mr-1"
+          aria-label="Item actions">
+    <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
+  </button>
+
+  <div id="item-actions-<%= item.id %>"
+       data-dropdown-target="menu"
+       class="hidden absolute right-0 mt-1 z-20 w-44 rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
+              transition transform origin-top-right
+              data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
+              data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
+    <%= button_to item_path(item), method: :patch, params: { state: item.saved? ? "unseen" : "saved" },
+          form: { data: { turbo_stream: true } },
+          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
+      <%= phosphor_icon "star", style: item.saved? ? :fill : :regular, class: "w-3.5 h-3.5 inline-block" %>
+      <%= item.saved? ? "Unsave" : "Save" %>
+    <% end %>
+
+    <%= button_to item_path(item), method: :patch, params: { state: "hidden" },
+          form: { data: { turbo_stream: true } },
+          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
+      <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
+    <% end %>
+
+    <%= button_to "#",
+          data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
+          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
+      <%= phosphor_icon "tag", class: "w-3.5 h-3.5 inline-block" %> Add tag
+    <% end %>
+  </div>
+</div>

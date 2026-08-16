@@ -45,4 +45,33 @@ class ApplicationHelperTest < ActionView::TestCase
   test "missing_thumb returns a data URI" do
     assert_match(/^data:image\/svg\+xml/, missing_thumb)
   end
+
+  test "video? is true for youtube_channel" do
+    source = Source.new(kind: :youtube_channel)
+    item = Item.new(source: source)
+    assert video?(item)
+  end
+
+  test "video? is true for video_channel" do
+    source = Source.new(kind: :video_channel)
+    item = Item.new(source: source)
+    assert video?(item)
+  end
+
+  test "video? is false for rss_feed" do
+    source = Source.new(kind: :rss_feed)
+    item = Item.new(source: source)
+    assert_not video?(item)
+  end
+
+  test "video? is false for generic_page" do
+    source = Source.new(kind: :generic_page)
+    item = Item.new(source: source)
+    assert_not video?(item)
+  end
+
+  test "video? is false when source is nil" do
+    item = Item.new(source: nil)
+    assert_not video?(item)
+  end
 end

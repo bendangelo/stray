@@ -14,13 +14,20 @@
   <% end %>
 
   <div class="flex-1 ml-3 mr-9">
-    <a class="block text-lg font-semibold hover:underline md:text-xl mb-1"
-       href="<%= item.url %>" target="_blank" rel="noopener">
-      <%= item.title %>
-    </a>
+    <div class="flex items-start gap-2 mb-1">
+      <a class="block text-lg font-semibold hover:underline md:text-xl flex-1 min-w-0"
+         href="<%= item.url %>" target="_blank" rel="noopener">
+        <%= item.title %>
+      </a>
+      <%= render "items/actions_menu", item: item %>
+    </div>
 
     <% if item.source.name.present? %>
-      <div class="flex mb-3">
+      <div class="flex mb-3 items-center gap-2">
+        <% if (icon = source_icon_url(item.source)) %>
+          <img src="<%= icon %>" alt="" loading="lazy"
+               class="w-5 h-5 rounded border-2 border-charcoal object-cover">
+        <% end %>
         <div>
           <%= link_to item.source.name, source_path(item.source),
             class: "text-gray-800 text-sm hover:text-black hover:underline" %>
@@ -39,28 +46,6 @@
         <%= truncate(item.content_text, length: 500) %>
       </p>
     <% end %>
-
-    <div class="flex gap-1 mt-3">
-      <% if item.saved? %>
-        <%= button_to item_path(item), method: :patch, params: { state: "unseen" },
-          form: { data: { turbo_stream: true } },
-          class: "text-amber-500 hover:text-amber-600 cursor-pointer bg-transparent border-none text-xs" do %>
-          <%= phosphor_icon "star", style: :fill, class: "w-3.5 h-3.5 inline-block" %> Saved
-        <% end %>
-      <% else %>
-        <%= button_to item_path(item), method: :patch, params: { state: "saved" },
-          form: { data: { turbo_stream: true } },
-          class: "text-charcoal-300 hover:text-amber-500 cursor-pointer bg-transparent border-none text-xs" do %>
-          <%= phosphor_icon "star", class: "w-3.5 h-3.5 inline-block" %> Save
-        <% end %>
-      <% end %>
-
-      <%= button_to item_path(item), method: :patch, params: { state: "hidden" },
-        form: { data: { turbo_stream: true } },
-        class: "text-charcoal-300 hover:text-cerise cursor-pointer bg-transparent border-none text-xs" do %>
-        <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
-      <% end %>
-    </div>
   </div>
 
   <button type="button" aria-label="Close"
