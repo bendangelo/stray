@@ -42,4 +42,39 @@ class FeedControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "No results"
   end
+
+  test "tag filter shows only items with that tag" do
+    sign_in_as(users(:one))
+    get root_path, params: { tag: "ruby" }
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_not_includes response.body, "Second Video"
+  end
+
+  test "tag filter combined with search" do
+    sign_in_as(users(:one))
+    get root_path, params: { q: "Ruby", tag: "ruby" }
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+  end
+
+  test "assigns tags collection for tag bar" do
+    sign_in_as(users(:one))
+    get root_path
+
+    assert_response :success
+    assert_not_nil assigns(:tags)
+  end
+
+  test "tag bar includes tag names" do
+    sign_in_as(users(:one))
+    get root_path
+
+    assert_response :success
+    assert_includes response.body, "ruby"
+    assert_includes response.body, "rails"
+    assert_includes response.body, "ai"
+  end
 end
