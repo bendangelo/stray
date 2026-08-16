@@ -1,18 +1,40 @@
 <div class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
   <div class="mb-4">
     <%= link_to "← Sources", sources_path, class: "text-sm text-charcoal underline hover:no-underline" %>
-    <h1 class="font-display text-2xl font-bold text-charcoal mt-2"><%= @source.name %></h1>
-    <div class="flex items-center gap-3 mt-1 text-xs text-charcoal-300">
-      <span><%= @source.kind.humanize %></span>
-      <% if @source.last_polled_at %>
-        <span>· polled <%= time_ago(@source.last_polled_at) %></span>
-      <% end %>
-      <% if @source.next_crawl_at %>
-        <span>· next poll <%= time_ago(@source.next_crawl_at) %></span>
-      <% end %>
-      <% if @source.last_error %>
-        <span class="text-cerise">· error: <%= @source.last_error %></span>
-      <% end %>
+    <div class="flex items-start justify-between gap-2 mt-2">
+      <div class="flex items-center gap-3">
+        <%= source_icon(@source) %>
+        <div>
+          <h1 class="font-display text-2xl font-bold text-charcoal"><%= @source.name %></h1>
+          <div class="flex items-center gap-3 mt-1 text-xs text-charcoal-300">
+            <span><%= @source.kind.humanize %></span>
+            <% if @source.last_polled_at %>
+              <span>· polled <%= time_ago(@source.last_polled_at) %></span>
+            <% end %>
+            <% if @source.next_crawl_at %>
+              <span>· next poll <%= time_ago(@source.next_crawl_at) %></span>
+            <% end %>
+            <% if @source.last_error %>
+              <span class="text-cerise">· error: <%= @source.last_error %></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <% if @source.active? %>
+          <%= button_to "Pause", source_path(@source), method: :patch, params: { source: { active: false } },
+                form: { data: { turbo_stream: true } },
+                class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+        <% else %>
+          <%= button_to "Unpause", source_path(@source), method: :patch, params: { source: { active: true } },
+                form: { data: { turbo_stream: true } },
+                class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+        <% end %>
+        <%= link_to "Edit", edit_source_path(@source), class: "text-xs text-charcoal underline hover:no-underline" %>
+        <%= button_to "Delete", source_path(@source), method: :delete,
+              form: { data: { turbo_confirm: "Delete this source and all its items?" } },
+              class: "text-xs text-cerise underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+      </div>
     </div>
   </div>
 
