@@ -78,6 +78,25 @@ else
   end
 end
 
+# Encryption key
+puts
+print "Generate STRAY_ENCRYPTION_KEY automatically? [Y/n]: "
+response = read_input.downcase
+if response != "n"
+  encryption_key = SecureRandom.hex(32)
+  env_content = update_env(env_content, "STRAY_ENCRYPTION_KEY", encryption_key)
+  puts "Generated STRAY_ENCRYPTION_KEY (64 hex chars)"
+else
+  value = prompt("STRAY_ENCRYPTION_KEY", echo: false)
+  if value.empty?
+    encryption_key = SecureRandom.hex(32)
+    env_content = update_env(env_content, "STRAY_ENCRYPTION_KEY", encryption_key)
+    puts "STRAY_ENCRYPTION_KEY left blank - generated one (64 hex chars)"
+  else
+    env_content = update_env(env_content, "STRAY_ENCRYPTION_KEY", value)
+  end
+end
+
 # AI provider
 puts
 puts "AI provider options: NONE, OLLAMA, OPENAI_COMPATIBLE"
@@ -128,4 +147,4 @@ puts
 puts "Next steps:"
 puts "  1. Run: docker compose up -d  (or: kamal deploy)"
 puts "  2. Visit /setup to create your admin account"
-puts "  3. Log in and start using Stray"
+puts "  3. Log in and visit /admin/settings to manage settings at runtime"
