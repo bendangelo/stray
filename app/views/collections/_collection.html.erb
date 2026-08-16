@@ -1,0 +1,19 @@
+<div class="border-3 border-charcoal rounded-md bg-athens-400 p-4 hover:bg-athens-500">
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      <%= link_to collection.name, collection_path(collection),
+            class: "font-display font-bold text-charcoal", data: { turbo_frame: "_top" } %>
+      <div class="text-xs text-charcoal-300 mt-1">
+        <%= collection.sources.count %> sources
+        · <%= collection.visibility %>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= link_to "Edit", edit_collection_path(collection),
+            class: "text-xs text-charcoal underline hover:no-underline" %>
+      <%= action_link_to "Delete", collection_path(collection), method: :delete,
+            confirm: "Delete this collection?",
+            class: "text-xs text-cerise underline hover:no-underline" %>
+    </div>
+  </div>
+</div>

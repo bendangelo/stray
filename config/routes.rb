@@ -12,6 +12,10 @@ Rails.application.routes.draw do
   get "privacy_and_terms", to: "pages#privacy_and_terms"
 
   resources :links, only: [ :create ]
+  resources :collections
+  get "c/:slug", to: "collections#public_show", as: :public_collection
+  get "c/:slug/manifest", to: "collections#manifest", as: :collection_manifest, defaults: { format: :json }
+  get "c/:slug/feed", to: "collections#feed", as: :collection_feed, defaults: { format: :xml }
   resources :sources do
     member do
       post :pull

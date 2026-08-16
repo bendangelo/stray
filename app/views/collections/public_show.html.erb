@@ -1,0 +1,31 @@
+<% title @collection.name %>
+
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-2xl">
+  <h1 class="font-display text-2xl font-bold text-charcoal"><%= @collection.name %></h1>
+  <% if @collection.description.present? %>
+    <p class="text-sm text-charcoal-300 mt-1"><%= @collection.description %></p>
+  <% end %>
+  <div class="text-xs text-charcoal-300 mt-1">
+    <%= @collection.sources.count %> sources · <%= @collection.items.count %> items
+  </div>
+
+  <div class="mt-4 border-3 border-charcoal rounded-md bg-athens-400 p-4">
+    <p class="text-sm text-charcoal mb-2">
+      This is a Stray collection. To subscribe, paste this URL into another Stray instance:
+    </p>
+    <input type="text" readonly value="<%= request.base_url %><%= public_collection_path(slug: @collection.slug) %>/manifest"
+           class="w-full h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
+           onclick="this.select()">
+  </div>
+
+  <h2 class="font-display text-lg font-bold text-charcoal mt-6 mb-3">Sources</h2>
+  <div class="space-y-2">
+    <% @collection.sources.order(:name).each do |source| %>
+      <div class="border-3 border-charcoal rounded-md bg-athens-400 p-3 flex items-center gap-2">
+        <%= source_icon(source, size: "w-8 h-8") %>
+        <span class="text-sm text-charcoal"><%= source.name %></span>
+        <span class="text-xs text-charcoal-300">· <%= source.kind.humanize %></span>
+      </div>
+    <% end %>
+  </div>
+</main>

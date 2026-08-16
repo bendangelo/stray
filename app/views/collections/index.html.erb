@@ -1,0 +1,19 @@
+<% title "Collections" %>
+
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Collections</h1>
+    <%= link_to "+ New collection", new_collection_path,
+          class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal" %>
+  </div>
+
+  <% if @collections.any? %>
+    <div class="space-y-3">
+      <%= render partial: "collections/collection", collection: @collections %>
+    </div>
+  <% else %>
+    <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
+      <p class="text-charcoal-300">No collections yet.</p>
+    </div>
+  <% end %>
+</main>

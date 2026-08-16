@@ -1,0 +1,69 @@
+<% title @collection.name %>
+
+<main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <div class="mb-4">
+    <%= link_to "← Collections", collections_path, class: "text-sm text-charcoal underline hover:no-underline" %>
+    <h1 class="font-display text-2xl font-bold text-charcoal mt-2"><%= @collection.name %></h1>
+    <% if @collection.description.present? %>
+      <p class="text-sm text-charcoal-300 mt-1"><%= @collection.description %></p>
+    <% end %>
+    <div class="text-xs text-charcoal-300 mt-1">
+      <%= @collection.sources.count %> sources · <%= @collection.visibility %>
+    </div>
+  </div>
+
+  <div class="mb-4 border-3 border-charcoal rounded-md bg-athens-400 p-3">
+    <h2 class="text-sm font-bold text-charcoal mb-2 flex items-center gap-1">
+      <%= phosphor_icon "share-network", class: "w-4 h-4" %>
+      Share
+    </h2>
+    <p class="text-xs text-charcoal-300 mb-2">Anyone with these links can view. The slug is the secret.</p>
+    <div class="space-y-2">
+      <div>
+        <label class="block text-xs font-bold text-charcoal mb-1">Manifest (Stray-to-Stray)</label>
+        <input type="text" readonly value="<%= request.base_url %><%= public_collection_path(slug: @collection.slug) %>/manifest"
+               class="w-full h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
+               onclick="this.select()">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-charcoal mb-1">RSS feed (any reader)</label>
+        <input type="text" readonly value="<%= request.base_url %><%= public_collection_path(slug: @collection.slug) %>/feed"
+               class="w-full h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
+               onclick="this.select()">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-charcoal mb-1">Public preview page</label>
+        <input type="text" readonly value="<%= request.base_url %><%= public_collection_path(slug: @collection.slug) %>"
+               class="w-full h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
+               onclick="this.select()">
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="font-display text-lg font-bold text-charcoal mb-3">Sources</h2>
+    <% if @collection.sources.any? %>
+      <div class="space-y-2">
+        <% @collection.sources.order(:name).each do |source| %>
+          <div class="border-3 border-charcoal rounded-md bg-athens-400 p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <%= source_icon(source, size: "w-8 h-8") %>
+              <span class="text-sm text-charcoal"><%= source.name %></span>
+            </div>
+            <%= link_to "View", source_path(source), class: "text-xs text-charcoal underline hover:no-underline" %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-charcoal-300">No sources yet. Edit the collection to add some.</p>
+    <% end %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= link_to "Edit", edit_collection_path(@collection),
+          class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal" %>
+    <%= action_link_to "Delete", collection_path(@collection), method: :delete,
+          confirm: "Delete this collection?",
+          class: "text-sm text-cerise underline hover:no-underline" %>
+  </div>
+</main>
