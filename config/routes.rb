@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   root "feed#index"
+  get "search/suggest", to: "search#suggest", as: :search_suggest
   get "about", to: "pages#index", as: :about
   get "privacy_and_terms", to: "pages#privacy_and_terms"
 
