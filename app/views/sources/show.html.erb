@@ -8,6 +8,7 @@
           <h1 class="font-display text-2xl font-bold text-charcoal"><%= @source.name %></h1>
           <div class="flex items-center gap-3 mt-1 text-xs text-charcoal-300">
             <span><%= @source.kind.humanize %></span>
+            <span>· <%= @total_count %> items</span>
             <% if @source.last_polled_at %>
               <span>· polled <%= time_ago(@source.last_polled_at) %></span>
             <% end %>
@@ -52,31 +53,48 @@
     <% end %>
   </div>
 
-  <% if @items.any? %>
-    <div class="grid grid-cols-12 gap-y-4 max-w-screen-xl mx-auto mb-4 gap-x-2"
-         data-controller="player">
-      <div class="col-span-12 hidden border-y-3 border-charcoal"
-           data-player-target="playerBox">
-        <p class="p-4 text-center text-charcoal-300">Loading...</p>
-      </div>
-
-      <%= render partial: "items/item", collection: @items, as: :item %>
+  <%= turbo_frame_tag dom_id(@source, :items) do %>
+    <div class="mb-4 flex items-center gap-2 flex-wrap">
+      <% [["1m", "Last month"], ["3m", "Last 3 months"], ["1y", "Last year"], ["all", "All time"]].each do |since, label| %>
+        <% active = (@since == since) %>
+        <%= link_to label, source_path(@source, since: since),
+              data: { turbo_frame: dom_id(@source, :items) },
+              class: "px-3 py-1 text-xs font-bold rounded-md border-3 border-charcoal #{active ? 'bg-mint text-charcoal' : 'bg-athens-400 text-charcoal hover:bg-athens-500'}" %>
+      <% end %>
     </div>
 
-    <% if @pagy.pages > 1 %>
-      <div class="mt-4 flex justify-center gap-2 text-sm">
-        <% if @pagy.previous %>
-          <%= link_to "← Newer", source_path(@source, page: @pagy.previous), class: "text-charcoal underline hover:no-underline" %>
-        <% end %>
-        <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
-        <% if @pagy.next %>
-          <%= link_to "Older →", source_path(@source, page: @pagy.next), class: "text-charcoal underline hover:no-underline" %>
-        <% end %>
+    <% if @since != "all" %>
+      <p class="text-xs text-charcoal-300 mb-2">
+        Showing <%= @pagy.count %> of <%= @total_count %> items
+      </p>
+    <% end %>
+
+    <% if @items.any? %>
+      <div class="grid grid-cols-12 gap-y-4 max-w-screen-xl mx-auto mb-4 gap-x-2"
+           data-controller="player">
+        <div class="col-span-12 hidden border-y-3 border-charcoal"
+             data-player-target="playerBox">
+          <p class="p-4 text-center text-charcoal-300">Loading...</p>
+        </div>
+
+        <%= render partial: "items/item", collection: @items, as: :item %>
+      </div>
+
+      <% if @pagy.pages > 1 %>
+        <div class="mt-4 flex justify-center gap-2 text-sm">
+          <% if @pagy.previous %>
+            <%= link_to "← Newer", source_path(@source, page: @pagy.previous, since: @since), class: "text-charcoal underline hover:no-underline" %>
+          <% end %>
+          <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
+          <% if @pagy.next %>
+            <%= link_to "Older →", source_path(@source, page: @pagy.next, since: @since), class: "text-charcoal underline hover:no-underline" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
+        <p class="text-charcoal-300">No items from this source yet.</p>
       </div>
     <% end %>
-  <% else %>
-    <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
-      <p class="text-charcoal-300">No items from this source yet.</p>
-    </div>
   <% end %>
 </div>

@@ -380,4 +380,42 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal 4, assigns(:total_count)
   end
+
+  test "show renders date filter pills" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    get source_path(source)
+
+    assert_response :success
+    assert_includes response.body, "Last month"
+    assert_includes response.body, "Last 3 months"
+    assert_includes response.body, "Last year"
+    assert_includes response.body, "All time"
+  end
+
+  test "show renders total item count in header" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    get source_path(source)
+
+    assert_response :success
+    assert_includes response.body, "3 items"
+  end
+
+  test "show renders showing X of Y when filter is active" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source, since: "1m")
+
+    assert_response :success
+    assert_includes response.body, "Showing 3 of 4 items"
+  end
 end
