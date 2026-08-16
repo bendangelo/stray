@@ -2,6 +2,8 @@
 
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+  # db:prepare creates and migrates every configured database
+  # (primary, cache, queue, cable) from their schema dumps.
   ./bin/rails db:prepare
   # Create/migrate full_search FTS tables (idempotent, safe on every boot)
   ./bin/rails full_search:prepare
