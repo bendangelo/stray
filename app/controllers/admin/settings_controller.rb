@@ -8,7 +8,7 @@ module Admin
       @setting = Setting.current
       permitted = setting_params
 
-      [:smtp_password, :ai_provider_api_key].each do |secret_field|
+      [ :smtp_password, :ai_provider_api_key ].each do |secret_field|
         permitted.delete(secret_field) if permitted[secret_field].blank?
       end
 
