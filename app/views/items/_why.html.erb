@@ -1,4 +1,4 @@
-<% follow = item.source.follows.find_by(user_id: current_user.id) if defined?(current_user) && current_user %>
+<% follow = item.source.follows.detect { |f| f.user_id == current_user.id } if defined?(current_user) && current_user %>
 <% if follow %>
   <% exp = ranking_explanation_for(item, follow) %>
   <details class="mt-1 text-xs text-charcoal-300">
