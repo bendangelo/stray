@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_194236) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_202428) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -50,6 +50,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_194236) do
   create_table "full_search_index_versions", primary_key: "table_name", id: :text, force: :cascade do |t|
     t.text "config_hash", null: false
     t.datetime "rebuilt_at", precision: nil, null: false
+  end
+
+  create_table "interactions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "item_id", null: false
+    t.integer "kind", null: false
+    t.integer "user_id", null: false
+    t.index ["item_id", "user_id", "kind"], name: "index_interactions_on_item_user_kind_unique", unique: true
+    t.index ["item_id"], name: "index_interactions_on_item_id"
+    t.index ["user_id", "created_at"], name: "index_interactions_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_interactions_on_user_id"
   end
 
   create_table "items", force: :cascade do |t|
@@ -180,6 +191,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_194236) do
   add_foreign_key "collections", "users"
   add_foreign_key "follows", "sources"
   add_foreign_key "follows", "users"
+  add_foreign_key "interactions", "items"
+  add_foreign_key "interactions", "users"
   add_foreign_key "items", "sources"
   add_foreign_key "items", "users"
   add_foreign_key "remote_collections", "sources"
