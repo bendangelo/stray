@@ -64,4 +64,18 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     assert_equal "row", player.evaluate_script("getComputedStyle(this).flexDirection"),
            "player should use side-by-side layout on desktop"
   end
+
+  test "feed grid shows 6 columns on xl viewport" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    # XL viewport (1280px+)
+    page.driver.browser.manage.window.resize_to(1536, 1024)
+
+    first_item = first("[data-player-target='video']")
+    classes = first_item[:class]
+
+    assert_includes classes, "xl:col-span-2",
+           "items should use xl:col-span-2 for 6-column density on large monitors"
+  end
 end
