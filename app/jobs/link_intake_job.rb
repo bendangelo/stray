@@ -1,33 +1,53 @@
 class LinkIntakeJob < ApplicationJob
   queue_as :default
 
+  NO_DURATION_UPDATE = %i[title url content_text content_html thumbnail_url published_at fetched_at].freeze
+
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
 
   discard_on Stray::YtDlp::Error do |job, error|
-    user_id = job.arguments.first
-    url = job.arguments.second
-    job.send(:broadcast_error, user_id, "Could not add #{url}: #{error.message}")
+    source_id = job.arguments.third
+    next unless source_id
+
+    source = Source.find_by(id: source_id)
+    next unless source
+
+    source.update!(last_error: error.message, last_error_at: Time.current)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
   end
 
-  def perform(user_id, url)
-    @user_id = user_id
+  def perform(user_id, url, source_id = nil)
+    @user = User.find(user_id)
     @url = url
+    @source = source_id && Source.find_by(id: source_id, user_id: user_id)
 
-    content, source = extract_and_create
-
-    broadcast_success(source, content)
+    extract_and_create
   end
 
   private
 
   def extract_and_create
-    if youtube_channel_url?
+    if @source
+      extract_for_existing_source
+    elsif youtube_channel_url?
       resolve_youtube_channel
     elsif youtube_video_url?
       extract_youtube_video
     else
       extract_generic_video
     end
+  end
+
+  def extract_for_existing_source
+    extractor = Stray::ExtractorRegistry.find_for_source(@source)
+    contents = Array(extractor.extract_feed(@source.url))
+    create_items(@source, contents)
+    enqueue_full_poll(@source)
   end
 
   def youtube_channel_url?
@@ -113,21 +133,9 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def create_source(kind:, url:, external_id:, name:, channel_url:)
-    source = Source.find_or_create_by!(
-      user_id: @user_id,
-      external_id: external_id,
-      kind: kind
-    ) do |s|
-      s.url = url
-      s.name = name
-      s.icon_url = nil
-      s.next_crawl_at = 1.hour.from_now
-    end
+    return @source if @source
 
-    source.update!(url: url, name: name)
-
-    Follow.find_or_create_by!(user_id: @user_id, source_id: source.id)
-    source
+    Source.follow!(@user, kind: kind, url: url, external_id: external_id, name: name)
   end
 
   def enqueue_full_poll(source)
@@ -137,10 +145,28 @@ class LinkIntakeJob < ApplicationJob
   def create_items(source, contents)
     return if contents.empty?
 
-    rows = contents.map do |content|
+    with_duration, without_duration = contents.partition { |c| c.duration.present? }
+
+    id_by_external_id = {}
+    id_by_external_id.merge!(upsert_rows(source, with_duration)) if with_duration.any?
+    id_by_external_id.merge!(upsert_rows(source, without_duration, update_only: NO_DURATION_UPDATE)) if without_duration.any?
+
+    missing_duration_ids = []
+    contents.each do |content|
+      item_id = id_by_external_id[content.external_id]
+      apply_extractor_tags(source, item_id, content)
+      EmbeddingJob.perform_later("Item", item_id)
+      missing_duration_ids << item_id if content.duration.blank?
+    end
+
+    DurationEnrichmentJob.perform_later(source.id, missing_duration_ids) if missing_duration_ids.any?
+  end
+
+  def upsert_rows(source, batch, update_only: nil)
+    rows = batch.map do |content|
       {
         source_id: source.id,
-        user_id: @user_id,
+        user_id: @user.id,
         external_id: content.external_id,
         title: content.title,
         url: content.url,
@@ -156,15 +182,9 @@ class LinkIntakeJob < ApplicationJob
       }
     end
 
-    Item.upsert_all(rows, unique_by: [ :source_id, :external_id ], returning: :id).then do |result|
-      item_ids = result.to_a.map { |row| row["id"] }
-
-      contents.each_with_index do |content, i|
-        item_id = item_ids[i]
-        apply_extractor_tags(source, item_id, content)
-        EmbeddingJob.perform_later("Item", item_id)
-      end
-    end
+    opts = { unique_by: [ :source_id, :external_id ], returning: [ :id, :external_id ] }
+    opts[:update_only] = update_only if update_only
+    Item.upsert_all(rows, **opts).to_a.each_with_object({}) { |row, h| h[row["external_id"]] = row["id"] }
   end
 
   def apply_extractor_tags(source, item_id, content)
@@ -172,31 +192,9 @@ class LinkIntakeJob < ApplicationJob
 
     item = Item.find(item_id)
     content.tags.each do |name|
-      tag = Tag.find_or_create_by!(user_id: @user_id, name: name)
+      tag = Tag.find_or_create_by!(user_id: @user.id, name: name)
       Tagging.find_or_create_by!(item: item, tag: tag, source: :user)
       EmbeddingJob.perform_later("Tag", tag.id) if tag.embedding.nil?
     end
-  end
-
-  def broadcast_success(source, contents)
-    count = Array(contents).size
-    Turbo::StreamsChannel.broadcast_replace_to(
-      "user_#{@user_id}_intake",
-      target: "intake_status",
-      html: "<div id=\"intake_status\" class=\"rounded-lg border p-4\">\n" \
-            "  <p class=\"font-semibold\">Following #{ERB::Util.html_escape(source.display_name)}</p>\n" \
-            "  <p class=\"text-sm text-gray-500\">#{count} new video#{'s' if count != 1}</p>\n" \
-            "</div>"
-    )
-  end
-
-  def broadcast_error(user_id, message)
-    Turbo::StreamsChannel.broadcast_replace_to(
-      "user_#{user_id}_intake",
-      target: "intake_status",
-      html: "<div id=\"intake_status\" class=\"rounded-lg border border-red-500 p-4\">\n" \
-            "  <p class=\"text-red-700\">#{ERB::Util.html_escape(message)}</p>\n" \
-            "</div>"
-    )
   end
 end

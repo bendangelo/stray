@@ -1,6 +1,8 @@
 class SourcePollJob < ApplicationJob
   queue_as :polling
 
+  NO_DURATION_UPDATE = %i[title url content_text content_html thumbnail_url published_at fetched_at].freeze
+
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
 
   discard_on Stray::YtDlp::Error do |job, error|
@@ -126,7 +128,28 @@ class SourcePollJob < ApplicationJob
   def upsert_items(source, contents)
     return if contents.empty?
 
-    rows = contents.map do |content|
+    with_duration, without_duration = contents.partition { |c| c.duration.present? }
+
+    id_by_external_id = {}
+    id_by_external_id.merge!(upsert_rows(source, with_duration)) if with_duration.any?
+    id_by_external_id.merge!(upsert_rows(source, without_duration, update_only: NO_DURATION_UPDATE)) if without_duration.any?
+
+    missing_thumb_ids = []
+    missing_duration_ids = []
+    contents.each do |content|
+      item_id = id_by_external_id[content.external_id]
+      apply_extractor_tags(source, item_id, content)
+      EmbeddingJob.perform_later("Item", item_id)
+      missing_thumb_ids << item_id if content.thumbnail_url.blank?
+      missing_duration_ids << item_id if content.duration.blank?
+    end
+
+    ThumbnailEnrichmentJob.perform_later(source.id, missing_thumb_ids) if missing_thumb_ids.any?
+    DurationEnrichmentJob.perform_later(source.id, missing_duration_ids) if missing_duration_ids.any?
+  end
+
+  def upsert_rows(source, batch, update_only: nil)
+    rows = batch.map do |content|
       {
         source_id: source.id,
         user_id: source.user_id,
@@ -145,19 +168,9 @@ class SourcePollJob < ApplicationJob
       }
     end
 
-    Item.upsert_all(rows, unique_by: [ :source_id, :external_id ], returning: :id).then do |result|
-      item_ids = result.to_a.map { |row| row["id"] }
-
-      missing_thumb_ids = []
-      contents.each_with_index do |content, i|
-        item_id = item_ids[i]
-        apply_extractor_tags(source, item_id, content)
-        EmbeddingJob.perform_later("Item", item_id)
-        missing_thumb_ids << item_id if content.thumbnail_url.blank?
-      end
-
-      ThumbnailEnrichmentJob.perform_later(source.id, missing_thumb_ids) if missing_thumb_ids.any?
-    end
+    opts = { unique_by: [ :source_id, :external_id ], returning: [ :id, :external_id ] }
+    opts[:update_only] = update_only if update_only
+    Item.upsert_all(rows, **opts).to_a.each_with_object({}) { |row, h| h[row["external_id"]] = row["id"] }
   end
 
   def apply_extractor_tags(source, item_id, content)

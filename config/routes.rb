@@ -11,7 +11,11 @@ Rails.application.routes.draw do
   get "about", to: "pages#index", as: :about
   get "privacy_and_terms", to: "pages#privacy_and_terms"
 
-  resources :links, only: [ :create ]
+  resources :links, only: [ :create ] do
+    collection do
+      post :bulk_create
+    end
+  end
   resources :collections
   get "c/:slug", to: "collections#public_show", as: :public_collection
   get "c/:slug/manifest", to: "collections#manifest", as: :collection_manifest, defaults: { format: :json }

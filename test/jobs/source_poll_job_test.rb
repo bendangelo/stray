@@ -233,6 +233,55 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_equal "boom", @source.last_error
   end
 
+  test "does not clobber existing duration when re-poll returns nil duration" do
+    item = @source.items.create!(
+      user: @user, external_id: "durvid1", title: "With Duration",
+      url: "https://example.com/watch?v=durvid1", published_at: 1.day.ago,
+      duration: 300
+    )
+
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=durvid1",
+        title: "Updated Title", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: 1.day.ago, external_id: "durvid1",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    assert_equal 300, item.reload.duration
+    assert_equal "Updated Title", item.reload.title
+  end
+
+  test "enqueues DurationEnrichmentJob for items missing duration" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=nodur1",
+        title: "No Duration", content_text: "desc", content_html: nil,
+        thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
+        external_id: "nodur1", duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        assert_enqueued_with(job: DurationEnrichmentJob) do
+          SourcePollJob.perform_now(@source.id)
+        end
+      end
+    end
+  end
+
   test "enqueues ThumbnailEnrichmentJob for items missing thumbnails" do
     contents = [
       Stray::ExtractedContent.new(

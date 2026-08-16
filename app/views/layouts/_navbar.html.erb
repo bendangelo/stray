@@ -35,17 +35,13 @@
         <% end %>
       </div>
 
-      <%= turbo_stream_from "user_#{current_user.id}_intake" %>
-
-      <%= form_with url: links_path, class: "flex gap-1 shrink-0", data: { turbo_stream: true } do |form| %>
+      <%= form_with url: links_path, class: "flex gap-1 shrink-0" do |form| %>
         <%= form.url_field :url,
           placeholder: "Paste a link...",
           class: "h-10 w-24 md:w-36 lg:w-64 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
         <%= form.submit "+",
           class: "h-10 w-10 bg-carrot-500 hover:bg-carrot-600 text-white font-bold rounded-md cursor-pointer border-3 border-charcoal shrink-0" %>
       <% end %>
-
-      <span id="intake_status" class="text-charcoal text-sm shrink-0"></span>
 
       <div class="flex items-center gap-2 text-sm shrink-0">
         <span class="text-charcoal hidden sm:inline"><%= current_user.username %></span>

@@ -28,6 +28,20 @@ class Source < ApplicationRecord
     end
   end
 
+  def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, active: true)
+    source = find_or_create_by!(user: user, external_id: external_id, kind: kind) do |s|
+      s.url = url
+      s.name = name
+      s.icon_url = icon_url
+      s.next_crawl_at = 1.hour.from_now
+      s.active = active
+    end
+    source.update!(url: url, name: name) if name.present?
+    Follow.find_or_create_by!(user: user, source: source)
+    source
+  end
+
+
   def recalculate_next_crawl!
     if poll_interval.present? && poll_interval.positive?
       update!(next_crawl_at: Time.current + poll_interval.seconds)

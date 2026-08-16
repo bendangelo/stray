@@ -117,44 +117,51 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal 1, source.items.count
   end
 
-  test "broadcasts success via Turbo Stream" do
-    content = Stray::ExtractedContent.new(
-      url: "https://bitchute.com/video/v1",
-      title: "Video", content_text: nil, content_html: nil,
-      thumbnail_url: nil, published_at: 1.day.ago,
-      external_id: "v1", duration: nil,
-      creator_identity: Stray::CreatorIdentity.new(
-        name: "Chan", url: "https://bitchute.com/channel/abc",
-        external_id: "abc", thumbnail_url: nil
-      ),
-      tags: []
-    )
+  test "does not create a duplicate source when extraction fails with a pre-created source" do
+    source = Source.create!(user: @user, kind: :video_channel,
+      url: "https://bitchute.com/channel/abc", external_id: "abc")
+    Follow.create!(user: @user, source: source)
 
-    extractor = Minitest::Mock.new
-    extractor.expect(:extract, content, [ "https://bitchute.com/video/v1" ])
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "failed" }
 
-    broadcast_called = false
-    Turbo::StreamsChannel.stub(:broadcast_replace_to, ->(*) { broadcast_called = true }) do
-      Stray::ExtractorRegistry.stub(:find_for, extractor) do
-        LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/v1")
-      end
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/channel/abc", source.id)
     end
 
-    assert broadcast_called
+    assert_equal 1, Source.where(external_id: "abc", user_id: @user.id).count
   end
 
-  test "broadcasts error on extraction failure" do
-    failing = Object.new
-    failing.define_singleton_method(:extract) { |_url| raise Stray::YtDlp::ExtractionFailed, "failed" }
+  test "uses pre-created source when source_id is provided" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCpre",
+      external_id: "UCpre")
+    Follow.create!(user: @user, source: source)
 
-    broadcast_called = false
-    Turbo::StreamsChannel.stub(:broadcast_replace_to, ->(*) { broadcast_called = true }) do
-      Stray::ExtractorRegistry.stub(:find_for, failing) do
-        LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/v1")
-      end
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://www.youtube.com/watch?v=pre1",
+        title: "Pre Video", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: 1.day.ago,
+        external_id: "pre1", duration: 120,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Chan", url: "https://www.youtube.com/channel/UCpre",
+          external_id: "UCpre", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, extractor) do
+      LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/channel/UCpre", source.id)
     end
 
-    assert broadcast_called
+    assert_equal 1, Source.where(external_id: "UCpre", user_id: @user.id).count
+    assert_equal 1, source.items.count
+    assert_equal "Pre Video", source.items.first.title
   end
 
   test "applies extractor tags from single video" do

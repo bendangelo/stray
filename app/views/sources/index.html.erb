@@ -25,6 +25,22 @@
   <% end %>
 
   <%= turbo_frame_tag "sources_list" do %>
+    <details class="mb-4 border-3 border-charcoal rounded-md bg-athens-400">
+      <summary class="cursor-pointer px-4 py-2 text-sm font-bold text-charcoal flex items-center gap-2">
+        <%= phosphor_icon "plus", class: "w-4 h-4" %>
+        Bulk add links
+      </summary>
+      <div class="p-4 border-t-3 border-charcoal">
+        <%= form_with url: bulk_create_links_path, class: "flex flex-col gap-2" do |form| %>
+          <%= form.text_area :urls, rows: 6,
+                placeholder: "One URL per line.\nYouTube videos/channels, RSS feeds, other Stray /c/:slug or manifest.json URLs.",
+                class: "w-full px-3 py-2 bg-athens-200 border-2 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+          <%= form.submit "Add all",
+                class: "self-start bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+        <% end %>
+      </div>
+    </details>
+
     <% if @active_sources.any? %>
       <div class="space-y-3 mb-8">
         <%= render partial: "sources/source", collection: @active_sources, as: :source %>
