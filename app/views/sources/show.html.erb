@@ -61,20 +61,7 @@
     </div>
   </div>
 
-  <div class="mb-4 flex items-center gap-3 border-3 border-charcoal rounded-md bg-athens-400 p-3">
-    <span id="<%= dom_id(@source, :weight) %>" class="text-sm text-charcoal">Weight: <%= @follow.weight %></span>
-    <% if @follow.weight != 1.0 %>
-      <%= action_link_to "Reset", source_path(@source), method: :patch, params: { reset_weight: true },
-        data: { turbo_stream: true },
-        class: "text-sm text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
-    <% end %>
-    <% if @follow.muted %>
-      <span class="text-sm text-cerise">· muted</span>
-      <%= action_link_to "Unmute", unmute_source_path(@source), method: :post,
-        data: { turbo_stream: true },
-        class: "text-sm text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
-    <% end %>
-  </div>
+  <%= render "sources/weight_bar", source: @source, follow: @follow %>
 
   <%= turbo_frame_tag dom_id(@source, :items) do %>
     <div class="mb-4 flex items-center gap-2 flex-wrap">

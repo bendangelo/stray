@@ -1,3 +1,3 @@
-<%= turbo_stream.replace dom_id(source, :weight) do %>
-  <span id="<%= dom_id(source, :weight) %>" class="text-sm text-charcoal">Weight: <%= source.follows.find_by(user_id: current_user.id)&.weight %></span>
+<%= turbo_stream.replace dom_id(source, :weight_bar) do %>
+  <%= render "sources/weight_bar", source: source, follow: source.follows.find_by(user_id: current_user.id) %>
 <% end %>
