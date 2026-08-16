@@ -41,4 +41,21 @@ class TaggingFlowTest < ApplicationSystemTestCase
     click_on "Update tag"
     assert_text "ruby-renamed"
   end
+
+  test "tag autocomplete shows matching tags and creates new tag" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    first("[data-controller='dropdown'] [data-dropdown-target='button']").click
+    click_on "Add tag"
+
+    fill_in "tag name", with: "ru" # should match "ruby" fixture tag
+
+    within "[data-tag-input-target='results']" do
+      assert_text "ruby"
+      find("li", text: "ruby").click
+    end
+
+    assert_selector "[data-tag-input-target='input']", visible: false
+  end
 end
