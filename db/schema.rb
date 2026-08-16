@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_193807) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_194146) do
+  create_table "collection_memberships", force: :cascade do |t|
+    t.integer "collection_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "source_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["collection_id", "source_id"], name: "index_collection_memberships_on_collection_id_and_source_id", unique: true
+    t.index ["collection_id"], name: "index_collection_memberships_on_collection_id"
+    t.index ["source_id"], name: "index_collection_memberships_on_source_id"
+  end
+
   create_table "collections", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -147,6 +157,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_193807) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "collection_memberships", "collections"
+  add_foreign_key "collection_memberships", "sources"
   add_foreign_key "collections", "users"
   add_foreign_key "follows", "sources"
   add_foreign_key "follows", "users"
