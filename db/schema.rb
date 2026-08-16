@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_175852) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_193807) do
+  create_table "collections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["user_id", "slug"], name: "index_collections_on_user_id_and_slug", unique: true
+    t.index ["user_id"], name: "index_collections_on_user_id"
+  end
+
   create_table "data_migrations", primary_key: "version", id: :string, force: :cascade do |t|
   end
 
@@ -135,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_175852) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "collections", "users"
   add_foreign_key "follows", "sources"
   add_foreign_key "follows", "users"
   add_foreign_key "items", "sources"

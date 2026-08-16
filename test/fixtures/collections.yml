@@ -1,0 +1,12 @@
+econ:
+  user: one
+  name: "Economics Blogs"
+  description: "Curated econ feeds"
+  visibility: 0
+  slug: "econblogssecrettoken1234"
+
+private_one:
+  user: one
+  name: "Private Notes"
+  visibility: 1
+  slug: "privatenotesecrettoken12345"
