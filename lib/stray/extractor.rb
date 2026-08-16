@@ -27,3 +27,5 @@ module Stray
     end
   end
 end
+
+require "stray/extractor/feed_result"
