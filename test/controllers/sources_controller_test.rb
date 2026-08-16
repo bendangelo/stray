@@ -59,4 +59,55 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get sources_path
     assert_redirected_to new_session_path
   end
+
+  test "new renders add source form" do
+    sign_in_as(users(:one))
+    get new_source_path
+
+    assert_response :success
+    assert_includes response.body, "Add source"
+  end
+
+  test "new requires authentication" do
+    get new_source_path
+    assert_redirected_to new_session_path
+  end
+
+  test "create with valid params creates source and follow and enqueues poll job" do
+    sign_in_as(users(:one))
+    assert_enqueued_with(job: SourcePollJob) do
+      post sources_path, params: {
+        source: {
+          url: "https://example.com/feed.xml",
+          kind: "rss_feed",
+          name: "My Feed",
+          active: "1"
+        }
+      }
+    end
+
+    assert_redirected_to sources_path
+    source = Source.find_by(url: "https://example.com/feed.xml")
+    assert source
+    assert_equal "My Feed", source.name
+    assert Follow.exists?(user_id: users(:one).id, source_id: source.id)
+  end
+
+  test "create with invalid params re-renders new with errors" do
+    sign_in_as(users(:one))
+    post sources_path, params: {
+      source: {
+        url: "",
+        kind: "rss_feed"
+      }
+    }
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "can't be blank"
+  end
+
+  test "create requires authentication" do
+    post sources_path, params: { source: { url: "https://example.com", kind: "rss_feed" } }
+    assert_redirected_to new_session_path
+  end
 end
