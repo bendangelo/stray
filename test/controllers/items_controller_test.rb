@@ -133,4 +133,26 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     follow.reload
     assert_equal first_weight, follow.weight
   end
+
+  test "opening player creates an opened interaction" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    assert_difference -> { Interaction.count }, 1 do
+      get player_item_path(item)
+    end
+
+    assert_response :success
+    assert Interaction.exists?(user: users(:one), item: item, kind: "opened")
+  end
+
+  test "second open of same player does not create a second interaction" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    get player_item_path(item)
+    assert_difference -> { Interaction.count }, 0 do
+      get player_item_path(item)
+    end
+  end
 end
