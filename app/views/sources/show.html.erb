@@ -1,3 +1,5 @@
+<% title @source.name %>
+
 <div class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
   <%= turbo_stream_from "user_#{current_user.id}_sources" %>
   <div class="mb-4">

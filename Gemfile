@@ -26,6 +26,7 @@ gem "bcrypt", "~> 3.1.7"
 gem "full_search", "~> 0.4"
 
 gem "pagy"
+gem "meta-tags"
 
 # Phosphor icon set as an inline-SVG view helper (no asset pipeline coupling)
 gem "phosphor_icons"

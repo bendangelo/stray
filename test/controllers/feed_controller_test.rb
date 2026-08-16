@@ -10,7 +10,7 @@ class FeedControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     get root_path
     assert_response :success
-    assert_select "title", "Stray"
+    assert_select "title", "Feed | Stray"
   end
 
   test "shows items from followed sources, reverse chronological" do

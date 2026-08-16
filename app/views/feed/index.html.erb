@@ -1,3 +1,13 @@
+<% if @tag %>
+  <% title "##{@tag}" %>
+  <% description "Items tagged ##{@tag} in your Stray feed." %>
+<% elsif @q.present? %>
+  <% title %(Search: "#{@q}") %>
+  <% description %(Search results for "#{@q}" in your Stray feed.) %>
+<% else %>
+  <% title "Feed" %>
+<% end %>
+
 <% content_for :tag_bar do %>
   <%= render "shared/tag_bar" %>
 <% end %>
