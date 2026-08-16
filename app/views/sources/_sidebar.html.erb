@@ -1,0 +1,34 @@
+<aside id="sidebar"
+       class="fixed inset-y-0 left-0 z-40 w-64 border-r-3 border-charcoal bg-champagne overflow-y-auto transition-transform duration-200 -translate-x-full md:translate-x-0 md:static md:w-52 lg:w-60 md:z-0"
+       data-sidebar-target="sidebar">
+  <div class="p-4">
+    <h2 class="font-display text-sm font-bold text-charcoal mb-3 uppercase tracking-wide">Sources</h2>
+
+    <div class="space-y-1">
+      <% if @sources&.any? %>
+        <% unseen_counts = Item.where(source_id: @sources.map(&:id), state: :unseen).group(:source_id).count %>
+      <% else %>
+        <% unseen_counts = {} %>
+      <% end %>
+
+      <% @sources&.each do |source| %>
+        <%= link_to source_path(source), class: "flex items-center gap-2 p-2 rounded-md hover:bg-athens-400" do %>
+          <img src="<%= source_icon_url(source) || missing_thumb %>"
+               alt=""
+               class="w-8 h-8 rounded border-2 border-charcoal object-cover shrink-0"
+               loading="lazy">
+
+          <span class="flex-1 text-sm text-charcoal truncate"><%= source.name %></span>
+
+          <% if unseen_counts[source.id].to_i > 0 %>
+            <span class="text-xs font-bold text-champagne bg-carrot-500 px-1.5 py-0.5 rounded-full">
+              <%= unseen_counts[source.id] %>
+            </span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%= link_to "All Sources", sources_path, class: "block mt-4 text-sm text-charcoal underline hover:no-underline" %>
+  </div>
+</aside>
