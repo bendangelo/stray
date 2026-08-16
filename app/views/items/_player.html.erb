@@ -1,4 +1,4 @@
-<div class="flex relative py-10 max-w-screen-lg mx-auto">
+<div class="flex flex-col lg:flex-row relative py-6 lg:py-10 px-3 max-w-screen-lg mx-auto">
   <% embed = embed_url(item) %>
   <% if embed %>
     <iframe src="<%= embed %>"
@@ -9,11 +9,11 @@
             allowfullscreen>
     </iframe>
   <% elsif item.thumbnail_url.present? %>
-    <img class="object-cover lg:mx-6 lg:w-1/2 h-72 lg:h-96 rounded-md border-3 border-charcoal"
+    <img class="object-cover w-full lg:mx-6 lg:w-1/2 h-72 lg:h-96 rounded-md border-3 border-charcoal"
          src="<%= item.thumbnail_url %>" alt="<%= item.title %>">
   <% end %>
 
-  <div class="flex-1 ml-3 mr-9">
+  <div class="flex-1 mt-4 lg:mt-0 lg:ml-3 lg:mr-12">
     <div class="flex items-start gap-2 mb-1">
       <a class="block text-lg font-semibold hover:underline md:text-xl flex-1 min-w-0"
          href="<%= item.url %>" target="_blank" rel="noopener">
@@ -51,12 +51,12 @@
   </div>
 
   <button type="button" aria-label="Close"
-          class="absolute top-10 right-0 w-6 h-6"
+          class="absolute top-2 right-2 w-6 h-6 z-10"
           data-action="click->player#close">
     <%= phosphor_icon "x", class: "text-charcoal hover:text-carrot w-full h-full" %>
   </button>
 
-  <div class="flex absolute bottom-3 -right-3">
+  <div class="flex absolute bottom-3 right-3">
     <button type="button" aria-label="Previous" id="video-prev"
             class="w-10 h-10"
             data-action="click->player#prev">

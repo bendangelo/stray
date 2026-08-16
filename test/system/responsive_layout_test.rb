@@ -31,4 +31,39 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     assert_includes wrapper_classes, "min-h-screen",
            "content wrapper should have min-h-screen so footer pins to viewport bottom"
   end
+
+  test "inline player stacks media above content on mobile" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    # Resize to mobile viewport
+    resize_to_mobile
+
+    first("[data-player-target='video'] a[data-action*='player#toggle']").click
+
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    # On mobile, the player should use flex-col (stacked), not lg:flex-row (side-by-side)
+    player = find("[data-player-target='playerBox'] > div")
+    player_classes = player[:class]
+    assert_includes player_classes, "flex-col",
+           "player should stack media/content vertically on mobile"
+  end
+
+  test "inline player uses side-by-side layout on desktop" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    # Desktop viewport (default 1400px)
+    resize_to_desktop
+
+    first("[data-player-target='video'] a[data-action*='player#toggle']").click
+
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    player = find("[data-player-target='playerBox'] > div")
+    player_classes = player[:class]
+    assert_includes player_classes, "lg:flex-row",
+           "player should use side-by-side layout on desktop"
+  end
 end
