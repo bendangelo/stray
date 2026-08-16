@@ -22,37 +22,39 @@
   </head>
 
   <body class="bg-champagne overflow-x-hidden">
-    <div data-controller="sidebar">
-      <%= render "layouts/navbar" %>
+    <div class="min-h-screen flex flex-col">
+      <div data-controller="sidebar" class="flex-1">
+        <%= render "layouts/navbar" %>
 
-      <%= yield :tag_bar %>
+        <%= yield :tag_bar %>
 
-      <% if content_for?(:muted_toggle) %>
-        <div class="container mx-auto px-4 pt-2 max-w-screen-xl">
-          <%= yield :muted_toggle %>
-        </div>
-      <% end %>
-
-      <div class="flex">
-        <% if authenticated? %>
-          <%= render "sources/sidebar" %>
-          <div data-sidebar-target="backdrop"
-               class="hidden fixed inset-0 bg-charcoal/50 z-30 md:hidden"
-               data-action="click->sidebar#close"></div>
+        <% if content_for?(:muted_toggle) %>
+          <div class="container mx-auto px-4 pt-2 max-w-screen-xl">
+            <%= yield :muted_toggle %>
+          </div>
         <% end %>
 
-        <main class="flex-1 min-w-0">
-          <% if flash[:alert] %>
-            <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-cerise text-cerise text-sm"><%= flash[:alert] %></div>
+        <div class="flex">
+          <% if authenticated? %>
+            <%= render "sources/sidebar" %>
+            <div data-sidebar-target="backdrop"
+                 class="hidden fixed inset-0 bg-charcoal/50 z-30 md:hidden"
+                 data-action="click->sidebar#close"></div>
           <% end %>
-          <% if flash[:notice] %>
-            <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-mint-500 text-mint-700 text-sm"><%= flash[:notice] %></div>
-          <% end %>
-          <%= yield %>
-        </main>
-      </div>
-    </div>
 
-    <%= render "layouts/footer" %>
+          <main class="flex-1 min-w-0">
+            <% if flash[:alert] %>
+              <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-cerise text-cerise text-sm"><%= flash[:alert] %></div>
+            <% end %>
+            <% if flash[:notice] %>
+              <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-mint-500 text-mint-700 text-sm"><%= flash[:notice] %></div>
+            <% end %>
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+
+      <%= render "layouts/footer" %>
+    </div>
   </body>
 </html>
