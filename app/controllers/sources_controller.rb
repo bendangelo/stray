@@ -13,7 +13,7 @@ class SourcesController < ApplicationController
     @since = params[:since].presence || "all"
     cutoff = since_cutoff(@since)
     @since = "all" unless cutoff
-    scope = @source.items.order(published_at: :desc)
+    scope = @source.items.includes(source: :follows).order(published_at: :desc)
     scope = scope.where("published_at >= ?", cutoff) if cutoff
     @total_count = @source.items.count
     @pagy, @items = pagy(scope, limit: 20)
