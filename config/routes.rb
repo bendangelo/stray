@@ -12,7 +12,11 @@ Rails.application.routes.draw do
   get "privacy_and_terms", to: "pages#privacy_and_terms"
 
   resources :links, only: [ :create ]
-  resources :sources
+  resources :sources do
+    member do
+      post :pull
+    end
+  end
   resources :tags do
     member do
       patch :merge

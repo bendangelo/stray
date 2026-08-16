@@ -419,4 +419,29 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Showing 3 of 4 items"
   end
+
+  test "pull enqueues SourcePollJob and redirects to the source" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    assert_enqueued_with(job: SourcePollJob, args: [ source.id ]) do
+      post pull_source_path(source)
+    end
+
+    assert_redirected_to source_path(source)
+    assert_includes flash[:notice], "Pull started"
+  end
+
+  test "pull returns 404 for a source the user does not follow" do
+    sign_in_as(users(:two))
+    assert_no_enqueued_jobs only: SourcePollJob do
+      post pull_source_path(sources(:bitchute))
+    end
+    assert_response :not_found
+  end
+
+  test "pull requires authentication" do
+    post pull_source_path(sources(:youtube))
+    assert_redirected_to new_session_path
+  end
 end

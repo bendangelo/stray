@@ -1,14 +1,14 @@
 <%= turbo_frame_tag dom_id(source) do %>
-  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-5 hover:bg-athens-500
+  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-4 hover:bg-athens-500
               <%= " opacity-50" unless source.active? %>">
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex items-start gap-3 min-w-0">
-        <%= source_icon(source) %>
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4 min-w-0">
+        <%= source_icon(source, size: "w-10 h-10") %>
         <div class="min-w-0">
           <%= link_to source_path(source), class: "block", data: { turbo_frame: "_top" } do %>
-            <span class="font-display font-bold text-charcoal"><%= source.name %></span>
+            <span class="font-display font-bold text-charcoal truncate"><%= source.name %></span>
           <% end %>
-          <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-2 mt-1">
+          <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-2 mt-1.5">
             <span><%= source.kind.humanize %></span>
             <% if source.items.unseen.any? %>
               <span class="bg-mint text-charcoal text-[10px] font-bold px-1.5 rounded-full">
@@ -29,21 +29,28 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-1 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
+        <%= button_to pull_source_path(source), method: :post, title: "Pull now",
+              class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold",
+              form: { data: { turbo_frame: "_top" } } do %>
+          <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
+          Pull
+        <% end %>
         <% if source.active? %>
-          <%= button_to "Pause", source_path(source), method: :patch, params: { source: { active: false } },
-                form: { data: { turbo_frame: "_top" } },
+          <%= action_link_to "Pause", source_path(source), method: :patch, params: { source: { active: false } },
+                data: { turbo_frame: "_top" },
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% else %>
-          <%= button_to "Unpause", source_path(source), method: :patch, params: { source: { active: true } },
-                form: { data: { turbo_frame: "_top" } },
+          <%= action_link_to "Unpause", source_path(source), method: :patch, params: { source: { active: true } },
+                data: { turbo_frame: "_top" },
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% end %>
         <%= link_to "Edit", edit_source_path(source),
               class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none",
               data: { turbo_frame: "_top" } %>
-        <%= button_to "Delete", source_path(source), method: :delete,
-              form: { data: { turbo_confirm: "Delete this source and all its items?", turbo_frame: "_top" } },
+        <%= action_link_to "Delete", source_path(source), method: :delete,
+              confirm: "Delete this source and all its items?",
+              data: { turbo_frame: "_top" },
               class: "text-xs text-cerise underline hover:no-underline cursor-pointer bg-transparent border-none" %>
       </div>
     </div>

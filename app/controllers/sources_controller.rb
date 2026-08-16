@@ -46,6 +46,12 @@ class SourcesController < ApplicationController
     end
   end
 
+  def pull
+    source = scoped_source
+    SourcePollJob.perform_later(source.id)
+    redirect_back_or_to source_path(source), notice: "Pull started for #{source.name}."
+  end
+
   def edit
     @source = scoped_source
   end

@@ -20,12 +20,12 @@
       </div>
     <% else %>
       <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center mb-8">
-        <p class="text-charcoal-300">No sources yet. Paste a link in the navbar or click "Add source".</p>
+        <p class="text-charcoal-300">No active sources yet. Paste a link in the navbar or click "Add source".</p>
       </div>
     <% end %>
 
     <% if @inactive_sources.any? %>
-      <h2 class="font-display text-lg font-bold text-charcoal-300 mb-2">Paused</h2>
+      <h2 class="font-display text-lg font-bold text-charcoal-300 mb-3 mt-8">Paused</h2>
       <div class="space-y-3">
         <%= render partial: "sources/source", collection: @inactive_sources, as: :source %>
       </div>

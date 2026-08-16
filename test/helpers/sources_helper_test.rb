@@ -20,4 +20,25 @@ class SourcesHelperTest < ActionView::TestCase
     source = Source.new(url: "not-a-url", icon_url: nil)
     assert_nil source_icon_url(source)
   end
+
+  test "source_icon renders image with icon_url when present" do
+    source = Source.new(url: "https://example.com", name: "Example", icon_url: "https://example.com/icon.png")
+    html = source_icon(source)
+    assert_includes html, "https://example.com/icon.png"
+    assert_match(/<img/, html)
+  end
+
+  test "source_icon falls back to favicon image when icon_url is nil" do
+    source = Source.new(url: "https://bitchute.com/channel/feedbc", name: "BC Channel", icon_url: nil)
+    html = source_icon(source)
+    assert_includes html, "https://icons.duckduckgo.com/ip3/bitchute.com.ico"
+    assert_match(/<img/, html)
+  end
+
+  test "source_icon renders letter avatar for invalid URLs" do
+    source = Source.new(url: "not-a-url", name: "B", icon_url: nil)
+    html = source_icon(source)
+    assert_includes html, "B"
+    refute_match(/<img/, html)
+  end
 end
