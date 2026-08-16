@@ -1,7 +1,7 @@
 class Source < ApplicationRecord
   belongs_to :user
   has_many :items, dependent: :destroy
-  has_one :follow, dependent: :destroy
+  has_many :follows, dependent: :destroy
 
   enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3 }
 

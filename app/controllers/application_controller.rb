@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
   private
 
   def set_sidebar_sources
-    @sources = Source.joins(:follow)
+    @sources = Source.joins(:follows)
       .where(follows: { user_id: current_user.id })
       .where(active: true)
       .order(:name)

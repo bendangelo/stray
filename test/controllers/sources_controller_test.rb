@@ -110,4 +110,98 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     post sources_path, params: { source: { url: "https://example.com", kind: "rss_feed" } }
     assert_redirected_to new_session_path
   end
+
+  test "edit renders edit form for followed source" do
+    sign_in_as(users(:one))
+    get edit_source_path(sources(:youtube))
+
+    assert_response :success
+    assert_includes response.body, "Edit source"
+    assert_includes response.body, "Test Channel"
+  end
+
+  test "edit returns 404 for source the user does not follow" do
+    sign_in_as(users(:two))
+    get edit_source_path(sources(:bitchute))
+    assert_response :not_found
+  end
+
+  test "update with general attributes updates source" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    patch source_path(source), params: {
+      source: { name: "Renamed Channel", icon_url: "https://example.com/icon.png" }
+    }, as: :turbo_stream
+
+    assert_response :success
+    source.reload
+    assert_equal "Renamed Channel", source.name
+    assert_equal "https://example.com/icon.png", source.icon_url
+  end
+
+  test "update pauses source when active set to false" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    patch source_path(source), params: {
+      source: { active: "0" }
+    }, as: :turbo_stream
+
+    assert_response :success
+    source.reload
+    assert_not source.active
+  end
+
+  test "update unpauses source when active set to true" do
+    sign_in_as(users(:one))
+    source = sources(:inactive)
+
+    patch source_path(source), params: {
+      source: { active: "1" }
+    }, as: :turbo_stream
+
+    assert_response :success
+    source.reload
+    assert source.active
+  end
+
+  test "update with reset_weight still works" do
+    sign_in_as(users(:one))
+    source = sources(:bitchute)
+    follow = follows(:two)
+    assert_equal 0.5, follow.weight
+
+    patch source_path(source), params: { reset_weight: true }, as: :turbo_stream
+
+    assert_response :success
+    follow.reload
+    assert_equal 1.0, follow.weight
+  end
+
+  test "destroy deletes source and associated follows and items" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    follow_ids = source.follows.pluck(:id)
+    item_ids = source.items.pluck(:id)
+
+    assert_difference -> { Source.count } => -1 do
+      assert_difference -> { Follow.count } => -follow_ids.size do
+        assert_difference -> { Item.count } => -item_ids.size do
+          delete source_path(source)
+        end
+      end
+    end
+
+    assert_redirected_to sources_path
+    assert_not Source.exists?(source.id)
+    follow_ids.each { |id| assert_not Follow.exists?(id) }
+    item_ids.each { |id| assert_not Item.exists?(id) }
+  end
+
+  test "destroy returns 404 for source the user does not follow" do
+    sign_in_as(users(:two))
+    delete source_path(sources(:bitchute))
+    assert_response :not_found
+  end
 end

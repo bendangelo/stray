@@ -41,8 +41,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal resolver_result.rss_url, source.url
     assert_equal "Test Channel", source.name
 
-    assert_not_nil source.follow
-    assert_equal 1.0, source.follow.weight
+    assert_not_nil source.follows.first
+    assert_equal 1.0, source.follows.first.weight
 
     assert_equal 1, source.items.count
     assert_equal "Video 1", source.items.first.title
@@ -81,7 +81,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_not_nil source
     assert_equal "youtube_channel", source.kind
     assert_equal "https://www.youtube.com/feeds/videos.xml?channel_id=UC123", source.url
-    assert_equal 1.0, source.follow.weight
+    assert_equal 1.0, source.follows.first.weight
     assert_equal 1, source.items.count
   end
 
@@ -108,7 +108,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_not_nil source
     assert_equal "video_channel", source.kind
     assert_equal "BC Channel", source.name
-    assert_equal 1.0, source.follow.weight
+    assert_equal 1.0, source.follows.first.weight
     assert_equal 1, source.items.count
   end
 

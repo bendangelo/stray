@@ -5,7 +5,7 @@ class FeedController < ApplicationController
     @q = params[:q].presence
     @tag = params[:tag].presence
 
-    scope = Item.joins(source: :follow)
+    scope = Item.joins(source: :follows)
       .where(follows: { user_id: current_user.id })
       .where(items: { user_id: current_user.id })
       .where.not(state: :hidden)
@@ -15,7 +15,7 @@ class FeedController < ApplicationController
 
     @pagy, @items = pagy(scope.order(published_at: :desc).distinct, limit: 20)
 
-    @tags = Tag.joins(taggings: { item: [ source: :follow ] })
+    @tags = Tag.joins(taggings: { item: [ source: :follows ] })
       .where(follows: { user_id: current_user.id })
       .where(items: { user_id: current_user.id })
       .where.not(items: { state: :hidden })

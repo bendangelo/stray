@@ -2,14 +2,14 @@ class SourcesController < ApplicationController
   include Pagy::Method
 
   def index
-    base = Source.joins(:follow).where(follows: { user_id: current_user.id })
+    base = Source.joins(:follows).where(follows: { user_id: current_user.id })
     @active_sources = base.active.matching(params[:q]).order(:name)
     @inactive_sources = base.inactive.order(:name)
   end
 
   def show
     @source = scoped_source
-    @follow = @source.follow
+    @follow = @source.follows.find_by(user_id: current_user.id)
     @pagy, @items = pagy(@source.items.order(published_at: :desc), limit: 20)
   end
 
@@ -37,7 +37,7 @@ class SourcesController < ApplicationController
     source = scoped_source
 
     if params[:reset_weight]
-      source.follow.update!(weight: 1.0)
+      source.follows.find_by(user_id: current_user.id)&.update!(weight: 1.0)
       respond_to do |format|
         format.turbo_stream { render "sources/update_weight", locals: { source: } }
         format.html { redirect_to source_path(source) }
@@ -62,7 +62,7 @@ class SourcesController < ApplicationController
   private
 
   def scoped_source
-    Source.joins(:follow).where(follows: { user_id: current_user.id }).find(params[:id])
+    Source.joins(:follows).where(follows: { user_id: current_user.id }).find(params[:id])
   end
 
   def source_params
