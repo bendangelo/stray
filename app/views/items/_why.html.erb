@@ -1,0 +1,15 @@
+<% follow = item.source.follows.find_by(user_id: current_user.id) if defined?(current_user) && current_user %>
+<% if follow %>
+  <% exp = ranking_explanation_for(item, follow) %>
+  <details class="mt-1 text-xs text-charcoal-300">
+    <summary class="cursor-pointer hover:text-carrot-500 select-none">why?</summary>
+    <div class="mt-1 pl-2 border-l-2 border-charcoal space-y-0.5">
+      <p>Published <%= time_ago(exp.published_at) %>.</p>
+      <p>Weight <%= exp.weight %> from <%= item.source.name %> — <%= offset_label(exp.offset_hours) %>.</p>
+      <p>Shown as if published <%= time_ago(exp.effective_at) %>.</p>
+      <% if exp.muted %>
+        <p class="text-cerise">Source muted (3+ hides in the last week).</p>
+      <% end %>
+    </div>
+  </details>
+<% end %>
