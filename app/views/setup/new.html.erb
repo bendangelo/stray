@@ -14,6 +14,14 @@
     <% end %>
 
     <%= form_with model: @user, url: setup_path, class: "space-y-4" do |form| %>
+      <% if @user.errors.any? %>
+        <div class="px-4 py-3 border-3 border-cerise text-cerise text-sm">
+          <% @user.errors.full_messages.each do |msg| %>
+            <div><%= msg %></div>
+          <% end %>
+        </div>
+      <% end %>
+
       <div>
         <%= form.text_field :username, required: true, autofocus: true, autocomplete: "username", placeholder: "Username", class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
       </div>
