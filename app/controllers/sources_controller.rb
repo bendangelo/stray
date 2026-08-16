@@ -2,10 +2,6 @@ class SourcesController < ApplicationController
   include Pagy::Method
 
   def index
-    @sources = Source.joins(:follow)
-      .where(follows: { user_id: current_user.id })
-      .where(active: true)
-      .order(:name)
   end
 
   def show

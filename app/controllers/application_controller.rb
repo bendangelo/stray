@@ -7,8 +7,16 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   prepend_before_action :redirect_to_setup_if_needed
+  before_action :set_sidebar_sources, if: :authenticated?
 
   private
+
+  def set_sidebar_sources
+    @sources = Source.joins(:follow)
+      .where(follows: { user_id: current_user.id })
+      .where(active: true)
+      .order(:name)
+  end
 
   def redirect_to_setup_if_needed
     return if authenticated? || User.any?
