@@ -15,4 +15,10 @@ class ApplicationController < ActionController::Base
     return if controller_name == "setup"
     redirect_to new_setup_path
   end
+
+  def require_admin
+    return if current_user&.admin?
+
+    redirect_to root_path, alert: "Not authorized."
+  end
 end
