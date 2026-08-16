@@ -1,0 +1,17 @@
+<% @suggestions[:term_hints].each do |word| %>
+  <li role="option" class="px-3 py-2 cursor-pointer hover:bg-athens-500 border-b border-charcoal-100"
+     data-autocomplete-value="<%= word %>">
+    <span class="text-charcoal-300 text-sm">Complete to:</span>
+    <span class="text-charcoal font-medium"><%= sanitize(word) %></span>
+  </li>
+<% end %>
+<% @suggestions[:items].each do |item| %>
+  <li role="option" class="px-3 py-2 cursor-pointer hover:bg-athens-500"
+     data-autocomplete-value="<%= item.title %>">
+    <div class="text-charcoal font-medium"><%= sanitize(item.highlighted_title, tags: %w[mark], attributes: []) %></div>
+    <div class="text-charcoal-300 text-xs"><%= item.source_name %> · <%= time_ago_in_words(item.published_at) if item.published_at %> ago</div>
+  </li>
+<% end %>
+<% if @suggestions[:term_hints].empty? && @suggestions[:items].empty? %>
+  <li class="px-3 py-2 text-charcoal-300 text-sm">No suggestions</li>
+<% end %>
