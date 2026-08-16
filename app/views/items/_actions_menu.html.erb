@@ -4,7 +4,8 @@
           data-action="dropdown#toggle click@window->dropdown#hide"
           aria-expanded="false"
           aria-controls="item-actions-<%= item.id %>"
-          class="text-charcoal-300 hover:text-carrot-500 bg-transparent border-none cursor-pointer p-1 -mr-1"
+          class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-1 -mr-1
+                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
           aria-label="Item actions">
     <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
   </button>
@@ -17,21 +18,27 @@
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
     <%= action_link_to item_path(item), method: :patch, params: { state: item.saved? ? "unseen" : "saved" },
           data: { turbo_stream: true },
-          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
-      <%= phosphor_icon "star", style: item.saved? ? :fill : :regular, class: "w-3.5 h-3.5 inline-block" %>
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "star", style: item.saved? ? :fill : :regular, class: "w-3.5 h-3.5" %>
       <%= item.saved? ? "Unsave" : "Save" %>
     <% end %>
 
     <%= action_link_to item_path(item), method: :patch, params: { state: "hidden" },
           data: { turbo_stream: true },
-          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
-      <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide
     <% end %>
 
     <%= action_link_to "#",
           data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
-          class: "block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer" do %>
-      <%= phosphor_icon "tag", class: "w-3.5 h-3.5 inline-block" %> Add tag
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "tag", class: "w-3.5 h-3.5" %> Add tag
+    <% end %>
+
+    <%= action_link_to mute_source_path(item.source), method: :post,
+          data: { turbo_stream: true },
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
     <% end %>
   </div>
 </div>
