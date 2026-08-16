@@ -35,20 +35,20 @@
           <%= button_to item_path(item), method: :patch, params: { state: "unseen" },
             form: { data: { turbo_stream: true } },
             class: "text-amber-500 hover:text-amber-600 cursor-pointer bg-transparent border-none text-xs" do %>
-            ★ Saved
+            <%= phosphor_icon "star", style: :fill, class: "w-3.5 h-3.5 inline-block" %> Saved
           <% end %>
         <% else %>
           <%= button_to item_path(item), method: :patch, params: { state: "saved" },
             form: { data: { turbo_stream: true } },
             class: "text-charcoal-300 hover:text-amber-500 cursor-pointer bg-transparent border-none text-xs" do %>
-            ☆ Save
+            <%= phosphor_icon "star", class: "w-3.5 h-3.5 inline-block" %> Save
           <% end %>
         <% end %>
 
         <%= button_to item_path(item), method: :patch, params: { state: "hidden" },
           form: { data: { turbo_stream: true } },
           class: "text-charcoal-300 hover:text-cerise cursor-pointer bg-transparent border-none text-xs" do %>
-          ✕ Hide
+          <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
         <% end %>
       </div>
 

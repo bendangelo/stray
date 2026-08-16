@@ -6,9 +6,7 @@
               class="md:hidden text-charcoal p-1"
               data-action="click->sidebar#toggle"
               aria-label="Toggle sources">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        <%= phosphor_icon "list", class: "w-6 h-6" %>
       </button>
     <% end %>
 
@@ -29,9 +27,7 @@
               class: "flex-1 h-10 px-3 bg-athens-400 rounded-l-md text-charcoal placeholder:text-charcoal-300 focus:outline-none text-sm",
               data: { autocomplete_target: "input" } %>
             <button type="submit" class="text-carrot-600 hover:bg-carrot-500 hover:text-champagne h-10 w-10 flex items-center justify-center rounded-r-md">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0" />
-              </svg>
+              <%= phosphor_icon "magnifying-glass", style: :bold, class: "w-5 h-5" %>
             </button>
             <%= tag.ul class: "absolute z-10 w-full top-full mt-1 bg-athens-400 border-3 border-charcoal rounded-md max-h-72 overflow-auto",
               data: { autocomplete_target: "results" } %>

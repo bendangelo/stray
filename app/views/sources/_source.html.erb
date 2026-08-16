@@ -1,5 +1,5 @@
 <%= turbo_frame_tag dom_id(source) do %>
-  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-4 hover:bg-athens-500
+  <div class="border-3 border-charcoal rounded-md bg-athens-400 p-5 hover:bg-athens-500
               <%= " opacity-50" unless source.active? %>">
     <div class="flex items-start justify-between gap-2">
       <div class="flex items-start gap-3 min-w-0">
@@ -8,7 +8,7 @@
           <%= link_to source_path(source), class: "block", data: { turbo_frame: "_top" } do %>
             <span class="font-display font-bold text-charcoal"><%= source.name %></span>
           <% end %>
-          <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-1">
+          <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-2 mt-1">
             <span><%= source.kind.humanize %></span>
             <% if source.items.unseen.any? %>
               <span class="bg-mint text-charcoal text-[10px] font-bold px-1.5 rounded-full">
@@ -40,7 +40,7 @@
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% end %>
         <%= link_to "Edit", edit_source_path(source),
-              class: "text-xs text-charcoal underline hover:no-underline",
+              class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none",
               data: { turbo_frame: "_top" } %>
         <%= button_to "Delete", source_path(source), method: :delete,
               form: { data: { turbo_confirm: "Delete this source and all its items?", turbo_frame: "_top" } },

@@ -27,6 +27,11 @@ class Source < ApplicationRecord
   end
 
   def recalculate_next_crawl!
+    if poll_interval.present? && poll_interval.positive?
+      update!(next_crawl_at: Time.current + poll_interval.seconds)
+      return
+    end
+
     recent = items.order(published_at: :desc).limit(5).pluck(:published_at).compact
 
     if recent.empty?

@@ -29,6 +29,13 @@
       <%= form.url_field :icon_url, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
     </div>
 
+    <div>
+      <%= form.label :poll_interval, "Poll interval (seconds, optional)", class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.number_field :poll_interval, min: 60, placeholder: "e.g. 1800",
+            class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+      <p class="text-xs text-charcoal-300 mt-1">Leave blank for automatic adaptive scheduling.</p>
+    </div>
+
     <div class="flex items-center gap-2">
       <%= form.check_box :active, class: "h-4 w-4 border-3 border-charcoal" %>
       <%= form.label :active, "Active (polling enabled)", class: "text-sm text-charcoal" %>

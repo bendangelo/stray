@@ -14,6 +14,11 @@
             <% if @source.next_crawl_at %>
               <span>· next poll <%= time_ago(@source.next_crawl_at) %></span>
             <% end %>
+            <% if @source.poll_interval.present? && @source.poll_interval.positive? %>
+              <span>· every <%= @source.poll_interval %>s</span>
+            <% else %>
+              <span>· adaptive</span>
+            <% end %>
             <% if @source.last_error %>
               <span class="text-cerise">· error: <%= @source.last_error %></span>
             <% end %>
@@ -30,7 +35,7 @@
                 form: { data: { turbo_frame: "_top" } },
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% end %>
-        <%= link_to "Edit", edit_source_path(@source), class: "text-xs text-charcoal underline hover:no-underline" %>
+        <%= link_to "Edit", edit_source_path(@source), class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <%= button_to "Delete", source_path(@source), method: :delete,
               form: { data: { turbo_confirm: "Delete this source and all its items?" } },
               class: "text-xs text-cerise underline hover:no-underline cursor-pointer bg-transparent border-none" %>

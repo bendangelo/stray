@@ -74,6 +74,6 @@ class SourcesController < ApplicationController
   end
 
   def source_params
-    params.require(:source).permit(:name, :url, :kind, :icon_url, :active)
+    params.require(:source).permit(:name, :url, :kind, :icon_url, :active, :poll_interval)
   end
 end

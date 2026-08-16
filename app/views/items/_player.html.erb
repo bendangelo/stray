@@ -45,20 +45,20 @@
         <%= button_to item_path(item), method: :patch, params: { state: "unseen" },
           form: { data: { turbo_stream: true } },
           class: "text-amber-500 hover:text-amber-600 cursor-pointer bg-transparent border-none text-xs" do %>
-          ★ Saved
+          <%= phosphor_icon "star", style: :fill, class: "w-3.5 h-3.5 inline-block" %> Saved
         <% end %>
       <% else %>
         <%= button_to item_path(item), method: :patch, params: { state: "saved" },
           form: { data: { turbo_stream: true } },
           class: "text-charcoal-300 hover:text-amber-500 cursor-pointer bg-transparent border-none text-xs" do %>
-          ☆ Save
+          <%= phosphor_icon "star", class: "w-3.5 h-3.5 inline-block" %> Save
         <% end %>
       <% end %>
 
       <%= button_to item_path(item), method: :patch, params: { state: "hidden" },
         form: { data: { turbo_stream: true } },
         class: "text-charcoal-300 hover:text-cerise cursor-pointer bg-transparent border-none text-xs" do %>
-        ✕ Hide
+        <%= phosphor_icon "x", class: "w-3.5 h-3.5 inline-block" %> Hide
       <% end %>
     </div>
   </div>
@@ -66,26 +66,19 @@
   <button type="button" aria-label="Close"
           class="absolute top-10 right-0 w-6 h-6"
           data-action="click->player#close">
-    <svg class="text-charcoal hover:text-carrot w-full h-full" width="20" height="20" viewBox="0 0 20 20">
-      <line x1="2" y1="2" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
-      <line x1="2" y1="18" x2="18" y2="2" stroke="currentColor" stroke-width="2"/>
-    </svg>
+    <%= phosphor_icon "x", class: "text-charcoal hover:text-carrot w-full h-full" %>
   </button>
 
   <div class="flex absolute bottom-3 -right-3">
     <button type="button" aria-label="Previous" id="video-prev"
             class="w-10 h-10"
             data-action="click->player#prev">
-      <svg class="text-charcoal hover:text-cerise w-full h-full" width="20" height="20" viewBox="0 0 20 20">
-        <polyline points="11,7 8,10 11,13" fill="none" stroke="currentColor" stroke-width="2"/>
-      </svg>
+      <%= phosphor_icon "caret-left", class: "text-charcoal hover:text-cerise w-full h-full" %>
     </button>
     <button type="button" aria-label="Next" id="video-next"
             class="w-10 h-10"
             data-action="click->player#next">
-      <svg class="text-charcoal hover:text-cerise w-full h-full" width="20" height="20" viewBox="0 0 20 20">
-        <polyline points="9,7 12,10 9,13" fill="none" stroke="currentColor" stroke-width="2"/>
-      </svg>
+      <%= phosphor_icon "caret-right", class: "text-charcoal hover:text-cerise w-full h-full" %>
     </button>
   </div>
 </div>

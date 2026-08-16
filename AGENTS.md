@@ -52,6 +52,8 @@ bin/setup-wizard        # host-only interactive setup → writes .env (never run
 
 - Follow Omakase style (`.rubocop.yml`). Do not add comments to code unless asked.
 - **Config is ENV-driven only.** Use `AppConfig` (`STRAY_*` env vars, defaults in `config/stray.yml`). Never use `Rails.credentials` or a `master.key`. `SECRET_KEY_BASE` is passed via env.
+- **Icons are Phosphor via the `phosphor_icon` helper.** Never inline raw `<svg>` in ERB. Use `phosphor_icon "name", style: :regular, class: "h-5 w-5"` (weights: `regular`/`bold`/`light`/`duotone`/`fill`/`thin`). Size/color via Tailwind classes (`fill="currentColor"`). Find names at phosphoricons.com.
+- **Data changes go in `db/data/` via `data_migrate`, not schema migrations.** Backfills, normalization, repairs, and one-time transformations belong in data migrations (`bin/rails g data_migration name`), run with `bin/rails data:migrate` (dev) or `bin/rails db:migrate:with_data` (deploy). Schema migrations are for structure only (`add_column`, indexes, constraints). Do not convert already-committed schema migrations that happen to touch data.
 - **Extractors are plugins.** Register new adapters in `config/initializers/extractors.rb`. Ranking/tagging/feed code must never change to add a site.
 - **Tagging provenance is mandatory.** Every `Tagging` stores `source` = `:ai_embedding`, `:ai_llm`, or `:user`. The UI shows it; users must be able to trust/distrust by origin.
 - **Dedup key is `external_id` + `source_id`.** Re-polling a feed must never create duplicate `Item`s.

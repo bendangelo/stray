@@ -12,13 +12,14 @@
       <% end %>
 
       <% @sources&.each do |source| %>
-        <%= link_to source_path(source), class: "flex items-center gap-2 p-2 rounded-md hover:bg-athens-400" do %>
+        <% active = @source.present? && source.id == @source.id %>
+        <%= link_to source_path(source), class: "flex items-center gap-2 p-2 rounded-md hover:bg-athens-400 #{active ? "bg-athens-400 border-l-3 border-carrot-500" : ""}" do %>
           <img src="<%= source_icon_url(source) || missing_thumb %>"
                alt=""
                class="w-8 h-8 rounded border-2 border-charcoal object-cover shrink-0"
                loading="lazy">
 
-          <span class="flex-1 text-sm text-charcoal truncate"><%= source.name %></span>
+          <span class="flex-1 text-sm text-charcoal truncate <%= "font-bold" if active %>"><%= source.name %></span>
 
           <% if unseen_counts[source.id].to_i > 0 %>
             <span class="text-xs font-bold text-champagne bg-carrot-500 px-1.5 py-0.5 rounded-full">

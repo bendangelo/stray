@@ -22,7 +22,7 @@ module Stray
         data = runner.single_video(url)
 
         ExtractedContent.new(
-          url: data["url"] || data["webpage_url"] || url,
+          url: canonicalize_url(url, data),
           title: data["title"],
           content_text: data["description"],
           content_html: nil,
@@ -40,7 +40,7 @@ module Stray
 
         entries.map do |data|
           ExtractedContent.new(
-            url: data["url"],
+            url: canonicalize_url(data["url"], data),
             title: data["title"],
             content_text: nil,
             content_html: nil,
@@ -59,6 +59,18 @@ module Stray
       end
 
       private
+
+      def canonicalize_url(url, data)
+        candidate = data["url"] || data["webpage_url"] || url
+        parsed = URI.parse(candidate)
+        if parsed.host&.include?("bitchute.com") && data["id"]
+          "https://www.bitchute.com/video/#{data["id"]}"
+        else
+          candidate
+        end
+      rescue URI::InvalidURIError
+        candidate
+      end
 
       def runner
         @runner ||= Stray::YtDlp::Runner.new

@@ -39,7 +39,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
       result = extractor.extract("https://bitchute.com/video/abc123")
 
       assert_equal "dQw4w9WgXcQ", result.external_id
-      assert_equal "https://bitchute.com/video/abc123", result.url
+      assert_equal "https://www.bitchute.com/video/dQw4w9WgXcQ", result.url
       assert_equal "Rick Astley - Never Gonna Give You Up (Official Music Video)", result.title
       assert_equal "The official video for Never Gonna Give You Up by Rick Astley.", result.content_text
       assert_equal "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", result.thumbnail_url
@@ -82,6 +82,36 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         extractor.extract("https://example.com/video")
       end
+    end
+  end
+
+  test "extract canonicalizes channel-prefixed bitchute URLs" do
+    data = @data.merge("id" => "abc123", "url" => "https://www.bitchute.com/channel/Foo//video/abc123")
+    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      result = extractor.extract("https://www.bitchute.com/channel/Foo//video/abc123")
+
+      assert_equal "https://www.bitchute.com/video/abc123", result.url
+    end
+  end
+
+  test "extract leaves non-bitchute URLs unchanged" do
+    data = @data.merge("url" => "https://vimeo.com/12345")
+    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      result = extractor.extract("https://vimeo.com/12345")
+
+      assert_equal "https://vimeo.com/12345", result.url
+    end
+  end
+
+  test "extract_channel canonicalizes bitchute listing URLs" do
+    listing = '{"id":"vid1","title":"Video 1","url":"https://www.bitchute.com/channel/Foo//video/vid1","channel":"Test","channel_id":"C1","channel_url":"https://www.bitchute.com/channel/Foo"}'
+    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      results = extractor.extract_channel("https://www.bitchute.com/channel/Foo")
+
+      assert_equal "https://www.bitchute.com/video/vid1", results[0].url
     end
   end
 

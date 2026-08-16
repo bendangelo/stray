@@ -27,6 +27,12 @@ gem "full_search", "~> 0.4"
 
 gem "pagy"
 
+# Phosphor icon set as an inline-SVG view helper (no asset pipeline coupling)
+gem "phosphor_icons"
+
+# One-time data migrations (backfills, normalization, repairs) in db/data/
+gem "data_migrate", "~> 11.3"
+
 gem "faraday", "~> 2.0"
 gem "faraday-follow_redirects"
 gem "faraday-retry"
