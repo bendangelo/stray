@@ -36,6 +36,24 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
     end
   end
 
+  test "single_video failure message surfaces stderr detail" do
+    Open3.stub(:capture3, [ "", "ERROR: Video unavailable\n", status_failure ]) do
+      error = assert_raises(Stray::YtDlp::ExtractionFailed) do
+        @runner.single_video("https://example.com/video")
+      end
+      assert_equal "ERROR: Video unavailable", error.message
+    end
+  end
+
+  test "single_video failure message falls back when stderr empty" do
+    Open3.stub(:capture3, [ "", "", status_failure ]) do
+      error = assert_raises(Stray::YtDlp::ExtractionFailed) do
+        @runner.single_video("https://example.com/video")
+      end
+      assert_equal "yt-dlp exited with non-zero status", error.message
+    end
+  end
+
   test "single_video raises ExtractionFailed on invalid JSON" do
     Open3.stub(:capture3, [ "", "not json", status_success ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do

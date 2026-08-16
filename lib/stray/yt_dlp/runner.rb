@@ -14,8 +14,8 @@ module Stray
       end
 
       def single_video(url)
-        stdout, _stderr, status = run_command("--dump-json", url)
-        raise ExtractionFailed, "yt-dlp exited with non-zero status" unless status.success?
+        stdout, stderr, status = run_command("--dump-json", url)
+        raise ExtractionFailed, failure_message(status, stderr) unless status.success?
 
         parse_json(stdout)
       rescue Errno::ENOENT
@@ -23,8 +23,8 @@ module Stray
       end
 
       def channel_listings(url)
-        stdout, _stderr, status = run_command("--flat-playlist", "--dump-json", url)
-        raise ExtractionFailed, "yt-dlp exited with non-zero status" unless status.success?
+        stdout, stderr, status = run_command("--flat-playlist", "--dump-json", url)
+        raise ExtractionFailed, failure_message(status, stderr) unless status.success?
 
         stdout.lines.map { |line| parse_json(line) }
       end
@@ -33,6 +33,12 @@ module Stray
 
       def run_command(*args)
         Open3.capture3(binary, *args)
+      end
+
+      def failure_message(status, stderr)
+        detail = stderr.to_s.strip
+        detail = "yt-dlp exited with non-zero status" if detail.empty?
+        detail
       end
 
       def parse_json(text)
