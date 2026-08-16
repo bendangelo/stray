@@ -30,4 +30,18 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id]
   end
+
+  test "orphaned session (user gone) redirects to login and clears the cookie" do
+    cookie_value = ActionDispatch::TestRequest.create.cookie_jar.tap do |jar|
+      jar.signed[:session_id] = 12345
+    end[:session_id]
+    cookies["session_id"] = cookie_value
+
+    Session.stub(:find_by, Session.new) do
+      get sources_path
+    end
+
+    assert_redirected_to new_session_path
+    assert_empty cookies[:session_id]
+  end
 end
