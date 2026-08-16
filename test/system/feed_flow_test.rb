@@ -96,7 +96,9 @@ class FeedFlowTest < ApplicationSystemTestCase
     visit root_path
 
     assert_text "ruby"
-    click_on "ruby"
+    within "#tag-bar" do
+      click_on "ruby"
+    end
 
     assert_text "First Video"
     assert_no_text "Second Video"
