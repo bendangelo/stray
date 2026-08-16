@@ -140,4 +140,20 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     assert_equal "2", grid_row,
            "player box should be in row 2 on desktop (6-column grid, 5th item)"
   end
+
+  test "tag input form is cloned from template not built by JS" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    # The template should exist in the DOM (hidden)
+    assert_selector "template[data-tag-input-target='template']",
+           visible: false, wait: 2
+
+    # Open the actions menu and click "Add tag"
+    first("[data-controller='dropdown'] [data-dropdown-target='button']").click
+    click_on "Add tag"
+
+    # The form should appear, cloned from the template
+    assert_selector "[data-tag-input-target='input']", wait: 5
+  end
 end

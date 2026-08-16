@@ -33,6 +33,21 @@
           data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
           class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
       <%= phosphor_icon "tag", class: "w-3.5 h-3.5" %> Add tag
+      <template data-tag-input-target="template">
+        <div class="flex flex-col gap-1 mt-1">
+          <div class="flex gap-1">
+            <input type="text" placeholder="tag name"
+              data-tag-input-target="input"
+              data-action="keydown.esc->tag-input#close keydown.enter->tag-input#submit keydown ArrowDown->tag-input#moveHighlight:prevent keydown ArrowUp->tag-input#moveHighlight:prevent input->tag-input#search"
+              class="flex-1 h-8 px-2 text-xs border-3 border-charcoal rounded-md bg-athens-400 text-charcoal focus:outline-none"
+              autocomplete="off">
+            <button data-action="tag-input#submit"
+              class="h-8 px-3 bg-carrot-500 text-white text-xs rounded-md border-3 border-charcoal">Add</button>
+          </div>
+          <ul data-tag-input-target="results"
+            class="hidden border-3 border-charcoal rounded-md bg-athens-400 text-xs max-h-32 overflow-y-auto"></ul>
+        </div>
+      </template>
     <% end %>
 
     <%= action_link_to mute_source_path(item.source), method: :post,

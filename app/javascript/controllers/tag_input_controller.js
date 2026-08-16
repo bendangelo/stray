@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = { itemId: Number }
-  static targets = ["input", "results"]
+  static targets = ["input", "results", "template"]
 
   connect() {
     this.highlightIndex = -1
@@ -16,20 +16,7 @@ export default class extends Controller {
       return
     }
 
-    const form = document.createElement("div")
-    form.className = "flex flex-col gap-1 mt-1"
-    form.innerHTML = `
-      <div class="flex gap-1">
-        <input type="text" placeholder="tag name"
-          data-${this.identifier}-target="input"
-          data-action="keydown.esc->${this.identifier}#close keydown.enter->${this.identifier}#submit keydown ArrowDown->${this.identifier}#moveHighlight:prevent keydown ArrowUp->${this.identifier}#moveHighlight:prevent input->${this.identifier}#search"
-          class="flex-1 h-8 px-2 text-xs border-3 border-charcoal rounded-md bg-athens-400 text-charcoal focus:outline-none" autocomplete="off">
-        <button data-action="${this.identifier}#submit"
-          class="h-8 px-3 bg-carrot-500 text-white text-xs rounded-md border-3 border-charcoal">Add</button>
-      </div>
-      <ul data-${this.identifier}-target="results"
-        class="hidden border-3 border-charcoal rounded-md bg-athens-400 text-xs max-h-32 overflow-y-auto"></ul>
-    `
+    const form = this.templateTarget.content.cloneNode(true)
     this.element.appendChild(form)
     this.inputTarget.focus()
   }
