@@ -101,4 +101,23 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "First Video"
     assert_no_text "Second Video"
   end
+
+  test "sources sidebar shows on feed page" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    assert_selector "#sidebar"
+    within "#sidebar" do
+      assert_text "Test Channel", count: 1
+    end
+  end
+
+  test "sources sidebar shows unseen count badge" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    within "#sidebar" do
+      assert_selector ".bg-carrot-500", minimum: 1
+    end
+  end
 end
