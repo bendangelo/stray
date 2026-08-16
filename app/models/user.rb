@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_many :tags, dependent: :destroy
   has_many :items, dependent: :destroy
   has_many :sources, dependent: :destroy
+  has_many :follows, dependent: :destroy
   has_many :collections, dependent: :destroy
   has_many :remote_collections, dependent: :destroy
 
