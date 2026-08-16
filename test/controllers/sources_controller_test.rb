@@ -238,4 +238,146 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     delete source_path(sources(:bitchute))
     assert_response :not_found
   end
+
+  test "show with since=1m filters items to last month" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    old_item = source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.months.ago, state: 0
+    )
+
+    get source_path(source, since: "1m")
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_includes response.body, "Second Video"
+    assert_not_includes response.body, "Old Video"
+  end
+
+  test "show with since=3m filters items to last 3 months" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 4.months.ago, state: 0
+    )
+
+    get source_path(source, since: "3m")
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_not_includes response.body, "Old Video"
+  end
+
+  test "show with since=1y filters items to last year" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source, since: "1y")
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_not_includes response.body, "Old Video"
+  end
+
+  test "show with since=all returns all items" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source, since: "all")
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_includes response.body, "Old Video"
+  end
+
+  test "show without since param returns all items" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source)
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_includes response.body, "Old Video"
+  end
+
+  test "show with invalid since value returns all items" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source, since: "garbage")
+
+    assert_response :success
+    assert_includes response.body, "First Video"
+    assert_includes response.body, "Old Video"
+  end
+
+  test "show with since filter excludes items with nil published_at" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "no-date", title: "No Date Video",
+      url: "https://www.youtube.com/watch?v=no-date",
+      content_text: "no date", published_at: nil, state: 0
+    )
+
+    get source_path(source, since: "1m")
+
+    assert_response :success
+    assert_not_includes response.body, "No Date Video"
+  end
+
+  test "show with since=all includes items with nil published_at" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "no-date", title: "No Date Video",
+      url: "https://www.youtube.com/watch?v=no-date",
+      content_text: "no date", published_at: nil, state: 0
+    )
+
+    get source_path(source, since: "all")
+
+    assert_response :success
+    assert_includes response.body, "No Date Video"
+  end
+
+  test "show assigns total_count regardless of since filter" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.items.create!(
+      user: users(:one), external_id: "old-vid", title: "Old Video",
+      url: "https://www.youtube.com/watch?v=old-vid",
+      content_text: "old", published_at: 2.years.ago, state: 0
+    )
+
+    get source_path(source, since: "1m")
+
+    assert_response :success
+    assert_equal 4, assigns(:total_count)
+  end
 end

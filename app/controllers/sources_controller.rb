@@ -10,7 +10,12 @@ class SourcesController < ApplicationController
   def show
     @source = scoped_source
     @follow = @source.follows.find_by(user_id: current_user.id)
-    @pagy, @items = pagy(@source.items.order(published_at: :desc), limit: 20)
+    @since = params[:since].presence || "all"
+    scope = @source.items.order(published_at: :desc)
+    cutoff = since_cutoff(@since)
+    scope = scope.where("published_at >= ?", cutoff) if cutoff
+    @total_count = @source.items.count
+    @pagy, @items = pagy(scope, limit: 20)
   end
 
   def new
@@ -75,5 +80,13 @@ class SourcesController < ApplicationController
 
   def source_params
     params.require(:source).permit(:name, :url, :kind, :icon_url, :active, :poll_interval)
+  end
+
+  def since_cutoff(since)
+    case since
+    when "1m" then 1.month.ago
+    when "3m" then 3.months.ago
+    when "1y" then 1.year.ago
+    end
   end
 end
