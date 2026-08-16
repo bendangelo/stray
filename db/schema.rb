@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_015150) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_023047) do
   create_table "follows", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "source_id", null: false
@@ -101,6 +101,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_015150) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "password_digest", null: false

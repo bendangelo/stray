@@ -47,4 +47,16 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
     get root_path
     assert_redirected_to new_setup_path
   end
+
+  test "POST create sets admin flag on first user" do
+    post setup_path, params: {
+      user: {
+        username: "admin",
+        email: "admin@example.com",
+        password: "password",
+        password_confirmation: "password"
+      }
+    }
+    assert User.first.admin?, "first user should be admin"
+  end
 end

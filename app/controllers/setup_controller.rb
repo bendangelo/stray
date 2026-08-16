@@ -12,6 +12,7 @@ class SetupController < ApplicationController
     end
 
     @user = User.new(setup_params)
+    @user.admin = true
     if @user.save
       redirect_to new_session_path, notice: "Account created. Please sign in."
     else
