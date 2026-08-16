@@ -129,3 +129,10 @@
 .dot-ai_embedding { background-color: #3b82f6; }
 .dot-ai_llm { background-color: #22c55e; }
 .dot-user { background-color: #9ca3af; }
+
+mark {
+  background-color: var(--color-carrot-200);
+  color: var(--color-charcoal-500);
+  border-radius: 2px;
+  padding: 0 2px;
+}
