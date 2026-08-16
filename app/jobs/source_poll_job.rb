@@ -10,7 +10,7 @@ class SourcePollJob < ApplicationJob
     source.update!(last_error: error.message, last_error_at: Time.current)
   end
 
-  def perform(source_id)
+  def perform(source_id, cursor = nil)
     source = Source.find_by(id: source_id)
     return unless source&.active?
 
@@ -19,8 +19,12 @@ class SourcePollJob < ApplicationJob
 
     domain = Stray::DomainMutex.domain_for(source.url)
 
-    Stray::DomainMutex.with_lock(domain) do
-      extract_and_persist(source)
+    if source.kind == "stray_collection"
+      extract_and_persist_relay(source, cursor)
+    else
+      Stray::DomainMutex.with_lock(domain) do
+        extract_and_persist(source)
+      end
     end
   ensure
     if source
@@ -44,6 +48,66 @@ class SourcePollJob < ApplicationJob
     source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil)
   rescue NotImplementedError => e
     source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current)
+  end
+
+  def extract_and_persist_relay(source, cursor)
+    extractor = Stray::ExtractorRegistry.find_for_source(source)
+    raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind}" unless extractor
+
+    fetch_url = cursor ? "#{source.url}?cursor=#{cursor}" : source.url
+    result = extractor.extract_feed(fetch_url)
+
+    if result.is_a?(Stray::Extractor::FeedResult)
+      handle_feed_result(source, result, cursor)
+    else
+      upsert_items(source, Array(result))
+      finish_relay_sync(source, cursor)
+    end
+  rescue Stray::UrlGuard::Blocked, StandardError => e
+    update_relay_error(source, e.message)
+  end
+
+  def handle_feed_result(source, result, cursor)
+    if early_stop?(source, result.items)
+      finish_relay_sync(source, cursor)
+      return
+    end
+
+    upsert_items(source, result.items)
+
+    if result.has_more && result.next_cursor.present?
+      SourcePollJob.perform_later(source.id, result.next_cursor)
+    else
+      finish_relay_sync(source, cursor)
+    end
+  end
+
+  def early_stop?(source, items)
+    return false if items.empty?
+    external_ids = items.map(&:external_id)
+    existing = source.items.where(external_id: external_ids).pluck(:external_id).to_set
+    external_ids.all? { |id| existing.include?(id) }
+  end
+
+  def finish_relay_sync(source, cursor)
+    rc = source.remote_collection
+    return unless rc
+
+    rc.update!(
+      last_synced_at: Time.current,
+      item_count: source.items.count,
+      last_cursor: cursor,
+      last_error: nil,
+      last_error_at: nil
+    )
+    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil)
+    source.recalculate_next_crawl!
+  end
+
+  def update_relay_error(source, message)
+    source.update!(last_error: message, last_error_at: Time.current)
+    rc = source.remote_collection
+    rc&.update!(last_error: message, last_error_at: Time.current)
   end
 
   def backfill_source_metadata(source, contents)

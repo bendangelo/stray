@@ -253,4 +253,97 @@ class SourcePollJobTest < ActiveJob::TestCase
       end
     end
   end
+
+  test "enqueues next page when FeedResult has_more true" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x")
+    Follow.create!(user: @user, source: source)
+    RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
+      duration: nil, creator_identity: nil, tags: []) ]
+    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
+
+    @extractor.expect(:extract_feed, feed_result, [ source.url ])
+    @verify_extractor = true
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        assert_enqueued_with(job: SourcePollJob, args: [ source.id, "cur2" ]) do
+          SourcePollJob.perform_now(source.id)
+        end
+      end
+    end
+  end
+
+  test "updates RemoteCollection after full sync" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x")
+    Follow.create!(user: @user, source: source)
+    rc = RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
+      duration: nil, creator_identity: nil, tags: []) ]
+    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
+
+    @extractor.expect(:extract_feed, feed_result, [ source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(source.id)
+      end
+    end
+
+    rc.reload
+    assert_not_nil rc.last_synced_at
+    assert_equal 1, rc.item_count
+    assert_nil rc.last_error
+  end
+
+  test "early stops when page contains only known external_ids" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x")
+    Follow.create!(user: @user, source: source)
+    RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+    source.items.create!(user: @user, external_id: "known1", title: "Old",
+      url: "https://x/1", published_at: 1.day.ago, state: 0)
+
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "Old", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: 1.day.ago, external_id: "known1",
+      duration: nil, creator_identity: nil, tags: []) ]
+    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
+
+    @extractor.expect(:extract_feed, feed_result, [ source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        assert_no_enqueued_jobs(only: SourcePollJob) do
+          SourcePollJob.perform_now(source.id)
+        end
+      end
+    end
+  end
+
+  test "records RemoteCollection error on fetch failure" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x")
+    Follow.create!(user: @user, source: source)
+    rc = RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+    @verify_extractor = false
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::UrlGuard::Blocked, "blocked" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(source.id)
+      end
+    end
+
+    rc.reload
+    assert_not_nil rc.last_error
+    assert_not_nil rc.last_error_at
+  end
 end
