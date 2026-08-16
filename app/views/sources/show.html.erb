@@ -68,6 +68,12 @@
         data: { turbo_stream: true },
         class: "text-sm text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
     <% end %>
+    <% if @follow.muted %>
+      <span class="text-sm text-cerise">· muted</span>
+      <%= action_link_to "Unmute", unmute_source_path(@source), method: :post,
+        data: { turbo_stream: true },
+        class: "text-sm text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+    <% end %>
   </div>
 
   <%= turbo_frame_tag dom_id(@source, :items) do %>
