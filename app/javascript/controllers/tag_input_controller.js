@@ -111,7 +111,9 @@ export default class extends Controller {
 
   submit(event) {
     event.preventDefault()
-    const name = this.inputTarget.value.trim().toLowerCase()
+    const items = this.resultsTarget.children
+    const highlighted = this.highlightIndex >= 0 ? items[this.highlightIndex] : null
+    const name = (highlighted?.dataset.action?.includes("#select") ? highlighted.textContent : this.inputTarget.value).trim().toLowerCase()
     if (!name) return
 
     const formData = new FormData()
@@ -137,5 +139,9 @@ export default class extends Controller {
     if (this.hasInputTarget) {
       this.inputTarget.closest("div").parentElement.remove()
     }
+  }
+
+  disconnect() {
+    clearTimeout(this.debounceTimer)
   }
 }
