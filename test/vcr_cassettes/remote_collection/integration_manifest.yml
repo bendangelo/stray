@@ -1,0 +1,32 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://stray.example.com/c/remotetokensecret12345678/manifest.json
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - stray.example.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '300'
+    body:
+      encoding: UTF-8
+      string: '{"format":"stray-collection","version":1,"collection":{"name":"Economics Blogs","slug":"econblogssecrettoken1234","item_count":1},"producer":{"instance_name":"Alice''s Stray","instance_domain":"stray.example.com","stray_version":"0.1.0"},"sources":[{"url":"https://www.youtube.com/feeds/videos.xml?channel_id=UCfeed","kind":"youtube_channel","name":"Test Channel","icon_url":"https://example.com/youtube-avatar.png"}],"items":[{"external_id":"relay-item-1","title":"Relayed Video","url":"https://example.com/watch?v=relay1","content_text":"relayed content","content_html":null,"thumbnail_url":null,"published_at":"2026-08-15T00:00:00Z","duration":null,"tags":["relay-tag"]}],"pagination":{"next_cursor":null,"next_url":null,"has_more":false}}'
+    http_version:
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.0.0
