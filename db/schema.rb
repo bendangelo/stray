@@ -10,7 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_033851) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_164520) do
+  create_table "data_migrations", primary_key: "version", id: :string, force: :cascade do |t|
+  end
+
   create_table "follows", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "source_id", null: false
@@ -90,7 +93,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_033851) do
     t.datetime "last_polled_at"
     t.string "name"
     t.datetime "next_crawl_at"
-    t.integer "poll_interval", default: 1800
+    t.integer "poll_interval"
     t.datetime "updated_at", null: false
     t.string "url", null: false
     t.integer "user_id", null: false
