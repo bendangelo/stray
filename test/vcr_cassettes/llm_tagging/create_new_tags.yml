@@ -1,0 +1,28 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://api:8080/v1/chat/completions
+    body: "{}"
+    headers:
+      Accept:
+      - "*/*"
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer test-key
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"choices":[{"message":{"content":"[\"newtag\"]"}}]}'
+    http_version: "1.1"
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.4.0
