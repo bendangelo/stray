@@ -62,4 +62,96 @@ class ItemTest < ActiveSupport::TestCase
     assert_not_includes unseen, items(:video_saved)
     assert_not_includes unseen, items(:video_hidden)
   end
+
+  test "suggest returns matching titles with highlights" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    Follow.create!(user: users(:one), source: source, weight: 1.0)
+    Item.create!(source:, user: users(:one), external_id: "v1", title: "Ruby on Rails Tutorial", url: "https://example.com/v1", content_text: "Learn web development")
+    Item.create!(source:, user: users(:one), external_id: "v2", title: "Ruby tips and tricks", url: "https://example.com/v2", content_text: "Advanced Ruby")
+    Item.create!(source:, user: users(:one), external_id: "v3", title: "Cooking Pasta", url: "https://example.com/v3", content_text: "Italian recipes")
+
+    rebuild_full_search_index(Item)
+
+    result = Item.suggest(user: users(:one), query: "ruby", limit: 8)
+
+    assert_equal 2, result[:items].length
+    titles = result[:items].map(&:title)
+    assert_includes titles, "Ruby on Rails Tutorial"
+    assert_includes titles, "Ruby tips and tricks"
+    assert_not_includes titles, "Cooking Pasta"
+
+    first_item = result[:items].find { |i| i.title == "Ruby on Rails Tutorial" }
+    assert_includes first_item.highlighted_title, "<mark>"
+    assert_includes first_item.highlighted_title, "</mark>"
+  end
+
+  test "suggest scopes to user's followed sources" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    Follow.create!(user: users(:one), source: source, weight: 1.0)
+    Item.create!(source:, user: users(:one), external_id: "v1", title: "Ruby Tutorial", url: "https://example.com/v1", content_text: "Learn Ruby")
+
+    source_two = Source.create!(user: users(:two), kind: :youtube_channel, url: "https://example.com/feed2", external_id: "UC2")
+    Follow.create!(user: users(:two), source: source_two, weight: 1.0)
+    Item.create!(source: source_two, user: users(:two), external_id: "v2", title: "Ruby Secrets", url: "https://example.com/v2", content_text: "Hidden Ruby")
+
+    rebuild_full_search_index(Item)
+
+    result = Item.suggest(user: users(:one), query: "ruby", limit: 8)
+    titles = result[:items].map(&:title)
+    assert_includes titles, "Ruby Tutorial"
+    assert_not_includes titles, "Ruby Secrets"
+  end
+
+  test "suggest excludes hidden items" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    Follow.create!(user: users(:one), source: source, weight: 1.0)
+    Item.create!(source:, user: users(:one), external_id: "v1", title: "Ruby Tutorial", url: "https://example.com/v1", content_text: "Learn Ruby")
+    Item.create!(source:, user: users(:one), external_id: "v2", title: "Ruby Hidden", url: "https://example.com/v2", content_text: "Hidden Ruby", state: :hidden)
+
+    rebuild_full_search_index(Item)
+
+    result = Item.suggest(user: users(:one), query: "ruby", limit: 8)
+    titles = result[:items].map(&:title)
+    assert_includes titles, "Ruby Tutorial"
+    assert_not_includes titles, "Ruby Hidden"
+  end
+
+  test "suggest respects limit" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    Follow.create!(user: users(:one), source: source, weight: 1.0)
+    5.times do |i|
+      Item.create!(source:, user: users(:one), external_id: "v#{i}", title: "Ruby Post #{i}", url: "https://example.com/v#{i}", content_text: "Ruby content")
+    end
+
+    rebuild_full_search_index(Item)
+
+    result = Item.suggest(user: users(:one), query: "ruby", limit: 3)
+    assert_equal 3, result[:items].length
+  end
+
+  test "suggest returns term hints from matching titles" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/feed", external_id: "UC1")
+    Follow.create!(user: users(:one), source: source, weight: 1.0)
+    Item.create!(source:, user: users(:one), external_id: "v1", title: "Ruby on Rails Tutorial", url: "https://example.com/v1", content_text: "Learn web development")
+    Item.create!(source:, user: users(:one), external_id: "v2", title: "Rubyists guide to programming", url: "https://example.com/v2", content_text: "Advanced")
+
+    rebuild_full_search_index(Item)
+
+    result = Item.suggest(user: users(:one), query: "rub", limit: 8)
+    assert result[:term_hints].is_a?(Array)
+    assert_includes result[:term_hints], "ruby"
+    assert_includes result[:term_hints], "rubyists"
+  end
+
+  test "suggest returns empty for short query" do
+    result = Item.suggest(user: users(:one), query: "ru", limit: 8)
+    assert_empty result[:items]
+    assert_empty result[:term_hints]
+  end
+
+  test "suggest returns empty on FTS error" do
+    result = Item.suggest(user: users(:one), query: '"', limit: 8)
+    assert_empty result[:items]
+    assert_empty result[:term_hints]
+  end
 end

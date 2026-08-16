@@ -9,6 +9,8 @@ WebMock.disable_net_connect!(allow_localhost: true)
 
 module ActiveSupport
   class TestCase
+    include FullSearch::TestHelpers
+
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
 
