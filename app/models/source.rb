@@ -12,6 +12,9 @@ class Source < ApplicationRecord
     where(active: true)
       .where("next_crawl_at <= ? OR next_crawl_at IS NULL", Time.current)
   }
+  scope :active, -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
+  scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
 
   def recalculate_next_crawl!
     recent = items.order(published_at: :desc).limit(5).pluck(:published_at).compact

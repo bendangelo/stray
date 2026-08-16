@@ -86,4 +86,35 @@ class SourceTest < ActiveSupport::TestCase
     source.recalculate_next_crawl!
     assert_not source.active
   end
+
+  test "active scope returns only active sources" do
+    assert_includes Source.active, sources(:youtube)
+    assert_not_includes Source.active, sources(:inactive)
+  end
+
+  test "inactive scope returns only inactive sources" do
+    assert_includes Source.inactive, sources(:inactive)
+    assert_not_includes Source.inactive, sources(:youtube)
+  end
+
+  test "search with blank q returns all sources" do
+    assert_includes Source.matching(nil), sources(:youtube)
+    assert_includes Source.matching(""), sources(:youtube)
+  end
+
+  test "search with q matching name returns matching source" do
+    result = Source.matching("Test Channel")
+    assert_includes result, sources(:youtube)
+    assert_not_includes result, sources(:bitchute)
+  end
+
+  test "search with q matching url returns matching source" do
+    result = Source.matching("bitchute")
+    assert_includes result, sources(:bitchute)
+    assert_not_includes result, sources(:youtube)
+  end
+
+  test "search with q matching nothing returns empty" do
+    assert_empty Source.matching("nonexistent-source-xyz")
+  end
 end
