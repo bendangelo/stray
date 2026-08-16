@@ -7,7 +7,7 @@ require "full_search/test_helpers"
 require_relative "test_helpers/session_test_helper"
 
 VCR.configure do |c|
-  c.cassette_library_dir = "test/fixtures/vcr_cassettes"
+  c.cassette_library_dir = "test/vcr_cassettes"
   c.hook_into :webmock
   c.allow_http_connections_when_no_cassette = false
   c.ignore_localhost = true
