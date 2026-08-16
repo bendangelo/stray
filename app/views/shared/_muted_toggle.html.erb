@@ -1,6 +1,6 @@
 <% if @muted_count&.positive? %>
   <div class="ml-auto text-xs">
-    <%= link_to root_path(show_muted: @show_muted ? "0" : "1"),
+    <%= link_to root_path(request.query_parameters.except("page").merge(show_muted: @show_muted ? "0" : "1")),
           class: "inline-flex items-center gap-1 px-2 py-1 rounded-md border-3 border-charcoal #{@show_muted ? 'bg-mint text-charcoal' : 'bg-athens-400 text-charcoal hover:bg-athens-500'}" do %>
       <%= phosphor_icon "speaker-slash", class: "w-3 h-3" %>
       <%= @show_muted ? "Hiding" : "Showing" %> <%= @muted_count %> muted
