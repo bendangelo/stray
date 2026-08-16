@@ -33,4 +33,12 @@ class TaggingsControllerTest < ActionDispatch::IntegrationTest
     post taggings_path, params: { tagging: { item_id: item.id, tag_name: "hack" } }, as: :turbo_stream
     assert_response :not_found
   end
+
+  test "AI-sourced tag chip renders remove button with turbo confirm" do
+    tagging = taggings(:video_one_ruby) # source: ai_embedding (0)
+    get root_path
+    assert_select "form[data-turbo-confirm*='Remove AI-assigned tag']" do
+      assert_select "button", text: "×"
+    end
+  end
 end

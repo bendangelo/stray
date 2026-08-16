@@ -3,10 +3,9 @@
       class: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border-3 border-charcoal bg-athens-400 hover:bg-athens-300 #{'ring-2 ring-carrot-400' if @tag == tagging.tag.name}" do %>
   <span class="w-2 h-2 rounded-full dot-<%= tagging.source %>"></span>
   <span class="text-charcoal"><%= tagging.tag.name %></span>
-  <% if tagging.source == "user" %>
-    <%= button_to tagging_path(tagging), method: :delete, form: { data: { turbo_stream: true } },
-      class: "ml-1 text-charcoal-300 hover:text-cerise text-xs leading-none" do %>
-      ×
-    <% end %>
+  <%= button_to tagging_path(tagging), method: :delete,
+        form: { data: { turbo_stream: true, turbo_confirm: (tagging.source == "user" ? nil : "Remove AI-assigned tag \"#{tagging.tag.name}\"?") } },
+        class: "ml-1 text-charcoal-300 hover:text-cerise text-xs leading-none" do %>
+    ×
   <% end %>
 <% end %>
