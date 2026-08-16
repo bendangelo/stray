@@ -20,4 +20,10 @@ class Stray::Embeddings::ProviderTest < ActiveSupport::TestCase
     assert_instance_of Stray::Embeddings::Providers::OpenAICompatible,
                        Stray::Embeddings::Provider.resolve
   end
+
+  test "resolve returns LocalMiniLM for OLLAMA (not an embedding provider)" do
+    Setting.current.update!(ai_provider_name: "OLLAMA", ai_provider_url: "http://ollama:11434")
+    assert_instance_of Stray::Embeddings::Providers::LocalMiniLM,
+                       Stray::Embeddings::Provider.resolve
+  end
 end

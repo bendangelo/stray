@@ -1,0 +1,46 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://example.com/articles/sample
+    body: ''
+    headers:
+      Accept:
+      - "*/*"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Faraday v2.14.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/html; charset=UTF-8
+    body:
+      encoding: UTF-8
+      string: |
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Example Article Title</title>
+            <meta property="og:title" content="Example Article Title">
+            <meta property="og:image" content="https://example.com/image.jpg">
+            <meta property="article:published_time" content="2026-08-01T12:00:00Z">
+          </head>
+          <body>
+            <nav id="sidebar">
+              <p>Sponsored links and navigation junk that should never be extracted as article content.</p>
+            </nav>
+            <article>
+              <h1>Example Article Title</h1>
+              <p>This is the main article body. It contains a substantial amount of prose that the readability algorithm will score highly as the primary content of the page being extracted by the GenericPage extractor.</p>
+              <p>A second paragraph reinforces the content length so the minimum text threshold is comfortably exceeded and this article remains the best candidate on the page.</p>
+              <p>The final sentence wraps up the extractable body text for the sample fixture used in automated testing of the extraction pipeline.</p>
+            </article>
+          </body>
+        </html>
+    http_version: "1.1"
+  recorded_at: Sun, 16 Aug 2026 00:00:00 GMT
+recorded_with: VCR 6.4.0

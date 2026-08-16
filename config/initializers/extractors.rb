@@ -4,4 +4,5 @@ Rails.application.config.to_prepare do
   Stray::ExtractorRegistry.register(Stray::Extractors::RssAtom)
   Stray::ExtractorRegistry.register(Stray::Extractors::YtDlp)
   Stray::ExtractorRegistry.register(Stray::Extractors::RemoteCollection)
+  Stray::ExtractorRegistry.register(Stray::Extractors::GenericPage)
 end

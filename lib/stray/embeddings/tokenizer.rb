@@ -1,7 +1,6 @@
 module Stray
   module Embeddings
     class Tokenizer
-      VOCAB = {}
       CLS_TOKEN = "[CLS]"
       SEP_TOKEN = "[SEP]"
       PAD_TOKEN = "[PAD]"
@@ -10,6 +9,7 @@ module Stray
 
       def initialize(vocab_path = nil)
         @vocab_path = vocab_path
+        @vocab = {}
         load_vocab if vocab_path && File.exist?(vocab_path)
       end
 
@@ -39,13 +39,13 @@ module Stray
       end
 
       def vocab_id(token)
-        VOCAB[token] || VOCAB[UNK_TOKEN] || 0
+        @vocab[token] || @vocab[UNK_TOKEN] || 0
       end
 
       def load_vocab
         File.readlines(@vocab_path).each_with_index do |line, i|
           token = line.strip
-          VOCAB[token] = i
+          @vocab[token] = i
         end
       end
     end

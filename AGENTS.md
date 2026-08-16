@@ -110,7 +110,7 @@ Two independent techniques — do not conflate them:
 - **Embedding zero-shot tagging (default, always on, no AI setup).** Embed item content with a small local model (leaning `all-MiniLM-L6-v2`, ~90MB, CPU-fast). Compare against existing `Tag` embeddings via cosine similarity; assign top-N above a threshold. Sub-threshold → "uncategorized" item the user tags manually, seeding a new tag embedding. Deterministic, no LLM.
 - **Generative LLM tagging (optional upgrade).** Requires `OLLAMA` or `OPENAI_COMPATIBLE` configured. Small instruct model (e.g. `qwen2.5:1.5b`, `llama3.2:1b`). Runs async; store `Taggings.source = :ai_llm`.
 
-The same embedding model powers semantic search (complementing FTS5) and the v2 "similar to what I save" ranking. Providers: `NONE` (default), `OLLAMA`, `OPENAI_COMPATIBLE`.
+The same embedding model powers semantic search (complementing FTS5) and the v2 "similar to what I save" ranking. Embedding providers: the local ONNX model (default, always available) or `OPENAI_COMPATIBLE` when configured. `OLLAMA` is **not** an embedding provider — it is only used for generative LLM tagging above. Embeddings are always produced locally or by an OpenAI-compatible endpoint, never by Ollama.
 
 ## Ranking
 

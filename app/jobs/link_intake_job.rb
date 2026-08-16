@@ -39,7 +39,7 @@ class LinkIntakeJob < ApplicationJob
     elsif youtube_video_url?
       extract_youtube_video
     else
-      extract_generic_video
+      extract_generic
     end
   end
 
@@ -112,13 +112,19 @@ class LinkIntakeJob < ApplicationJob
     [ [ content ], source ]
   end
 
-  def extract_generic_video
+  def extract_generic
     extractor = Stray::ExtractorRegistry.find_for(@url)
     content = extractor.extract(@url)
 
     creator = content.creator_identity
-    raise Stray::YtDlp::ExtractionFailed, "No channel info in video metadata" unless creator&.external_id
+    if creator&.external_id
+      create_video_source(content, creator)
+    else
+      create_generic_page_source(content)
+    end
+  end
 
+  def create_video_source(content, creator)
     source = create_source(
       kind: :video_channel,
       url: creator.url,
@@ -132,7 +138,29 @@ class LinkIntakeJob < ApplicationJob
     [ [ content ], source ]
   end
 
-  def create_source(kind:, url:, external_id:, name:, channel_url:)
+  def create_generic_page_source(content)
+    source = create_source(
+      kind: :generic_page,
+      url: content.url,
+      external_id: content.external_id,
+      name: extract_page_name(content)
+    )
+
+    create_items(source, [ content ])
+    enqueue_full_poll(source)
+    [ [ content ], source ]
+  end
+
+  def extract_page_name(content)
+    content.title.presence || begin
+      uri = URI.parse(content.url)
+      uri.host&.sub(/^www\./, "")
+    rescue URI::InvalidURIError
+      nil
+    end
+  end
+
+  def create_source(kind:, url:, external_id:, name:, channel_url: nil)
     return @source if @source
 
     Source.follow!(@user, kind: kind, url: url, external_id: external_id, name: name)

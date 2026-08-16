@@ -94,3 +94,5 @@ group :test do
 end
 
 gem "onnxruntime", "~> 0.11.6"
+
+gem "ruby-readability", "~> 0.7.3"

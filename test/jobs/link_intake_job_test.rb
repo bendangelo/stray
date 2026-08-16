@@ -117,6 +117,32 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal 1, source.items.count
   end
 
+  test "creates a generic_page source for a non-video URL without creator identity" do
+    content = Stray::ExtractedContent.new(
+      url: "https://example.com/blog/hello-world",
+      title: "Hello World", content_text: "Body text", content_html: "<p>Body text</p>",
+      thumbnail_url: nil, published_at: nil,
+      external_id: Digest::SHA256.hexdigest("https://example.com/blog/hello-world")[0, 32],
+      duration: nil,
+      creator_identity: nil,
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://example.com/blog/hello-world" ])
+
+    Stray::ExtractorRegistry.stub(:find_for, extractor) do
+      LinkIntakeJob.perform_now(@user.id, "https://example.com/blog/hello-world")
+    end
+
+    source = Source.find_by(kind: "generic_page", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "https://example.com/blog/hello-world", source.url
+    assert_equal "Hello World", source.name
+    assert_equal 1, source.items.count
+    assert_equal "Hello World", source.items.first.title
+  end
+
   test "does not create a duplicate source when extraction fails with a pre-created source" do
     source = Source.create!(user: @user, kind: :video_channel,
       url: "https://bitchute.com/channel/abc", external_id: "abc")
