@@ -66,6 +66,7 @@ class LinkIntakeJob < ApplicationJob
     )
 
     create_items(source, contents)
+    enqueue_full_poll(source)
     [ contents, source ]
   end
 
@@ -87,6 +88,7 @@ class LinkIntakeJob < ApplicationJob
     )
 
     create_items(source, [ content ])
+    enqueue_full_poll(source)
     [ [ content ], source ]
   end
 
@@ -106,6 +108,7 @@ class LinkIntakeJob < ApplicationJob
     )
 
     create_items(source, [ content ])
+    enqueue_full_poll(source)
     [ [ content ], source ]
   end
 
@@ -125,6 +128,10 @@ class LinkIntakeJob < ApplicationJob
 
     Follow.find_or_create_by!(user_id: @user_id, source_id: source.id)
     source
+  end
+
+  def enqueue_full_poll(source)
+    SourcePollJob.set(wait: 10.seconds).perform_later(source.id)
   end
 
   def create_items(source, contents)

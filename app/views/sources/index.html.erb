@@ -1,4 +1,5 @@
 <main class="container mx-auto px-4 pt-4 pb-16 max-w-3xl">
+  <%= turbo_stream_from "user_#{current_user.id}_sources" %>
   <div class="flex items-center justify-between mb-4">
     <h1 class="font-display text-2xl font-bold text-charcoal">Sources</h1>
     <%= link_to "+ Add source", new_source_path,

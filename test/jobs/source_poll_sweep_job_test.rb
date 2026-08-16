@@ -33,4 +33,22 @@ class SourcePollSweepJobTest < ActiveJob::TestCase
       SourcePollSweepJob.perform_now
     end
   end
+
+  test "clears stale polling flags older than 10 minutes" do
+    stale = Source.create!(
+      user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCstale",
+      external_id: "UCstale", polling: true, updated_at: 20.minutes.ago
+    )
+    fresh = Source.create!(
+      user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCfresh",
+      external_id: "UCfresh", polling: true, updated_at: 1.minute.ago
+    )
+
+    SourcePollSweepJob.perform_now
+
+    assert_not stale.reload.polling?
+    assert fresh.reload.polling?
+  end
 end

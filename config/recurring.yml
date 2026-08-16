@@ -19,3 +19,8 @@ production:
   source_poll_sweep:
     class: SourcePollSweepJob
     schedule: every hour at minute 0
+
+development:
+  source_poll_sweep:
+    class: SourcePollSweepJob
+    schedule: every hour at minute 0

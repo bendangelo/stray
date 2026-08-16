@@ -130,4 +130,34 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
       assert_equal "Video 1", results[0].title
     end
   end
+
+  test "extract_channel falls back to top-level thumbnail field" do
+    listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","thumbnail":"https://example.com/top.jpg","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
+    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      results = extractor.extract_channel("https://bitchute.com/channel/abc")
+
+      assert_equal "https://example.com/top.jpg", results[0].thumbnail_url
+    end
+  end
+
+  test "extract_channel falls back to string thumbnails entry" do
+    listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","thumbnails":["https://example.com/str.jpg"],"channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
+    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      results = extractor.extract_channel("https://bitchute.com/channel/abc")
+
+      assert_equal "https://example.com/str.jpg", results[0].thumbnail_url
+    end
+  end
+
+  test "extract_channel returns nil thumbnail when none present" do
+    listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
+    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+      extractor = Stray::Extractors::YtDlp.new
+      results = extractor.extract_channel("https://bitchute.com/channel/abc")
+
+      assert_nil results[0].thumbnail_url
+    end
+  end
 end

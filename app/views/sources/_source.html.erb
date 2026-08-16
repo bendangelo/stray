@@ -30,11 +30,18 @@
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
-        <%= button_to pull_source_path(source), method: :post, title: "Pull now",
-              class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold",
-              form: { data: { turbo_frame: "_top" } } do %>
-          <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
-          Pull
+        <% if source.polling? %>
+          <span class="flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-athens-500 text-charcoal text-xs font-bold cursor-wait">
+            <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>
+            Pulling…
+          </span>
+        <% else %>
+          <%= button_to pull_source_path(source), method: :post, title: "Pull now",
+                class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold",
+                form: { data: { turbo_frame: "_top" } } do %>
+            <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
+            Pull
+          <% end %>
         <% end %>
         <% if source.active? %>
           <%= action_link_to "Pause", source_path(source), method: :patch, params: { source: { active: false } },

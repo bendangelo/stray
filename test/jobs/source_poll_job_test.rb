@@ -194,4 +194,63 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not_nil @source.last_error
     assert_match(/extract_feed/, @source.last_error)
   end
+
+  test "clears polling flag after successful poll" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=pollvid1",
+        title: "Poll Vid", content_text: "desc", content_html: nil,
+        thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
+        external_id: "pollvid1", duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_not @source.polling?
+  end
+
+  test "clears polling flag even when extraction fails" do
+    @verify_extractor = false
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "boom" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_not @source.polling?
+    assert_equal "boom", @source.last_error
+  end
+
+  test "enqueues ThumbnailEnrichmentJob for items missing thumbnails" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=nothumb1",
+        title: "No Thumb", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: Time.current, external_id: "nothumb1",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        assert_enqueued_with(job: ThumbnailEnrichmentJob) do
+          SourcePollJob.perform_now(@source.id)
+        end
+      end
+    end
+  end
 end

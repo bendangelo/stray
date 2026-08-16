@@ -23,8 +23,8 @@ module Stray
         raise Error, "yt-dlp binary not found: #{binary}"
       end
 
-      def channel_listings(url)
-        stdout, stderr, status = run_command("--flat-playlist", "--dump-json", url)
+      def channel_listings(url, timeout: 120)
+        stdout, stderr, status = run_command("--flat-playlist", "--dump-json", url, timeout: timeout)
         raise ExtractionFailed, failure_message(status, stderr) unless status.success?
 
         stdout.lines.map { |line| parse_json(line) }
@@ -32,10 +32,10 @@ module Stray
 
       private
 
-      def run_command(*args)
-        ::Timeout.timeout(@timeout) { Open3.capture3(binary, *args) }
+      def run_command(*args, timeout: @timeout)
+        ::Timeout.timeout(timeout) { Open3.capture3(binary, *args) }
       rescue ::Timeout::Error
-        raise Stray::YtDlp::Timeout, "yt-dlp timed out after #{@timeout}s"
+        raise Stray::YtDlp::Timeout, "yt-dlp timed out after #{timeout}s"
       end
 
       def failure_message(status, stderr)

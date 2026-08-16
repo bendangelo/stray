@@ -104,7 +104,9 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor.expect(:extract, content, [ "https://bitchute.com/video/bcvid123" ])
 
     Stray::ExtractorRegistry.stub(:find_for, extractor) do
-      LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/bcvid123")
+      assert_enqueued_with(job: SourcePollJob) do
+        LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/bcvid123")
+      end
     end
 
     source = Source.find_by(external_id: "abc", user_id: @user.id)

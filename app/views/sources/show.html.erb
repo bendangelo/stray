@@ -1,4 +1,5 @@
 <div class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
+  <%= turbo_stream_from "user_#{current_user.id}_sources" %>
   <div class="mb-4">
     <%= link_to "← Sources", sources_path, class: "text-sm text-charcoal underline hover:no-underline" %>
     <div class="flex items-start justify-between gap-2 mt-2">
@@ -27,10 +28,17 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <%= button_to pull_source_path(@source), method: :post, title: "Pull now",
-              class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold" do %>
-          <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
-          Pull now
+        <% if @source.polling? %>
+          <span class="flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-athens-500 text-charcoal text-xs font-bold cursor-wait">
+            <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>
+            Pulling…
+          </span>
+        <% else %>
+          <%= button_to pull_source_path(@source), method: :post, title: "Pull now",
+                class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold" do %>
+            <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
+            Pull now
+          <% end %>
         <% end %>
         <% if @source.active? %>
           <%= action_link_to "Pause", source_path(@source), method: :patch,

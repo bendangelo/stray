@@ -37,7 +37,7 @@ class SourcesController < ApplicationController
     end
 
     if @source.valid?
-      @source.update!(source_params.permit(:name, :url, :icon_url, :active))
+      @source.update!(source_params.permit(:name, :url, :icon_url, :active, :poll_interval))
       Follow.find_or_create_by!(user: current_user, source: @source)
       SourcePollJob.perform_later(@source.id)
       redirect_to sources_path, notice: "Source added."

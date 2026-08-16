@@ -44,7 +44,7 @@ module Stray
             title: data["title"],
             content_text: nil,
             content_html: nil,
-            thumbnail_url: data.dig("thumbnails", 0, "url"),
+            thumbnail_url: extract_listing_thumbnail(data),
             published_at: parse_upload_date(data["upload_date"]),
             external_id: data["id"],
             duration: data["duration"],
@@ -74,6 +74,13 @@ module Stray
 
       def runner
         @runner ||= Stray::YtDlp::Runner.new
+      end
+
+      def extract_listing_thumbnail(data)
+        thumbnails = data["thumbnails"]
+        first = thumbnails.is_a?(Array) ? thumbnails.first : nil
+        first.is_a?(Hash) ? first["url"] : first ||
+          data["thumbnail"]
       end
 
       def extract_creator(data)

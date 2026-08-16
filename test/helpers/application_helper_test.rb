@@ -42,8 +42,8 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_nil embed_url(item)
   end
 
-  test "missing_thumb returns a data URI" do
-    assert_match(/^data:image\/svg\+xml/, missing_thumb)
+  test "missing_thumb returns the missing-video asset path" do
+    assert_match(/missing-video\.jpg/, missing_thumb)
   end
 
   test "video? is true for youtube_channel" do

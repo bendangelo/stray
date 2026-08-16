@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_164520) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_175852) do
   create_table "data_migrations", primary_key: "version", id: :string, force: :cascade do |t|
   end
 
@@ -94,6 +94,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_164520) do
     t.string "name"
     t.datetime "next_crawl_at"
     t.integer "poll_interval"
+    t.boolean "polling", default: false, null: false
     t.datetime "updated_at", null: false
     t.string "url", null: false
     t.integer "user_id", null: false

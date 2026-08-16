@@ -14,10 +14,18 @@ class SourcePollJob < ApplicationJob
     source = Source.find_by(id: source_id)
     return unless source&.active?
 
+    source.update!(polling: true)
+    broadcast_source_update(source)
+
     domain = Stray::DomainMutex.domain_for(source.url)
 
     Stray::DomainMutex.with_lock(domain) do
       extract_and_persist(source)
+    end
+  ensure
+    if source
+      source.update!(polling: false)
+      broadcast_source_update(source)
     end
   end
 
@@ -76,11 +84,15 @@ class SourcePollJob < ApplicationJob
     Item.upsert_all(rows, unique_by: [ :source_id, :external_id ], returning: :id).then do |result|
       item_ids = result.to_a.map { |row| row["id"] }
 
+      missing_thumb_ids = []
       contents.each_with_index do |content, i|
         item_id = item_ids[i]
         apply_extractor_tags(source, item_id, content)
         EmbeddingJob.perform_later("Item", item_id)
+        missing_thumb_ids << item_id if content.thumbnail_url.blank?
       end
+
+      ThumbnailEnrichmentJob.perform_later(source.id, missing_thumb_ids) if missing_thumb_ids.any?
     end
   end
 
@@ -93,5 +105,14 @@ class SourcePollJob < ApplicationJob
       Tagging.find_or_create_by!(item: item, tag: tag, source: :user)
       EmbeddingJob.perform_later("Tag", tag.id) if tag.embedding.nil?
     end
+  end
+
+  def broadcast_source_update(source)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
   end
 end
