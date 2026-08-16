@@ -117,4 +117,19 @@ class SourceTest < ActiveSupport::TestCase
   test "search with q matching nothing returns empty" do
     assert_empty Source.matching("nonexistent-source-xyz")
   end
+
+  test "display_name returns name when present" do
+    source = sources(:youtube)
+    assert_equal "Test Channel", source.display_name
+  end
+
+  test "display_name falls back to hostname when name is nil" do
+    source = Source.new(url: "https://www.example.com/feed.xml", external_id: "abc")
+    assert_equal "example.com", source.display_name
+  end
+
+  test "display_name falls back to external_id when url is invalid" do
+    source = Source.new(url: "not-a-url", external_id: "abc123")
+    assert_equal "abc123", source.display_name
+  end
 end

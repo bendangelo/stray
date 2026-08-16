@@ -51,11 +51,17 @@ class LinkIntakeJob < ApplicationJob
     extractor = Stray::ExtractorRegistry.find_for(result.rss_url)
     contents = Array(extractor.extract(result.rss_url))
 
+    name = result.channel_name
+    if name.nil?
+      creator = contents.map(&:creator_identity).compact.find { |c| c.name }
+      name = creator&.name
+    end
+
     source = create_source(
       kind: :youtube_channel,
       url: result.rss_url,
       external_id: result.channel_id,
-      name: result.channel_name,
+      name: name,
       channel_url: result.channel_url
     )
 
@@ -130,7 +136,7 @@ class LinkIntakeJob < ApplicationJob
         user_id: @user_id,
         external_id: content.external_id,
         title: content.title,
-        url: build_item_url(source, content),
+        url: content.url,
         content_text: content.content_text,
         content_html: content.content_html,
         thumbnail_url: content.thumbnail_url,
@@ -165,22 +171,13 @@ class LinkIntakeJob < ApplicationJob
     end
   end
 
-  def build_item_url(source, content)
-    case source.kind
-    when "youtube_channel"
-      "https://www.youtube.com/watch?v=#{content.external_id}"
-    else
-      "#{source.url}/video/#{content.external_id}"
-    end
-  end
-
   def broadcast_success(source, contents)
     count = Array(contents).size
     Turbo::StreamsChannel.broadcast_replace_to(
       "user_#{@user_id}_intake",
       target: "intake_status",
       html: "<div id=\"intake_status\" class=\"rounded-lg border p-4\">\n" \
-            "  <p class=\"font-semibold\">Following #{source.name || 'channel'}</p>\n" \
+            "  <p class=\"font-semibold\">Following #{ERB::Util.html_escape(source.display_name)}</p>\n" \
             "  <p class=\"text-sm text-gray-500\">#{count} new video#{'s' if count != 1}</p>\n" \
             "</div>"
     )

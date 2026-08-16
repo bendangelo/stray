@@ -26,20 +26,22 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "performs poll: extracts items, upserts, recalculates cadence" do
     contents = [
       Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120, creator_identity: nil, tags: [],
       ),
       Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=vid2",
         title: "Video 2", content_text: "Desc 2", content_html: nil,
         thumbnail_url: "https://example.com/t2.jpg", published_at: 2.days.ago,
         external_id: "vid2", duration: 180, creator_identity: nil, tags: []
       )
     ]
 
-    @extractor.expect(:extract, contents, [ @source.url ])
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -62,15 +64,16 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     contents = [
       Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=vid1",
         title: "New Title", content_text: "Updated", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
         external_id: "vid1", duration: nil, creator_identity: nil, tags: []
       )
     ]
 
-    @extractor.expect(:extract, contents, [ @source.url ])
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -83,9 +86,9 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "records error on extraction failure" do
     @verify_extractor = false
     failing = Object.new
-    failing.define_singleton_method(:extract) { |_url| raise Stray::YtDlp::ExtractionFailed, "yt-dlp failed" }
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "yt-dlp failed" }
 
-    Stray::ExtractorRegistry.stub(:find_for, failing, [ @source.url ]) do
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -105,15 +108,16 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "applies extractor tags to items" do
     contents = [
       Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=tagvid1",
         title: "Tagged Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "tagvid1",
         duration: nil, creator_identity: nil, tags: [ "ruby", "education" ]
       )
     ]
 
-    @extractor.expect(:extract, contents, [ @source.url ])
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -129,20 +133,65 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "enqueues EmbeddingJob for new items" do
     contents = [
       Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=newvid1",
         title: "New Vid", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "newvid1",
         duration: nil, creator_identity: nil, tags: []
       )
     ]
 
-    @extractor.expect(:extract, contents, [ @source.url ])
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for, @extractor, [ @source.url ]) do
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_enqueued_with(job: EmbeddingJob) do
           SourcePollJob.perform_now(@source.id)
         end
       end
     end
+  end
+
+  test "backfills source name from creator_identity when name is nil" do
+    @source.update!(name: nil)
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=vid_name1",
+        title: "Video", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: Time.current, external_id: "vid_name1",
+        duration: nil,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Backfilled Channel", url: "https://example.com",
+          external_id: "UCtest", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_equal "Backfilled Channel", @source.name
+  end
+
+  test "records error when extractor does not implement extract_feed" do
+    @verify_extractor = false
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "not implemented" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_not_nil @source.last_error
+    assert_match(/extract_feed/, @source.last_error)
   end
 end

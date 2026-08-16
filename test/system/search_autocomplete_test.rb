@@ -25,7 +25,7 @@ class SearchAutocompleteTest < ApplicationSystemTestCase
       find("li[role='option']", text: "First Video").click
     end
 
-    assert_selector "h1", text: "Your Feed"
+    assert_equal "First Video", find_field("q").value
     assert_text "First Video"
     assert_no_text "Second Video"
   end

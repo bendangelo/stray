@@ -2,16 +2,21 @@ require "feedjira"
 
 module Stray
   module Extractors
-    class YoutubeRss < Stray::Extractor
+    class RssAtom < Stray::Extractor
       def self.matches?(url)
         uri = URI.parse(url)
-        uri.host&.end_with?("youtube.com") && uri.path == "/feeds/videos.xml"
+        path = uri.path.downcase
+        path.end_with?(".xml", ".rss", ".atom") ||
+          path.include?("/feed") ||
+          path.include?("/rss") ||
+          path.include?("/atom") ||
+          path.include?("/feeds/")
       rescue URI::InvalidURIError
         false
       end
 
       def self.handles_kind?(kind)
-        kind == "youtube_channel"
+        kind == "rss_feed"
       end
 
       def extract(url)
@@ -23,10 +28,10 @@ module Stray
             url: entry.url,
             title: entry.title,
             content_text: entry.content || entry.summary,
-            content_html: nil,
-            thumbnail_url: entry.media_thumbnail_url,
+            content_html: entry.content,
+            thumbnail_url: extract_thumbnail(entry),
             published_at: entry.published,
-            external_id: entry.entry_id.sub("yt:video:", ""),
+            external_id: entry.entry_id || entry.url,
             duration: nil,
             creator_identity: extract_creator(feed),
             tags: []
@@ -47,11 +52,17 @@ module Stray
         end
       end
 
+      def extract_thumbnail(entry)
+        entry.respond_to?(:media_thumbnail_url) ? entry.media_thumbnail_url : nil
+      end
+
       def extract_creator(feed)
+        return nil unless feed.respond_to?(:title) || feed.respond_to?(:url)
+
         CreatorIdentity.new(
           name: feed.title,
           url: feed.url,
-          external_id: feed.youtube_channel_id,
+          external_id: feed.feed_url || feed.url,
           thumbnail_url: nil
         )
       end

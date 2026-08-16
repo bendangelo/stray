@@ -1,6 +1,6 @@
 module Stray
   ExtractedContent = Data.define(
-    :title, :content_text, :content_html,
+    :url, :title, :content_text, :content_html,
     :thumbnail_url, :published_at,
     :external_id, :duration,
     :creator_identity,
@@ -14,7 +14,15 @@ module Stray
       raise NotImplementedError
     end
 
+    def self.handles_kind?(kind)
+      false
+    end
+
     def extract(url)
+      raise NotImplementedError
+    end
+
+    def extract_feed(url)
       raise NotImplementedError
     end
   end

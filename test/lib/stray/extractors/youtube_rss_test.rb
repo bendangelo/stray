@@ -19,6 +19,15 @@ class Stray::Extractors::YoutubeRssTest < ActiveSupport::TestCase
     assert_not Stray::Extractors::YoutubeRss.matches?("https://bitchute.com/channel/abc")
   end
 
+  test "handles_kind? returns true for youtube_channel" do
+    assert Stray::Extractors::YoutubeRss.handles_kind?("youtube_channel")
+  end
+
+  test "handles_kind? returns false for other kinds" do
+    assert_not Stray::Extractors::YoutubeRss.handles_kind?("rss_feed")
+    assert_not Stray::Extractors::YoutubeRss.handles_kind?("video_channel")
+  end
+
   test "extract returns array of ExtractedContent from RSS feed" do
     rss_xml = File.read(FIXTURE_PATH)
     stub_request(:get, /youtube\.com\/feeds\/videos\.xml/)
@@ -30,6 +39,7 @@ class Stray::Extractors::YoutubeRssTest < ActiveSupport::TestCase
     assert_equal 2, results.size
     first = results.first
     assert_equal "dQw4w9WgXcQ", first.external_id
+    assert_equal "https://www.youtube.com/watch?v=dQw4w9WgXcQ", first.url
     assert_equal "Rick Astley - Never Gonna Give You Up (Official Music Video)", first.title
     assert_equal "The official video for Never Gonna Give You Up by Rick Astley.", first.content_text
     assert_equal "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg", first.thumbnail_url

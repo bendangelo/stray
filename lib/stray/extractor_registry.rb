@@ -11,6 +11,10 @@ module Stray
         @extractors.find { |klass| klass.matches?(url) }&.new
       end
 
+      def find_for_source(source)
+        @extractors.find { |klass| klass.handles_kind?(source.kind) }&.new
+      end
+
       def all
         @extractors.dup
       end

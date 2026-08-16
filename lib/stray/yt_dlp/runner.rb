@@ -1,5 +1,6 @@
 require "open3"
 require "json"
+require "timeout"
 
 require_relative "error"
 
@@ -32,7 +33,9 @@ module Stray
       private
 
       def run_command(*args)
-        Open3.capture3(binary, *args)
+        ::Timeout.timeout(@timeout) { Open3.capture3(binary, *args) }
+      rescue ::Timeout::Error
+        raise Stray::YtDlp::Timeout, "yt-dlp timed out after #{@timeout}s"
       end
 
       def failure_message(status, stderr)

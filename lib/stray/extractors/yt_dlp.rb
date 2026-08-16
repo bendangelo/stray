@@ -14,10 +14,15 @@ module Stray
         false
       end
 
+      def self.handles_kind?(kind)
+        kind == "video_channel"
+      end
+
       def extract(url)
         data = runner.single_video(url)
 
         ExtractedContent.new(
+          url: data["url"] || data["webpage_url"] || url,
           title: data["title"],
           content_text: data["description"],
           content_html: nil,
@@ -35,6 +40,7 @@ module Stray
 
         entries.map do |data|
           ExtractedContent.new(
+            url: data["url"],
             title: data["title"],
             content_text: nil,
             content_html: nil,
@@ -46,6 +52,10 @@ module Stray
             tags: []
           )
         end
+      end
+
+      def extract_feed(url)
+        extract_channel(url)
       end
 
       private

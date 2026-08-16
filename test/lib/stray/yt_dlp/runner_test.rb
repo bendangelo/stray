@@ -62,6 +62,15 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
     end
   end
 
+  test "single_video raises Timeout when yt-dlp exceeds timeout" do
+    runner = Stray::YtDlp::Runner.new(timeout: 0.01)
+    Open3.stub(:capture3, ->(*args) { sleep 1; [ "", "", status_success ] }) do
+      assert_raises(Stray::YtDlp::Timeout) do
+        runner.single_video("https://example.com/video")
+      end
+    end
+  end
+
   test "constructor accepts binary and timeout options" do
     runner = Stray::YtDlp::Runner.new(binary: "/usr/local/bin/yt-dlp", timeout: 60)
     assert_equal "/usr/local/bin/yt-dlp", runner.binary

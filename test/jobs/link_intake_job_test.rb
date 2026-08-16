@@ -8,6 +8,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
   test "creates source + follow + items for YouTube channel URL" do
     contents = [
       Stray::ExtractedContent.new(
+        url: "https://www.youtube.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120,
@@ -50,6 +51,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "creates source + follow + single item for YouTube video URL" do
     video_content = Stray::ExtractedContent.new(
+      url: "https://www.youtube.com/watch?v=vid123",
       title: "Test Video", content_text: "Desc", content_html: nil,
       thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
       external_id: "vid123", duration: 300,
@@ -87,6 +89,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "creates source for non-YouTube video URL" do
     content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/bcvid123",
       title: "Bitchute Video", content_text: "Desc", content_html: nil,
       thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
       external_id: "bcvid123", duration: 300,
@@ -114,6 +117,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "broadcasts success via Turbo Stream" do
     content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/v1",
       title: "Video", content_text: nil, content_html: nil,
       thumbnail_url: nil, published_at: 1.day.ago,
       external_id: "v1", duration: nil,
@@ -153,6 +157,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "applies extractor tags from single video" do
     content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/tagvid1",
       title: "Tagged Video", content_text: "desc", content_html: nil,
       thumbnail_url: nil, published_at: 1.day.ago,
       external_id: "tagvid1", duration: 300,
@@ -173,5 +178,40 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     tag = Tag.find_by(user: @user, name: "python")
     assert tag
     assert Tagging.joins(:item).where(tag: tag).exists?
+  end
+
+  test "backfills source name from RSS feed for /channel/UC... URL" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://www.youtube.com/watch?v=vid1",
+        title: "Video 1", content_text: "Desc", content_html: nil,
+        thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+        external_id: "vid1", duration: 120,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Channel From Feed", url: "https://www.youtube.com/channel/UC456",
+          external_id: "UC456", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    resolver_result = Stray::Youtube::ChannelResolver::Result.new(
+      channel_id: "UC456",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC456",
+      channel_name: nil,
+      channel_url: "https://www.youtube.com/channel/UC456"
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, contents, [ resolver_result.rss_url ])
+
+    Stray::Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      Stray::ExtractorRegistry.stub(:find_for, extractor, [ resolver_result.rss_url ]) do
+        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/channel/UC456")
+      end
+    end
+
+    source = Source.find_by(external_id: "UC456", user_id: @user.id)
+    assert_equal "Channel From Feed", source.name
   end
 end

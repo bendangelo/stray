@@ -117,6 +117,29 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "can&#39;t be blank"
   end
 
+  test "create with same URL reuses existing source (deterministic external_id)" do
+    sign_in_as(users(:one))
+    url = "https://example.com/duplicate-feed.xml"
+
+    assert_difference -> { Source.count }, 1 do
+      post sources_path, params: {
+        source: { url: url, kind: "rss_feed", name: "First Feed", active: "1" }
+      }
+    end
+
+    first_source = Source.find_by(url: url)
+    assert_equal "First Feed", first_source.name
+
+    assert_no_difference -> { Source.count } do
+      post sources_path, params: {
+        source: { url: url, kind: "rss_feed", name: "Updated Feed", active: "1" }
+      }
+    end
+
+    first_source.reload
+    assert_equal "Updated Feed", first_source.name
+  end
+
   test "create requires authentication" do
     post sources_path, params: { source: { url: "https://example.com", kind: "rss_feed" } }
     assert_redirected_to new_session_path

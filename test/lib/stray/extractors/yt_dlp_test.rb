@@ -24,12 +24,22 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
     assert_not Stray::Extractors::YtDlp.matches?("https://www.youtube.com/feeds/videos.xml?channel_id=UC123")
   end
 
+  test "handles_kind? returns true for video_channel" do
+    assert Stray::Extractors::YtDlp.handles_kind?("video_channel")
+  end
+
+  test "handles_kind? returns false for other kinds" do
+    assert_not Stray::Extractors::YtDlp.handles_kind?("youtube_channel")
+    assert_not Stray::Extractors::YtDlp.handles_kind?("rss_feed")
+  end
+
   test "extract returns ExtractedContent with video metadata" do
     Open3.stub(:capture3, [ @json, "", status_success ]) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
 
       assert_equal "dQw4w9WgXcQ", result.external_id
+      assert_equal "https://bitchute.com/video/abc123", result.url
       assert_equal "Rick Astley - Never Gonna Give You Up (Official Music Video)", result.title
       assert_equal "The official video for Never Gonna Give You Up by Rick Astley.", result.content_text
       assert_equal "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", result.thumbnail_url
@@ -86,6 +96,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
       assert_equal 2, results.size
       assert_equal "vid1", results[0].external_id
+      assert_equal "https://example.com/v1", results[0].url
       assert_equal "Video 1", results[0].title
     end
   end

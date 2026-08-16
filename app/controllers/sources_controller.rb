@@ -18,9 +18,20 @@ class SourcesController < ApplicationController
   end
 
   def create
-    @source = Source.new(source_params.merge(user: current_user, external_id: SecureRandom.hex(8)))
+    external_id = Digest::SHA256.hexdigest(source_params[:url])[0, 16]
+    @source = Source.find_or_create_by!(
+      user: current_user,
+      external_id: external_id,
+      kind: source_params[:kind]
+    ) do |s|
+      s.url = source_params[:url]
+      s.name = source_params[:name]
+      s.icon_url = source_params[:icon_url]
+      s.active = source_params.key?(:active) ? (source_params[:active] == "1") : true
+    end
 
-    if @source.save
+    if @source.valid?
+      @source.update!(source_params.permit(:name, :url, :icon_url, :active))
       Follow.find_or_create_by!(user: current_user, source: @source)
       SourcePollJob.perform_later(@source.id)
       redirect_to sources_path, notice: "Source added."

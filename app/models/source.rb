@@ -16,6 +16,16 @@ class Source < ApplicationRecord
   scope :inactive, -> { where(active: false) }
   scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
 
+  def display_name
+    name.presence || begin
+      uri = URI.parse(url)
+      host = uri.host&.sub(/^www\./, "")
+      host || external_id
+    rescue URI::InvalidURIError
+      external_id
+    end
+  end
+
   def recalculate_next_crawl!
     recent = items.order(published_at: :desc).limit(5).pluck(:published_at).compact
 

@@ -8,9 +8,17 @@ class Stray::ExtractorRegistryTest < ActiveSupport::TestCase
       false
     end
 
+    def self.handles_kind?(kind)
+      kind == "youtube_channel"
+    end
+
     def extract(url)
-      Stray::ExtractedContent.new(title: "test", content_text: nil, content_html: nil,
+      Stray::ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
         thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
+    end
+
+    def extract_feed(url)
+      extract(url)
     end
   end
 
@@ -19,9 +27,17 @@ class Stray::ExtractorRegistryTest < ActiveSupport::TestCase
       true
     end
 
+    def self.handles_kind?(kind)
+      kind == "video_channel"
+    end
+
     def extract(url)
-      Stray::ExtractedContent.new(title: "test", content_text: nil, content_html: nil,
+      Stray::ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
         thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
+    end
+
+    def extract_feed(url)
+      extract(url)
     end
   end
 
@@ -58,5 +74,17 @@ class Stray::ExtractorRegistryTest < ActiveSupport::TestCase
     Stray::ExtractorRegistry.register(FakeYoutubeRss)
     extractor = Stray::ExtractorRegistry.find_for("https://www.youtube.com/feeds/videos.xml?channel_id=UC123")
     assert_equal FakeYtDlp, extractor.class
+  end
+
+  test "find_for_source returns extractor matching source kind" do
+    source = Source.new(kind: :youtube_channel, url: "https://example.com")
+    extractor = Stray::ExtractorRegistry.find_for_source(source)
+    assert_equal FakeYoutubeRss, extractor.class
+  end
+
+  test "find_for_source returns nil when no extractor handles kind" do
+    Stray::ExtractorRegistry.reset!
+    source = Source.new(kind: :generic_page, url: "https://example.com")
+    assert_nil Stray::ExtractorRegistry.find_for_source(source)
   end
 end

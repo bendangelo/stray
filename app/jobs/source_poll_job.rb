@@ -24,15 +24,31 @@ class SourcePollJob < ApplicationJob
   private
 
   def extract_and_persist(source)
-    extractor = Stray::ExtractorRegistry.find_for(source.url)
-    raise Stray::YtDlp::ExtractionFailed, "No extractor found for #{source.url}" unless extractor
+    extractor = Stray::ExtractorRegistry.find_for_source(source)
+    raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind} url=#{source.url}" unless extractor
 
-    contents = extractor.extract(source.url)
+    contents = extractor.extract_feed(source.url)
     contents = Array(contents)
 
     upsert_items(source, contents)
+    backfill_source_metadata(source, contents)
     source.recalculate_next_crawl!
     source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil)
+  rescue NotImplementedError => e
+    source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current)
+  end
+
+  def backfill_source_metadata(source, contents)
+    updates = {}
+    if source.name.nil?
+      creator = contents.map(&:creator_identity).compact.find { |c| c.name }
+      updates[:name] = creator.name if creator
+    end
+    if source.icon_url.nil?
+      creator = contents.map(&:creator_identity).compact.find { |c| c.thumbnail_url }
+      updates[:icon_url] = creator.thumbnail_url if creator
+    end
+    source.update!(updates) if updates.any?
   end
 
   def upsert_items(source, contents)
@@ -44,7 +60,7 @@ class SourcePollJob < ApplicationJob
         user_id: source.user_id,
         external_id: content.external_id,
         title: content.title,
-        url: build_item_url(source, content),
+        url: content.url,
         content_text: content.content_text,
         content_html: content.content_html,
         thumbnail_url: content.thumbnail_url,
@@ -76,17 +92,6 @@ class SourcePollJob < ApplicationJob
       tag = Tag.find_or_create_by!(user_id: source.user_id, name: name)
       Tagging.find_or_create_by!(item: item, tag: tag, source: :user)
       EmbeddingJob.perform_later("Tag", tag.id) if tag.embedding.nil?
-    end
-  end
-
-  def build_item_url(source, content)
-    return content.external_id if content.external_id&.start_with?("http")
-
-    case source.kind
-    when "youtube_channel"
-      "https://www.youtube.com/watch?v=#{content.external_id}"
-    else
-      "https://example.com/watch/#{content.external_id}"
     end
   end
 end
