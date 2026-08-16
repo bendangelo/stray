@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+require_relative "../config/environment"
+
+SECRET_COLUMNS = %w[smtp_password ai_provider_api_key].freeze
+
+def show(reveal: false)
+  setting = Setting.current
+  Setting::ENV_MAPPING.keys.each do |key|
+    value = setting.public_send(key)
+    if value.nil?
+      env_val = ENV[Setting::ENV_MAPPING[key]]
+      value = env_val if env_val.present?
+    end
+
+    if SECRET_COLUMNS.include?(key.to_s) && value.present? && !reveal
+      display = "••••••••"
+    else
+      display = value.to_s
+    end
+
+    puts "#{key}: #{display}"
+  end
+end
+
+def get(key)
+  raise "Unknown setting: #{key}" unless Setting::ENV_MAPPING.key?(key.to_sym)
+
+  value = Setting.get(key.to_sym)
+  if SECRET_COLUMNS.include?(key) && value.present?
+    puts "••••••••"
+  else
+    puts value.to_s
+  end
+end
+
+def set(arg)
+  key, value = arg.split("=", 2)
+  raise "Invalid format. Use: key=value" unless key && value
+
+  value = value.gsub(/\A["']|["']\z/, "")
+
+  result = Setting.set(key.to_sym, value)
+  puts "#{key} = #{result}"
+end
+
+case (ARGV[0] || "")
+when "settings"
+  subcommand = ARGV[1] || "show"
+  case subcommand
+  when "show"
+    show(reveal: ARGV[2] == "--reveal")
+  when "get"
+    raise "Usage: bin/stray settings get KEY" unless ARGV[2]
+    get(ARGV[2])
+  when "set"
+    raise "Usage: bin/stray settings set KEY=VALUE" unless ARGV[2]
+    set(ARGV[2])
+  else
+    warn "Unknown subcommand: #{subcommand}"
+    warn "Usage: bin/stray settings [show | get KEY | set KEY=VALUE]"
+    exit 1
+  end
+else
+  warn "Usage: bin/stray <command> [args]"
+  warn "Commands:"
+  warn "  settings show [--reveal]    Print all settings"
+  warn "  settings get KEY            Print single value"
+  warn "  settings set KEY=VALUE       Set a value"
+  exit 1
+end
