@@ -27,6 +27,12 @@
 
       <%= yield :tag_bar %>
 
+      <% if content_for?(:muted_toggle) %>
+        <div class="container mx-auto px-4 pt-2 max-w-screen-xl">
+          <%= yield :muted_toggle %>
+        </div>
+      <% end %>
+
       <div class="flex">
         <% if authenticated? %>
           <%= render "sources/sidebar" %>
