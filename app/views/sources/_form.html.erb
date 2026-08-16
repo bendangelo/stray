@@ -1,5 +1,4 @@
-<%= form_with model: source, url: source.new_record? ? sources_path : source_path(source),
-      data: { turbo_frame: "_top" } do |form| %>
+<%= form_with model: source, url: source.new_record? ? sources_path : source_path(source) do |form| %>
   <% if source.errors.any? %>
     <div class="mb-4 border-3 border-cerise rounded-md bg-athens-400 p-3">
       <% source.errors.full_messages.each do |message| %>
@@ -39,8 +38,7 @@
       <%= form.submit source.new_record? ? "Add source" : "Save",
             class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
       <%= link_to "Cancel", sources_path,
-            class: "text-sm text-charcoal underline hover:no-underline",
-            data: { turbo_frame: "_top" } %>
+            class: "text-sm text-charcoal underline hover:no-underline" %>
     </div>
   </div>
 <% end %>

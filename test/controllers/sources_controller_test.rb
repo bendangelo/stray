@@ -145,7 +145,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       source: { name: "Renamed Channel", icon_url: "https://example.com/icon.png" }
     }, as: :turbo_stream
 
-    assert_response :success
+    assert_redirected_to sources_path
     source.reload
     assert_equal "Renamed Channel", source.name
     assert_equal "https://example.com/icon.png", source.icon_url
@@ -159,7 +159,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       source: { active: "0" }
     }, as: :turbo_stream
 
-    assert_response :success
+    assert_redirected_to sources_path
     source.reload
     assert_not source.active
   end
@@ -172,7 +172,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       source: { active: "1" }
     }, as: :turbo_stream
 
-    assert_response :success
+    assert_redirected_to sources_path
     source.reload
     assert source.active
   end

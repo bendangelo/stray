@@ -32,18 +32,18 @@
       <div class="flex items-center gap-1 shrink-0">
         <% if source.active? %>
           <%= button_to "Pause", source_path(source), method: :patch, params: { source: { active: false } },
-                form: { data: { turbo_stream: true } },
+                form: { data: { turbo_frame: "_top" } },
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% else %>
           <%= button_to "Unpause", source_path(source), method: :patch, params: { source: { active: true } },
-                form: { data: { turbo_stream: true } },
+                form: { data: { turbo_frame: "_top" } },
                 class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
         <% end %>
         <%= link_to "Edit", edit_source_path(source),
               class: "text-xs text-charcoal underline hover:no-underline",
               data: { turbo_frame: "_top" } %>
         <%= button_to "Delete", source_path(source), method: :delete,
-              form: { data: { turbo_confirm: "Delete this source and all its items?" } },
+              form: { data: { turbo_confirm: "Delete this source and all its items?", turbo_frame: "_top" } },
               class: "text-xs text-cerise underline hover:no-underline cursor-pointer bg-transparent border-none" %>
       </div>
     </div>

@@ -6,9 +6,10 @@
   </div>
 
   <%= form_with url: sources_path, method: :get, class: "mb-4 flex gap-1",
-        data: { turbo_frame: "sources_list", turbo_action: "advance" } do |form| %>
+        data: { controller: "source-search", turbo_frame: "sources_list", turbo_action: "advance" } do |form| %>
     <%= form.text_field :q, placeholder: "Search sources...",
           value: params[:q],
+          data: { source_search_target: "input", action: "input->source-search#submit" },
           class: "h-9 w-full px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
   <% end %>
 
