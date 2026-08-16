@@ -45,8 +45,7 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
 
     # On mobile, the player should use flex-col (stacked), not lg:flex-row (side-by-side)
     player = find("[data-player-target='playerBox'] > div")
-    player_classes = player[:class]
-    assert_includes player_classes, "flex-col",
+    assert_equal "column", player.evaluate_script("getComputedStyle(this).flexDirection"),
            "player should stack media/content vertically on mobile"
   end
 
@@ -62,8 +61,7 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     assert_selector "[data-player-target='playerBox']:not(.hidden)"
 
     player = find("[data-player-target='playerBox'] > div")
-    player_classes = player[:class]
-    assert_includes player_classes, "lg:flex-row",
+    assert_equal "row", player.evaluate_script("getComputedStyle(this).flexDirection"),
            "player should use side-by-side layout on desktop"
   end
 end
