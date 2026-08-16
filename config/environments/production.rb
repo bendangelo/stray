@@ -67,10 +67,10 @@ Rails.application.configure do
   # Configure SMTP from config (optional - needed for password reset emails)
   if AppConfig.smtp_configured?
     config.action_mailer.smtp_settings = {
-      address: AppConfig.smtp["host"],
-      port: AppConfig.smtp["port"],
-      user_name: AppConfig.smtp["username"],
-      password: AppConfig.smtp["password"],
+      address: AppConfig.smtp[:host],
+      port: AppConfig.smtp[:port],
+      user_name: AppConfig.smtp[:username],
+      password: AppConfig.smtp[:password],
       authentication: :plain,
       enable_starttls_auto: true
     }

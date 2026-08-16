@@ -8,9 +8,9 @@ Bundler.require(*Rails.groups)
 
 module Stray
   class Application < Rails::Application
-    # Configure the path for configuration classes that should be used before initialization
-    # NOTE: path should be relative to the project root (Rails.root)
-    config.anyway_config.autoload_static_config_path = "config/configs"
+    # AppConfig is a plain Ruby class under config/configs. Autoload it so it's
+    # available in both the app and bin/ scripts without anyway_config.
+    config.autoload_paths << Rails.root.join("config/configs")
 
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1

@@ -33,10 +33,6 @@ gem "faraday-retry"
 gem "nokogiri"
 gem "feedjira"
 
-# Centralized, typed configuration from ENV/YAML with boot-time validation
-# [https://github.com/palkan/anyway_config]
-gem "anyway_config", "~> 2.6"
-
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
