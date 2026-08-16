@@ -55,4 +55,11 @@ class ItemTest < ActiveSupport::TestCase
     assert_includes results.map(&:title), "Ruby on Rails Tutorial"
     assert_not_includes results.map(&:title), "Cooking Pasta"
   end
+
+  test "unseen scope returns only unseen items" do
+    unseen = Item.unseen.to_a
+    assert_includes unseen, items(:video_one)
+    assert_not_includes unseen, items(:video_saved)
+    assert_not_includes unseen, items(:video_hidden)
+  end
 end
