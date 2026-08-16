@@ -81,14 +81,26 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
 
   test "source detail action buttons wrap on narrow screens" do
     sign_in_as(users(:one))
+    sources(:youtube).update!(name: "A very long source name that forces the action buttons to wrap")
     visit source_path(sources(:youtube))
 
     resize_to_mobile
 
     action_cluster = find("[data-test='source-actions']")
-    action_classes = action_cluster[:class]
 
-    assert_includes action_classes, "flex-wrap",
-           "source action buttons should wrap on mobile"
+    assert_equal "wrap", action_cluster.evaluate_script("getComputedStyle(this).flexWrap"),
+           "source action cluster should have wrap computed style"
+
+    button_tops = action_cluster.all(":scope > *", visible: false).map do |child|
+      child.evaluate_script("this.getBoundingClientRect().top")
+    end
+    assert_operator button_tops.uniq.length, :>, 1,
+           "action buttons should wrap to a second row on a narrow viewport"
+
+    action_cluster.all(":scope > *", visible: false).each do |child|
+      right = child.evaluate_script("this.getBoundingClientRect().right")
+      assert_operator right, :<=, page.evaluate_script("document.documentElement.clientWidth"),
+            "action buttons should not overflow the right edge of the viewport"
+    end
   end
 end
