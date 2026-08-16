@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_023047) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_023134) do
   create_table "follows", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "source_id", null: false
@@ -57,6 +57,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_023047) do
     t.string "user_agent"
     t.integer "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "settings", force: :cascade do |t|
+    t.string "ai_provider_api_key"
+    t.string "ai_provider_name", default: "NONE"
+    t.string "ai_provider_url"
+    t.datetime "created_at", null: false
+    t.string "instance_domain"
+    t.string "instance_name"
+    t.string "smtp_host"
+    t.string "smtp_password"
+    t.integer "smtp_port", default: 587
+    t.string "smtp_username"
+    t.datetime "updated_at", null: false
   end
 
   create_table "sources", force: :cascade do |t|
