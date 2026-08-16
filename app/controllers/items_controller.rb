@@ -1,10 +1,12 @@
 class ItemsController < ApplicationController
   ALLOWED_STATES = %w[ unseen saved hidden ].freeze
+  KIND_MAP = { "saved" => :starred, "hidden" => :hidden }.freeze
 
   def player
     item = Item.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless item
 
+    Stray::Ranking.apply_interaction!(user: current_user, item: item, kind: :opened)
     render partial: "items/player", locals: { item: }, layout: false
   end
 
@@ -16,6 +18,7 @@ class ItemsController < ApplicationController
     return head :bad_request unless ALLOWED_STATES.include?(state)
 
     item.update!(state: state)
+    Stray::Ranking.apply_interaction!(user: current_user, item: item, kind: KIND_MAP[state])
 
     respond_to do |format|
       format.turbo_stream { render "items/update", locals: { item:, state: } }

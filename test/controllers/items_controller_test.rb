@@ -78,4 +78,59 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
   end
+
+  test "saving an item creates a starred interaction and nudges weight up" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    follow = follows(:one)
+    assert_equal 1.0, follow.weight
+
+    assert_difference -> { Interaction.count }, 1 do
+      patch item_path(item), params: { state: "saved" }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert Interaction.exists?(user: users(:one), item: item, kind: "starred")
+    follow.reload
+    assert_in_delta 1.1, follow.weight, 0.001
+  end
+
+  test "hiding an item creates a hidden interaction and nudges weight down" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    follow = follows(:one)
+    assert_equal 1.0, follow.weight
+
+    assert_difference -> { Interaction.count }, 1 do
+      patch item_path(item), params: { state: "hidden" }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert Interaction.exists?(user: users(:one), item: item, kind: "hidden")
+    follow.reload
+    assert_in_delta 0.9, follow.weight, 0.001
+  end
+
+  test "setting state to unseen creates no interaction" do
+    sign_in_as(users(:one))
+    item = items(:video_saved)
+
+    assert_no_difference -> { Interaction.count } do
+      patch item_path(item), params: { state: "unseen" }, as: :turbo_stream
+    end
+  end
+
+  test "second save of same item does not nudge weight again" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    follow = follows(:one)
+
+    patch item_path(item), params: { state: "saved" }, as: :turbo_stream
+    first_weight = follow.reload.weight
+
+    patch item_path(item), params: { state: "unseen" }, as: :turbo_stream
+    patch item_path(item), params: { state: "saved" }, as: :turbo_stream
+    follow.reload
+    assert_equal first_weight, follow.weight
+  end
 end
