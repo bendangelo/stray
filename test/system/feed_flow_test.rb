@@ -6,7 +6,6 @@ class FeedFlowTest < ApplicationSystemTestCase
     sign_in_as(users(:one))
     visit root_path
 
-    assert_text "Your Feed"
     assert_text "First Video"
     assert_text "Second Video"
     assert_selector ".grid.grid-cols-12"
@@ -44,7 +43,9 @@ class FeedFlowTest < ApplicationSystemTestCase
     visit root_path
 
     fill_in "q", with: "Ruby"
-    click_button "Search"
+    within "nav form[action='/']" do
+      find("button[type='submit']").click
+    end
 
     assert_text "First Video"
     assert_no_text "Second Video"
@@ -88,5 +89,16 @@ class FeedFlowTest < ApplicationSystemTestCase
 
     find("[data-action*='player#close']").click
     assert_selector "[data-player-target='playerBox'].hidden", visible: false
+  end
+
+  test "clicking a tag filters the feed" do
+    sign_in_as(users(:one))
+    visit root_path
+
+    assert_text "ruby"
+    click_on "ruby"
+
+    assert_text "First Video"
+    assert_no_text "Second Video"
   end
 end

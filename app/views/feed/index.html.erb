@@ -1,19 +1,8 @@
-<main class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
-  <div class="mb-4">
-    <h1 class="font-display text-2xl font-bold text-charcoal">Your Feed</h1>
-  </div>
+<% content_for :tag_bar do %>
+  <%= render "shared/tag_bar" %>
+<% end %>
 
-  <%= render "search" %>
-
-  <% if @tags.any? %>
-    <div class="mb-4 flex flex-wrap gap-2">
-      <% @tags.each do |tag| %>
-        <%= link_to tag.name, root_path(tag: tag.name),
-          class: "px-3 py-1 text-sm rounded-md border-3 border-charcoal bg-athens-400 text-charcoal hover:bg-carrot-500 hover:text-white" %>
-      <% end %>
-    </div>
-  <% end %>
-
+<div class="container mx-auto px-4 pt-4 pb-16 max-w-screen-xl">
   <% if @items.any? %>
     <div class="grid grid-cols-12 gap-y-4 max-w-screen-xl mx-auto mb-4 gap-x-2"
          data-controller="player">
@@ -27,8 +16,8 @@
   <% else %>
     <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
       <p class="text-charcoal-300">
-        <% if @q.present? %>
-          No results for "<%= @q %>"
+        <% if @q.present? || @tag.present? %>
+          No results<% if @q.present? %> for "<%= @q %>"<% end %><% if @tag.present? %> tagged "<%= @tag %>"<% end %>.
         <% else %>
           Your feed is empty. Add a link above to start following sources.
         <% end %>
@@ -39,14 +28,14 @@
   <% if @pagy.pages > 1 %>
     <div class="mt-4 flex justify-center gap-2 text-sm">
       <% if @pagy.previous %>
-        <%= link_to "← Newer", root_path(page: @pagy.previous, q: @q),
+        <%= link_to "← Newer", root_path(page: @pagy.previous, q: @q, tag: @tag),
           class: "text-charcoal underline hover:no-underline" %>
       <% end %>
       <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
       <% if @pagy.next %>
-        <%= link_to "Older →", root_path(page: @pagy.next, q: @q),
+        <%= link_to "Older →", root_path(page: @pagy.next, q: @q, tag: @tag),
           class: "text-charcoal underline hover:no-underline" %>
       <% end %>
     </div>
   <% end %>
-</main>
+</div>
