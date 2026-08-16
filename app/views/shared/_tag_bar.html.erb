@@ -1,0 +1,18 @@
+<% if defined?(@tags) && @tags&.any? %>
+  <div class="border-b-3 border-charcoal bg-champagne">
+    <div class="flex overflow-x-auto whitespace-nowrap px-2 md:px-4 lg:px-16 py-2 gap-1">
+      <% active_class = "border-b-6 border-carrot font-semibold text-carrot" %>
+      <% inactive_class = "border-b-6 border-transparent text-charcoal hover:text-carrot" %>
+
+      <%= link_to "All",
+        root_path(request.query_parameters.except("tag", "page")),
+        class: (@tag.blank? ? active_class : inactive_class) + " px-3 py-1 text-sm whitespace-nowrap" %>
+
+      <% @tags.each do |tag| %>
+        <%= link_to tag.name,
+          root_path(request.query_parameters.except("page").merge(tag: tag.name)),
+          class: (@tag == tag.name ? active_class : inactive_class) + " px-3 py-1 text-sm whitespace-nowrap" %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
