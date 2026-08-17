@@ -16,15 +16,15 @@ class TaggingJobTest < ActiveJob::TestCase
   end
 
   test "cold-start no-op when no tags have embeddings" do
-    @item.update!(embedding: Stray::Embeddings::Serializer.pack([ 1.0, 0.0 ]))
+    @item.update!(embedding: Embeddings::Serializer.pack([ 1.0, 0.0 ]))
     TaggingJob.perform_now(@item.id)
     assert_equal 0, @item.taggings.count
   end
 
   test "assigns tags above threshold" do
-    @item.update!(embedding: Stray::Embeddings::Serializer.pack([ 1.0, 0.0 ]))
-    tags(:ruby).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.9, 0.1 ]))
-    tags(:rails).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.1, 0.9 ]))
+    @item.update!(embedding: Embeddings::Serializer.pack([ 1.0, 0.0 ]))
+    tags(:ruby).update!(embedding: Embeddings::Serializer.pack([ 0.9, 0.1 ]))
+    tags(:rails).update!(embedding: Embeddings::Serializer.pack([ 0.1, 0.9 ]))
 
     TaggingJob.perform_now(@item.id)
 
@@ -36,8 +36,8 @@ class TaggingJobTest < ActiveJob::TestCase
   end
 
   test "does not assign tags below threshold" do
-    @item.update!(embedding: Stray::Embeddings::Serializer.pack([ 1.0, 0.0 ]))
-    tags(:ruby).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.0, 1.0 ]))
+    @item.update!(embedding: Embeddings::Serializer.pack([ 1.0, 0.0 ]))
+    tags(:ruby).update!(embedding: Embeddings::Serializer.pack([ 0.0, 1.0 ]))
     Setting.current.update!(zero_shot_threshold: 0.9)
 
     TaggingJob.perform_now(@item.id)
@@ -46,11 +46,11 @@ class TaggingJobTest < ActiveJob::TestCase
   end
 
   test "caps at top_n" do
-    @item.update!(embedding: Stray::Embeddings::Serializer.pack([ 1.0, 0.0 ]))
+    @item.update!(embedding: Embeddings::Serializer.pack([ 1.0, 0.0 ]))
     Setting.current.update!(zero_shot_top_n: 1)
-    tags(:ruby).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.9, 0.1 ]))
-    tags(:rails).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.9, 0.1 ]))
-    tags(:ai).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.9, 0.1 ]))
+    tags(:ruby).update!(embedding: Embeddings::Serializer.pack([ 0.9, 0.1 ]))
+    tags(:rails).update!(embedding: Embeddings::Serializer.pack([ 0.9, 0.1 ]))
+    tags(:ai).update!(embedding: Embeddings::Serializer.pack([ 0.9, 0.1 ]))
 
     TaggingJob.perform_now(@item.id)
 
@@ -58,8 +58,8 @@ class TaggingJobTest < ActiveJob::TestCase
   end
 
   test "idempotent — does not duplicate existing tagging" do
-    @item.update!(embedding: Stray::Embeddings::Serializer.pack([ 1.0, 0.0 ]))
-    tags(:ruby).update!(embedding: Stray::Embeddings::Serializer.pack([ 0.9, 0.1 ]))
+    @item.update!(embedding: Embeddings::Serializer.pack([ 1.0, 0.0 ]))
+    tags(:ruby).update!(embedding: Embeddings::Serializer.pack([ 0.9, 0.1 ]))
     TaggingJob.perform_now(@item.id)
     TaggingJob.perform_now(@item.id)
 

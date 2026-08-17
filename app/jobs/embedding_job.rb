@@ -16,9 +16,9 @@ class EmbeddingJob < ApplicationJob
     return if item.embedding.present?
 
     vec = provider.embed(item_text(item))
-    item.update!(embedding: Stray::Embeddings::Serializer.pack(vec))
+    item.update!(embedding: Embeddings::Serializer.pack(vec))
     enqueue_downstream(item_id)
-  rescue Stray::Embeddings::ModelMissing => e
+  rescue Embeddings::ModelMissing => e
     Rails.logger.warn("[EmbeddingJob] Skipping item #{item_id}: #{e.message}")
   end
 
@@ -26,18 +26,18 @@ class EmbeddingJob < ApplicationJob
     tag = Tag.find_by(id: tag_id)
     return unless tag
 
-    vec = provider.embed(Stray::Embeddings::Text.normalize(tag.name))
-    tag.update!(embedding: Stray::Embeddings::Serializer.pack(vec))
-  rescue Stray::Embeddings::ModelMissing => e
+    vec = provider.embed(Embeddings::Text.normalize(tag.name))
+    tag.update!(embedding: Embeddings::Serializer.pack(vec))
+  rescue Embeddings::ModelMissing => e
     Rails.logger.warn("[EmbeddingJob] Skipping tag #{tag_id}: #{e.message}")
   end
 
   def provider
-    @provider ||= Stray::Embeddings::Provider.resolve
+    @provider ||= Embeddings::Provider.resolve
   end
 
   def item_text(item)
-    Stray::Embeddings::Text.normalize(item.content_text || item.title)
+    Embeddings::Text.normalize(item.content_text || item.title)
   end
 
   def enqueue_downstream(item_id)

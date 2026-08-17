@@ -21,12 +21,12 @@ class SourcePollJob < ApplicationJob
 
     source = resolve_pending_youtube_channel(source)
 
-    domain = Stray::DomainMutex.domain_for(source.url)
+    domain = DomainMutex.domain_for(source.url)
 
     if source.kind == "stray_collection"
       extract_and_persist_relay(source, cursor)
     else
-      Stray::DomainMutex.with_lock(domain) do
+      DomainMutex.with_lock(domain) do
         extract_and_persist(source)
       end
     end
@@ -42,9 +42,9 @@ class SourcePollJob < ApplicationJob
   def resolve_pending_youtube_channel(source)
     return source unless source.kind == "youtube_channel"
     return source unless source.status == "pending"
-    return source if Stray::Extractors::YoutubeRss.matches?(source.url)
+    return source if Extractors::YoutubeRss.matches?(source.url)
 
-    result = Stray::Youtube::ChannelResolver.resolve(source.url)
+    result = Youtube::ChannelResolver.resolve(source.url)
     source.update!(
       url: result.rss_url,
       external_id: result.channel_id,
@@ -69,7 +69,7 @@ class SourcePollJob < ApplicationJob
   end
 
   def extract_and_persist(source)
-    extractor = Stray::ExtractorRegistry.find_for_source(source)
+    extractor = ExtractorRegistry.find_for_source(source)
     raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind} url=#{source.url}" unless extractor
 
     contents = extractor.extract_feed(source.url)
@@ -90,19 +90,19 @@ class SourcePollJob < ApplicationJob
   end
 
   def extract_and_persist_relay(source, cursor)
-    extractor = Stray::ExtractorRegistry.find_for_source(source)
+    extractor = ExtractorRegistry.find_for_source(source)
     raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind}" unless extractor
 
     fetch_url = cursor ? "#{source.url}?cursor=#{cursor}" : source.url
     result = extractor.extract_feed(fetch_url)
 
-    if result.is_a?(Stray::Extractor::FeedResult)
+    if result.is_a?(Extractor::FeedResult)
       handle_feed_result(source, result, cursor)
     else
       upsert_items(source, Array(result))
       finish_relay_sync(source, cursor)
     end
-  rescue Stray::UrlGuard::Blocked, StandardError => e
+  rescue UrlGuard::Blocked, StandardError => e
     update_relay_error(source, e.message)
   end
 

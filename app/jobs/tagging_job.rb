@@ -6,14 +6,14 @@ class TaggingJob < ApplicationJob
     return unless item
     return unless item.embedding
 
-    item_embedding = Stray::Embeddings::Serializer.unpack(item.embedding)
+    item_embedding = Embeddings::Serializer.unpack(item.embedding)
     candidate_tags = Tag.where(user_id: item.user_id).where.not(embedding: nil)
 
     return if candidate_tags.empty?
 
     scored = candidate_tags.map do |tag|
-      tag_vec = Stray::Embeddings::Serializer.unpack(tag.embedding)
-      { tag: tag, score: Stray::Embeddings::Cosine.similarity(item_embedding, tag_vec) }
+      tag_vec = Embeddings::Serializer.unpack(tag.embedding)
+      { tag: tag, score: Embeddings::Cosine.similarity(item_embedding, tag_vec) }
     end
 
     threshold = Setting.get(:zero_shot_threshold) || 0.35

@@ -4,7 +4,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
   def without_lock
-    Stray::DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
+    DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
       yield
     end
   end
@@ -21,7 +21,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
     )
 
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=inttest1",
         title: "Integration Test Video", content_text: "Test description",
         content_html: nil, thumbnail_url: "https://example.com/t.jpg",
@@ -33,7 +33,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
     extractor = Minitest::Mock.new
     extractor.expect(:extract_feed, contents, [ source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, extractor) do
+    ExtractorRegistry.stub(:find_for_source, extractor) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end

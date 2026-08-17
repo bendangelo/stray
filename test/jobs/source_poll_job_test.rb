@@ -18,20 +18,20 @@ class SourcePollJobTest < ActiveJob::TestCase
   end
 
   def without_lock
-    Stray::DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
+    DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
       yield
     end
   end
 
   test "performs poll: extracts items, upserts, recalculates cadence" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120, creator_identity: nil, tags: [],
       ),
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=vid2",
         title: "Video 2", content_text: "Desc 2", content_html: nil,
         thumbnail_url: "https://example.com/t2.jpg", published_at: 2.days.ago,
@@ -41,7 +41,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -63,7 +63,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=vid1",
         title: "New Title", content_text: "Updated", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
@@ -73,7 +73,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -88,7 +88,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "yt-dlp failed" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -107,7 +107,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "applies extractor tags to items" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=tagvid1",
         title: "Tagged Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "tagvid1",
@@ -117,7 +117,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -132,7 +132,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues EmbeddingJob for new items" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=newvid1",
         title: "New Vid", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "newvid1",
@@ -142,7 +142,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_enqueued_with(job: EmbeddingJob) do
           SourcePollJob.perform_now(@source.id)
@@ -154,12 +154,12 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "backfills source name from creator_identity when name is nil" do
     @source.update!(name: nil)
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=vid_name1",
         title: "Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "vid_name1",
         duration: nil,
-        creator_identity: Stray::CreatorIdentity.new(
+        creator_identity: CreatorIdentity.new(
           name: "Backfilled Channel", url: "https://example.com",
           external_id: "UCtest", thumbnail_url: nil
         ),
@@ -169,7 +169,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -184,7 +184,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     extractor = Object.new
     extractor.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "not implemented" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, extractor) do
+    ExtractorRegistry.stub(:find_for_source, extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -197,7 +197,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "clears polling flag after successful poll" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=pollvid1",
         title: "Poll Vid", content_text: "desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
@@ -207,7 +207,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -222,7 +222,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "boom" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -241,7 +241,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=durvid1",
         title: "Updated Title", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago, external_id: "durvid1",
@@ -251,7 +251,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -263,7 +263,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues DurationEnrichmentJob for items missing duration" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=nodur1",
         title: "No Duration", content_text: "desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
@@ -273,7 +273,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_enqueued_with(job: DurationEnrichmentJob) do
           SourcePollJob.perform_now(@source.id)
@@ -284,7 +284,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues ThumbnailEnrichmentJob for items missing thumbnails" do
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=nothumb1",
         title: "No Thumb", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "nothumb1",
@@ -294,7 +294,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_enqueued_with(job: ThumbnailEnrichmentJob) do
           SourcePollJob.perform_now(@source.id)
@@ -309,15 +309,15 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
-    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
+    feed_result = Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
 
     @extractor.expect(:extract_feed, feed_result, [ source.url ])
     @verify_extractor = true
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_enqueued_with(job: SourcePollJob, args: [ source.id, "cur2" ]) do
           SourcePollJob.perform_now(source.id)
@@ -332,14 +332,14 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     rc = RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
-    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
+    feed_result = Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
 
     @extractor.expect(:extract_feed, feed_result, [ source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end
@@ -359,14 +359,14 @@ class SourcePollJobTest < ActiveJob::TestCase
     source.items.create!(user: @user, external_id: "known1", title: "Old",
       url: "https://x/1", published_at: 1.day.ago, state: 0)
 
-    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "Old", content_text: nil,
+    items = [ ExtractedContent.new(url: "https://x/1", title: "Old", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: 1.day.ago, external_id: "known1",
       duration: nil, creator_identity: nil, tags: []) ]
-    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
+    feed_result = Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
 
     @extractor.expect(:extract_feed, feed_result, [ source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         assert_no_enqueued_jobs(only: SourcePollJob) do
           SourcePollJob.perform_now(source.id)
@@ -383,9 +383,9 @@ class SourcePollJobTest < ActiveJob::TestCase
     @verify_extractor = false
 
     failing = Object.new
-    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::UrlGuard::Blocked, "blocked" }
+    failing.define_singleton_method(:extract_feed) { |_url| raise UrlGuard::Blocked, "blocked" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end
@@ -399,7 +399,7 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "sets status to ok on successful poll" do
     @source.update!(status: :pending)
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=st1", title: "Video 1",
         content_text: "desc", content_html: nil, thumbnail_url: nil,
         published_at: 1.day.ago, external_id: "st1", duration: 120,
@@ -408,7 +408,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     ]
 
     @extractor.expect(:extract_feed, contents, [ @source.url ])
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -424,7 +424,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "nope" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -441,7 +441,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise Faraday::TimeoutError, "timed out" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -461,7 +461,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "nope" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
       end
@@ -479,14 +479,14 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
-    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
+    feed_result = Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
 
     @extractor.expect(:extract_feed, feed_result, [ source.url ])
 
-    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end
@@ -504,9 +504,9 @@ class SourcePollJobTest < ActiveJob::TestCase
     @verify_extractor = false
 
     failing = Object.new
-    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::UrlGuard::Blocked, "blocked" }
+    failing.define_singleton_method(:extract_feed) { |_url| raise UrlGuard::Blocked, "blocked" }
 
-    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+    ExtractorRegistry.stub(:find_for_source, failing) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end
@@ -524,7 +524,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       url: "https://www.youtube.com/@Handle", external_id: "pending:h", status: :pending)
     Follow.create!(user: @user, source: source)
 
-    resolver_result = Stray::Youtube::ChannelResolver::Result.new(
+    resolver_result = Youtube::ChannelResolver::Result.new(
       channel_id: "UCResolved",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
       channel_name: "Resolved Channel",
@@ -532,7 +532,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      Stray::ExtractedContent.new(
+      ExtractedContent.new(
         url: "https://example.com/watch?v=rp1", title: "V1",
         content_text: "desc", content_html: nil, thumbnail_url: nil,
         published_at: 1.day.ago, external_id: "rp1", duration: 120,
@@ -542,8 +542,8 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     @extractor.expect(:extract_feed, contents, [ resolver_result.rss_url ])
 
-    Stray::Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+    Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      ExtractorRegistry.stub(:find_for_source, @extractor) do
         without_lock do
           SourcePollJob.perform_now(source.id)
         end

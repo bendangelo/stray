@@ -9,7 +9,7 @@ class RemoteCollectionsController < ApplicationController
       @preview = fetch_manifest_preview(url)
       @manifest_url = url
       render :preview
-    rescue Stray::UrlGuard::Blocked, StandardError => e
+    rescue UrlGuard::Blocked, StandardError => e
       @error = "Could not fetch manifest: #{e.message}"
       render :new, status: :unprocessable_content
     end
@@ -56,7 +56,7 @@ class RemoteCollectionsController < ApplicationController
   private
 
   def fetch_manifest_preview(url)
-    raise Stray::UrlGuard::Blocked, "URL blocked" unless Stray::UrlGuard.allowed?(url)
+    raise UrlGuard::Blocked, "URL blocked" unless UrlGuard.allowed?(url)
 
     response = Faraday.new do |conn|
       conn.response :follow_redirects, max: 3

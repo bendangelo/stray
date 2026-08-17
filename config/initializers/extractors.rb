@@ -1,8 +1,8 @@
 Rails.application.config.to_prepare do
-  Stray::ExtractorRegistry.reset!
-  Stray::ExtractorRegistry.register(Stray::Extractors::YoutubeRss)
-  Stray::ExtractorRegistry.register(Stray::Extractors::RssAtom)
-  Stray::ExtractorRegistry.register(Stray::Extractors::YtDlp)
-  Stray::ExtractorRegistry.register(Stray::Extractors::RemoteCollection)
-  Stray::ExtractorRegistry.register(Stray::Extractors::GenericPage)
+  ExtractorRegistry.reset!
+  ExtractorRegistry.register(Extractors::YoutubeRss)
+  ExtractorRegistry.register(Extractors::RssAtom)
+  ExtractorRegistry.register(Extractors::YtDlp)
+  ExtractorRegistry.register(Extractors::RemoteCollection)
+  ExtractorRegistry.register(Extractors::GenericPage)
 end

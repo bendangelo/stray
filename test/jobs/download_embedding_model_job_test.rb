@@ -8,7 +8,7 @@ class DownloadEmbeddingModelJobTest < ActiveJob::TestCase
       "/fake/path/model.onnx"
     end
 
-    Stray::Embeddings::Downloader.stub(:new, downloader) do
+    Embeddings::Downloader.stub(:new, downloader) do
       DownloadEmbeddingModelJob.perform_now
     end
 

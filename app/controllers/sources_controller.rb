@@ -92,9 +92,9 @@ class SourcesController < ApplicationController
 
     item = source.items.first
     if item
-      Stray::Ranking.apply_interaction!(user: current_user, item: item, kind: :muted_source)
+      Ranking.apply_interaction!(user: current_user, item: item, kind: :muted_source)
     else
-      follow.update!(weight: Stray::Ranking.clamp(follow.weight - Stray::Ranking::MUTE_PENALTY))
+      follow.update!(weight: Ranking.clamp(follow.weight - Ranking::MUTE_PENALTY))
     end
     follow.update!(muted: true)
 

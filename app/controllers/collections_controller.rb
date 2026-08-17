@@ -50,7 +50,7 @@ class CollectionsController < ApplicationController
     @collection = Collection.find_by!(slug: params[:slug])
     return head :not_found unless @collection.unlisted?
 
-    manifest = Stray::CollectionManifest.build(@collection,
+    manifest = CollectionManifest.build(@collection,
       cursor: params[:cursor],
       base_url: request.base_url)
     render json: manifest

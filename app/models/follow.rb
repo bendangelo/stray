@@ -8,6 +8,6 @@ class Follow < ApplicationRecord
   private
 
   def clamp_weight
-    self.weight = Stray::Ranking.clamp(weight)
+    self.weight = Ranking.clamp(weight)
   end
 end

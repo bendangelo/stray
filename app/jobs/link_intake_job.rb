@@ -45,7 +45,7 @@ class LinkIntakeJob < ApplicationJob
 
   def extract_for_existing_source
     resolve_pending_youtube_channel if pending_youtube_channel?
-    extractor = Stray::ExtractorRegistry.find_for_source(@source)
+    extractor = ExtractorRegistry.find_for_source(@source)
     contents = Array(extractor.extract_feed(@source.url))
     create_items(@source, contents)
     enqueue_full_poll(@source)
@@ -54,11 +54,11 @@ class LinkIntakeJob < ApplicationJob
   def pending_youtube_channel?
     @source.kind == "youtube_channel" &&
       @source.status == "pending" &&
-      !Stray::Extractors::YoutubeRss.matches?(@source.url)
+      !Extractors::YoutubeRss.matches?(@source.url)
   end
 
   def resolve_pending_youtube_channel
-    result = Stray::Youtube::ChannelResolver.resolve(@source.url)
+    result = Youtube::ChannelResolver.resolve(@source.url)
     @source.update!(
       url: result.rss_url,
       external_id: result.channel_id,
@@ -98,8 +98,8 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def resolve_youtube_channel
-    result = Stray::Youtube::ChannelResolver.resolve(@url)
-    extractor = Stray::ExtractorRegistry.find_for(result.rss_url)
+    result = Youtube::ChannelResolver.resolve(@url)
+    extractor = ExtractorRegistry.find_for(result.rss_url)
     contents = Array(extractor.extract(result.rss_url))
 
     name = result.channel_name
@@ -122,13 +122,13 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_youtube_video
-    extractor = Stray::ExtractorRegistry.find_for(@url)
+    extractor = ExtractorRegistry.find_for(@url)
     content = extractor.extract(@url)
 
     creator = content.creator_identity
     raise Stray::YtDlp::ExtractionFailed, "No channel info in video metadata" unless creator&.external_id
 
-    rss_url = Stray::Youtube::ChannelResolver.build_rss_url(creator.external_id)
+    rss_url = Youtube::ChannelResolver.build_rss_url(creator.external_id)
 
     source = create_source(
       kind: :youtube_channel,
@@ -144,7 +144,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_generic
-    extractor = Stray::ExtractorRegistry.find_for(@url)
+    extractor = ExtractorRegistry.find_for(@url)
     content = extractor.extract(@url)
 
     creator = content.creator_identity

@@ -54,7 +54,7 @@ class LinksController < ApplicationController
   private
 
   def remote_collection_manifest_url(url)
-    return url if Stray::Extractors::RemoteCollection.matches?(url)
+    return url if Extractors::RemoteCollection.matches?(url)
     manifest_url_for_friendly_collection(url)
   end
 

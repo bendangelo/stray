@@ -18,7 +18,7 @@ class FeedController < ApplicationController
     scope = scope.joins(taggings: :tag).where(tags: { name: @tag }) if @tag
 
     @pagy, @items = pagy(
-      scope.order(Arel.sql(Stray::Ranking.order_sql)).distinct,
+      scope.order(Arel.sql(Ranking.order_sql)).distinct,
       limit: 20
     )
 
