@@ -31,6 +31,10 @@ class Source < ApplicationRecord
     end || external_id
   end
 
+  def stuck_pending?
+    pending? && last_polled_at.nil? && created_at < 10.minutes.ago
+  end
+
   def path_segment
     uri = URI.parse(url)
     return nil unless uri.host && uri.path

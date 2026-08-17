@@ -9,7 +9,7 @@ class SourcePollJob < ApplicationJob
     source = Source.find_by(id: job.arguments.first)
     return unless source
 
-    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed)
+    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
   end
 
   def perform(source_id, cursor = nil)
@@ -31,7 +31,7 @@ class SourcePollJob < ApplicationJob
       end
     end
   ensure
-    if source
+    if source&.persisted?
       source.update!(polling: false)
       broadcast_source_update(source)
     end
@@ -48,12 +48,14 @@ class SourcePollJob < ApplicationJob
     source.update!(
       url: result.rss_url,
       external_id: result.channel_id,
-      name: result.channel_name.presence || source.name,
-      status: :ok
+      name: result.channel_name.presence || source.name
     )
     source
   rescue ActiveRecord::RecordNotUnique
     adopt_existing_channel(source, result.channel_id)
+  rescue StandardError => e
+    source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+    source
   end
 
   def adopt_existing_channel(source, channel_id)
@@ -79,6 +81,12 @@ class SourcePollJob < ApplicationJob
     source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
   rescue NotImplementedError => e
     source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
+    reschedule_on_failure!(source)
+  rescue Stray::YtDlp::Error
+    raise
+  rescue StandardError => e
+    source.update!(last_error: e.message, last_error_at: Time.current, status: :failed)
+    reschedule_on_failure!(source)
   end
 
   def extract_and_persist_relay(source, cursor)
@@ -131,12 +139,12 @@ class SourcePollJob < ApplicationJob
       last_error: nil,
       last_error_at: nil
     )
-    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil)
+    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
     source.recalculate_next_crawl!
   end
 
   def update_relay_error(source, message)
-    source.update!(last_error: message, last_error_at: Time.current)
+    source.update!(last_error: message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
     rc = source.remote_collection
     rc&.update!(last_error: message, last_error_at: Time.current)
   end
@@ -220,5 +228,9 @@ class SourcePollJob < ApplicationJob
       partial: "sources/source",
       locals: { source: source }
     )
+  end
+
+  def reschedule_on_failure!(source)
+    source.update!(next_crawl_at: 5.minutes.from_now)
   end
 end

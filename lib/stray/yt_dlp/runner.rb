@@ -40,6 +40,8 @@ module Stray
         return nil if line.nil? || line.strip.empty?
 
         parse_json(line)
+      rescue Errno::ENOENT
+        raise Error, "yt-dlp binary not found: #{binary}"
       end
 
       private

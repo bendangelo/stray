@@ -47,5 +47,6 @@ Rails.application.routes.draw do
     resource :settings, only: %i[show update] do
       post :download_model
     end
+    mount MissionControl::Jobs::Engine, at: "/jobs"
   end
 end

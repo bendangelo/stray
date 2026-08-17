@@ -15,8 +15,13 @@
                 <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
                 Resolving…
               </span>
+              <% if source.stuck_pending? %>
+                <span class="text-cerise font-bold" title="No successful poll yet. Check the jobs dashboard for a queued or failed job.">stuck</span>
+              <% end %>
             <% elsif source.failed? %>
               <span class="text-cerise font-bold" title="<%= source.last_error %>">Failed</span>
+            <% elsif source.ok? %>
+              <span class="text-mint-700 font-bold">OK</span>
             <% end %>
             <% if source.items.unseen.any? %>
               <span class="bg-mint text-charcoal text-[10px] font-bold px-1.5 rounded-full">
@@ -30,7 +35,7 @@
             <% if source.next_crawl_at && source.active? %>
               <span>· next <%= time_ago(source.next_crawl_at) %></span>
             <% end %>
-            <% if source.last_error && !source.failed? %>
+            <% if source.failed? && source.last_error %>
               <span class="text-cerise" title="<%= source.last_error %>">· error</span>
             <% end %>
           </div>

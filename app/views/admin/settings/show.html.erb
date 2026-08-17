@@ -1,7 +1,10 @@
 <% title "Settings" %>
 
 <main class="max-w-2xl mx-auto px-5 py-8 pb-20">
-  <h1 class="font-display text-2xl font-bold text-charcoal mb-6">Settings</h1>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Settings</h1>
+    <%= link_to "Jobs dashboard", admin_mission_control_jobs_path, class: "text-sm text-charcoal underline hover:no-underline" %>
+  </div>
 
   <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: "space-y-8" do |form| %>
     <% if @setting.errors.any? %>

@@ -475,6 +475,21 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:notice], "Pull started"
   end
 
+  test "pull resets status to pending, clears error, and marks polling" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.update!(status: :failed, last_error: "yt-dlp timed out after 30s", last_error_at: Time.current, next_crawl_at: 1.minute.ago)
+
+    post pull_source_path(source)
+
+    source.reload
+    assert source.pending?
+    assert_nil source.last_error
+    assert_nil source.last_error_at
+    assert source.polling?
+    assert_nil source.next_crawl_at
+  end
+
   test "pull returns 404 for a source the user does not follow" do
     sign_in_as(users(:two))
     assert_no_enqueued_jobs only: SourcePollJob do

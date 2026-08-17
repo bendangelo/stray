@@ -67,6 +67,8 @@ class LinkIntakeJob < ApplicationJob
     )
   rescue ActiveRecord::RecordNotUnique
     adopt_existing_channel(result.channel_id)
+  rescue StandardError => e
+    @source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
   end
 
   def adopt_existing_channel(channel_id)

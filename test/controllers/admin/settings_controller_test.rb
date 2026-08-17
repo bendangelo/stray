@@ -56,4 +56,16 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_settings_path
   end
+
+  test "non-admin user redirected from jobs dashboard" do
+    sign_in_as(@regular)
+    get admin_mission_control_jobs_path
+    assert_redirected_to root_path
+  end
+
+  test "admin user can view jobs dashboard" do
+    sign_in_as(@admin)
+    get admin_mission_control_jobs_path
+    assert_response :success
+  end
 end

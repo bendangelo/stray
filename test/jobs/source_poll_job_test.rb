@@ -435,6 +435,90 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not_nil @source.last_error
   end
 
+  test "records error and reschedules on generic StandardError" do
+    @source.update!(status: :ok, last_error: nil, next_crawl_at: 1.hour.from_now)
+    @verify_extractor = false
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Faraday::TimeoutError, "timed out" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.failed?
+    assert_equal "timed out", @source.last_error
+    assert_not_nil @source.last_error_at
+    assert @source.next_crawl_at <= 5.minutes.from_now
+    assert @source.next_crawl_at > Time.current
+  end
+
+  test "reschedules next_crawl_at on NotImplementedError failure" do
+    @source.update!(status: :ok, next_crawl_at: 1.hour.from_now)
+    @verify_extractor = false
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "nope" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.failed?
+    assert @source.next_crawl_at <= 5.minutes.from_now
+    assert @source.next_crawl_at > Time.current
+  end
+
+  test "sets status to ok on successful relay sync" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x", status: :pending)
+    Follow.create!(user: @user, source: source)
+    RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
+      duration: nil, creator_identity: nil, tags: []) ]
+    feed_result = Stray::Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
+
+    @extractor.expect(:extract_feed, feed_result, [ source.url ])
+
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(source.id)
+      end
+    end
+
+    source.reload
+    assert source.ok?
+  end
+
+  test "sets status to failed and reschedules on relay error" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x", status: :pending)
+    Follow.create!(user: @user, source: source)
+    RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+    @verify_extractor = false
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::UrlGuard::Blocked, "blocked" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(source.id)
+      end
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "blocked", source.last_error
+    assert source.next_crawl_at <= 5.minutes.from_now
+    assert source.next_crawl_at > Time.current
+  end
+
   test "resolves a pending youtube channel handle URL before polling" do
     source = Source.create!(user: @user, kind: :youtube_channel,
       url: "https://www.youtube.com/@Handle", external_id: "pending:h", status: :pending)

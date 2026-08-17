@@ -74,6 +74,13 @@ class SourcesController < ApplicationController
 
   def pull
     source = scoped_source
+    source.update!(status: :pending, last_error: nil, last_error_at: nil, polling: true, next_crawl_at: nil)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
     SourcePollJob.perform_later(source.id)
     redirect_back_or_to source_path(source), notice: "Pull started for #{source.name}."
   end
