@@ -43,6 +43,14 @@ class Extractors::YoutubeRssTest < ActiveSupport::TestCase
     end
   end
 
+  test "http_client sends a browser User-Agent, Accept-Language, and CONSENT cookie" do
+    client = Extractors::YoutubeRss.new.send(:http_client)
+
+    assert_equal Extractors::YoutubeRss::BROWSER_UA, client.headers["User-Agent"]
+    assert_equal "en", client.headers["Accept-Language"]
+    assert_equal "CONSENT=YES+cb", client.headers["Cookie"]
+  end
+
   test "extract includes creator_identity from feed author" do
     VCR.use_cassette("extractors/youtube_rss_feed") do
       extractor = Extractors::YoutubeRss.new

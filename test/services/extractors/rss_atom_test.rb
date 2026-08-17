@@ -45,6 +45,13 @@ class Extractors::RssAtomTest < ActiveSupport::TestCase
     end
   end
 
+  test "http_client sends a browser User-Agent and Accept-Language" do
+    client = Extractors::RssAtom.new.send(:http_client)
+
+    assert_equal Extractors::RssAtom::BROWSER_UA, client.headers["User-Agent"]
+    assert_equal "en", client.headers["Accept-Language"]
+  end
+
   test "extract includes creator_identity from feed metadata" do
     VCR.use_cassette("extractors/rss_atom/feed") do
       extractor = Extractors::RssAtom.new

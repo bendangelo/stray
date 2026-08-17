@@ -1,7 +1,9 @@
 require "feedjira"
 
 module Extractors
-  class RssAtom < Extractor
+    class RssAtom < Extractor
+      BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+
       def self.matches?(url)
         uri = URI.parse(url)
         path = uri.path.downcase
@@ -46,6 +48,8 @@ module Extractors
 
       def http_client
         Faraday.new do |conn|
+          conn.headers["User-Agent"] = BROWSER_UA
+          conn.headers["Accept-Language"] = "en"
           conn.response :follow_redirects
           conn.adapter :net_http
         end

@@ -41,7 +41,6 @@ class SourcePollJob < ApplicationJob
 
   def resolve_pending_youtube_channel(source)
     return source unless source.kind == "youtube_channel"
-    return source unless source.status == "pending"
     return source if Extractors::YoutubeRss.matches?(source.url)
 
     result = Youtube::ChannelResolver.resolve(source.url)
