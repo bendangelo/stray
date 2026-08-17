@@ -1,4 +1,4 @@
-<% title @source.name %>
+<% title @source.display_name %>
 
 <div class="container mx-auto px-4 pt-4 max-w-screen-xl xl:max-w-screen-2xl">
   <%= turbo_stream_from "user_#{current_user.id}_sources" %>
@@ -8,9 +8,17 @@
       <div class="flex items-center gap-3">
         <%= source_icon(@source) %>
         <div>
-          <h1 class="font-display text-2xl font-bold text-charcoal"><%= @source.name %></h1>
+          <h1 class="font-display text-2xl font-bold text-charcoal"><%= @source.display_name %></h1>
           <div class="flex items-center gap-3 mt-1 text-xs text-charcoal-300">
             <span><%= @source.kind.humanize %></span>
+            <% if @source.pending? %>
+              <span class="flex items-center gap-1 text-charcoal font-bold">
+                <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
+                Resolving…
+              </span>
+            <% elsif @source.failed? %>
+              <span class="text-cerise font-bold">Failed</span>
+            <% end %>
             <span>· <%= @total_count %> items</span>
             <% if @source.last_polled_at %>
               <span>· polled <%= time_ago(@source.last_polled_at) %></span>

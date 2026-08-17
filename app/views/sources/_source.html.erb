@@ -6,10 +6,18 @@
         <%= source_icon(source, size: "w-10 h-10") %>
         <div class="min-w-0">
           <%= link_to source_path(source), class: "block", data: { turbo_frame: "_top" } do %>
-            <span class="font-display font-bold text-charcoal truncate"><%= source.name %></span>
+            <span class="font-display font-bold text-charcoal truncate"><%= source.display_name %></span>
           <% end %>
           <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-2 mt-1.5">
             <span><%= source.kind.humanize %></span>
+            <% if source.pending? %>
+              <span class="flex items-center gap-1 text-charcoal font-bold">
+                <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
+                Resolving…
+              </span>
+            <% elsif source.failed? %>
+              <span class="text-cerise font-bold" title="<%= source.last_error %>">Failed</span>
+            <% end %>
             <% if source.items.unseen.any? %>
               <span class="bg-mint text-charcoal text-[10px] font-bold px-1.5 rounded-full">
                 <%= source.items.unseen.count %> new
@@ -22,7 +30,7 @@
             <% if source.next_crawl_at && source.active? %>
               <span>· next <%= time_ago(source.next_crawl_at) %></span>
             <% end %>
-            <% if source.last_error %>
+            <% if source.last_error && !source.failed? %>
               <span class="text-cerise" title="<%= source.last_error %>">· error</span>
             <% end %>
           </div>

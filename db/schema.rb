@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_203116) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_211529) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -147,10 +147,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_203116) do
     t.datetime "next_crawl_at"
     t.integer "poll_interval"
     t.boolean "polling", default: false, null: false
+    t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.string "url", null: false
     t.integer "user_id", null: false
     t.index ["next_crawl_at", "active"], name: "index_sources_on_next_crawl_at_and_active", where: "active = true"
+    t.index ["status"], name: "index_sources_on_status"
     t.index ["user_id", "external_id", "kind"], name: "index_sources_on_user_id_and_external_id_and_kind", unique: true
     t.index ["user_id"], name: "index_sources_on_user_id"
   end

@@ -23,13 +23,13 @@ class Stray::Youtube::ChannelResolverTest < ActiveSupport::TestCase
   end
 
   test "resolves /@handle URL via yt-dlp" do
-    json = {
+    data = {
       "channel_id" => "UCuAXFkgsw1L7xaCfnd5JJOw",
       "channel" => "Rick Astley",
       "channel_url" => "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
-    }.to_json
+    }
 
-    runner = mock_runner(json)
+    runner = mock_runner(data)
     Stray::YtDlp::Runner.stub(:new, runner) do
       result = Stray::Youtube::ChannelResolver.resolve("https://www.youtube.com/@RickAstley")
 
@@ -41,13 +41,13 @@ class Stray::Youtube::ChannelResolverTest < ActiveSupport::TestCase
   end
 
   test "resolves /c/name URL via yt-dlp" do
-    json = {
+    data = {
       "channel_id" => "UCuAXFkgsw1L7xaCfnd5JJOw",
       "channel" => "Rick Astley",
       "channel_url" => "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
-    }.to_json
+    }
 
-    runner = mock_runner(json)
+    runner = mock_runner(data)
     Stray::YtDlp::Runner.stub(:new, runner) do
       result = Stray::Youtube::ChannelResolver.resolve("https://www.youtube.com/c/RickAstley")
 
@@ -57,13 +57,13 @@ class Stray::Youtube::ChannelResolverTest < ActiveSupport::TestCase
   end
 
   test "resolves /user/name URL via yt-dlp" do
-    json = {
+    data = {
       "channel_id" => "UCuAXFkgsw1L7xaCfnd5JJOw",
       "channel" => "Rick Astley",
       "channel_url" => "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
-    }.to_json
+    }
 
-    runner = mock_runner(json)
+    runner = mock_runner(data)
     Stray::YtDlp::Runner.stub(:new, runner) do
       result = Stray::Youtube::ChannelResolver.resolve("https://www.youtube.com/user/RickAstley")
 
@@ -71,11 +71,20 @@ class Stray::Youtube::ChannelResolverTest < ActiveSupport::TestCase
     end
   end
 
+  test "raises when yt-dlp returns no channel_id" do
+    runner = mock_runner(nil)
+    Stray::YtDlp::Runner.stub(:new, runner) do
+      assert_raises(ArgumentError) do
+        Stray::Youtube::ChannelResolver.resolve("https://www.youtube.com/@NoChannel")
+      end
+    end
+  end
+
   private
 
-  def mock_runner(json_response)
+  def mock_runner(data)
     runner = Minitest::Mock.new
-    runner.expect(:single_video, JSON.parse(json_response), [ String ])
+    runner.expect(:channel_metadata, data, [ String ])
     runner
   end
 end

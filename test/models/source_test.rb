@@ -133,6 +133,21 @@ class SourceTest < ActiveSupport::TestCase
     assert_equal "abc123", source.display_name
   end
 
+  test "display_name falls back to the handle for a pending youtube /@ URL" do
+    source = Source.new(url: "https://www.youtube.com/@StreetOfSilence", external_id: "pending:abc")
+    assert_equal "@StreetOfSilence", source.display_name
+  end
+
+  test "display_name falls back to the path segment for a /c/ URL" do
+    source = Source.new(url: "https://www.youtube.com/c/RickAstley", external_id: "pending:abc")
+    assert_equal "RickAstley", source.display_name
+  end
+
+  test "display_name falls back to the channel id for a /channel/ URL" do
+    source = Source.new(url: "https://www.youtube.com/channel/UC123", external_id: "pending:abc")
+    assert_equal "UC123", source.display_name
+  end
+
   test "stray_collection kind is a valid enum value" do
     source = Source.new(user: users(:one), kind: :stray_collection, url: "https://x/c/y/manifest.json")
     assert source.valid?
@@ -144,5 +159,41 @@ class SourceTest < ActiveSupport::TestCase
       url: "https://x/c/y/manifest.json", external_id: "y")
     rc = RemoteCollection.create!(source: source, user: users(:one), manifest_url: source.url)
     assert_equal rc, source.remote_collection
+  end
+
+  test "status defaults to pending" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@handle", external_id: "pending:abc")
+    assert source.pending?
+  end
+
+  test "status enum values" do
+    assert_equal 0, Source.statuses[:pending]
+    assert_equal 1, Source.statuses[:ok]
+    assert_equal 2, Source.statuses[:failed]
+  end
+
+  test "pending, ok, and failed scopes" do
+    pending = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@a", external_id: "pending:a", status: :pending)
+    ok = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCok", external_id: "UCok", status: :ok)
+    failed = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@b", external_id: "pending:b", status: :failed)
+
+    assert_includes Source.pending, pending
+    assert_not_includes Source.pending, ok
+    assert_includes Source.ok, ok
+    assert_not_includes Source.ok, pending
+    assert_includes Source.failed, failed
+    assert_not_includes Source.failed, ok
+  end
+
+  test "follow! creates source and follow with given status" do
+    source = Source.follow!(users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@handle", external_id: "pending:abc", status: :pending)
+
+    assert source.pending?
+    assert Follow.exists?(user: users(:one), source: source)
   end
 end

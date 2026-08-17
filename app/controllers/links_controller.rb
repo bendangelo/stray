@@ -7,13 +7,8 @@ class LinksController < ApplicationController
       redirect_to new_remote_collection_path(manifest_url: manifest_url) and return
     end
 
-    if (external_id = youtube_channel_id_from_url(url))
-      source = Source.follow!(
-        current_user,
-        kind: :youtube_channel,
-        url: Stray::Youtube::ChannelResolver.build_rss_url(external_id),
-        external_id: external_id
-      )
+    if youtube_channel_url?(url)
+      source = create_pending_youtube_channel(url)
       LinkIntakeJob.perform_later(current_user.id, url, source.id)
       redirect_to source_path(source) and return
     end
@@ -39,13 +34,8 @@ class LinksController < ApplicationController
         next
       end
 
-      if (external_id = youtube_channel_id_from_url(url))
-        source = Source.follow!(
-          current_user,
-          kind: :youtube_channel,
-          url: Stray::Youtube::ChannelResolver.build_rss_url(external_id),
-          external_id: external_id
-        )
+      if youtube_channel_url?(url)
+        source = create_pending_youtube_channel(url)
         LinkIntakeJob.perform_later(current_user.id, url, source.id)
       else
         LinkIntakeJob.perform_later(current_user.id, url)
@@ -78,13 +68,23 @@ class LinksController < ApplicationController
     nil
   end
 
-  def youtube_channel_id_from_url(url)
+  def youtube_channel_url?(url)
     uri = URI.parse(url)
-    return nil unless uri.host&.end_with?("youtube.com")
-
-    uri.path.match(%r{^/channel/(UC[a-zA-Z0-9_-]+)})&.captures&.first
+    uri.host&.end_with?("youtube.com") &&
+      uri.path&.match?(%r{^/(channel/UC|@|c/|user/)})
   rescue URI::InvalidURIError
-    nil
+    false
+  end
+
+  def create_pending_youtube_channel(url)
+    external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
+    Source.follow!(
+      current_user,
+      kind: :youtube_channel,
+      url: url,
+      external_id: external_id,
+      status: :pending
+    )
   end
 
   def youtube_video_id_from_url(url)

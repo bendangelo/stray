@@ -9,7 +9,7 @@ class SourcePollJob < ApplicationJob
     source = Source.find_by(id: job.arguments.first)
     return unless source
 
-    source.update!(last_error: error.message, last_error_at: Time.current)
+    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed)
   end
 
   def perform(source_id, cursor = nil)
@@ -18,6 +18,8 @@ class SourcePollJob < ApplicationJob
 
     source.update!(polling: true)
     broadcast_source_update(source)
+
+    source = resolve_pending_youtube_channel(source)
 
     domain = Stray::DomainMutex.domain_for(source.url)
 
@@ -37,6 +39,33 @@ class SourcePollJob < ApplicationJob
 
   private
 
+  def resolve_pending_youtube_channel(source)
+    return source unless source.kind == "youtube_channel"
+    return source unless source.status == "pending"
+    return source if Stray::Extractors::YoutubeRss.matches?(source.url)
+
+    result = Stray::Youtube::ChannelResolver.resolve(source.url)
+    source.update!(
+      url: result.rss_url,
+      external_id: result.channel_id,
+      name: result.channel_name.presence || source.name,
+      status: :ok
+    )
+    source
+  rescue ActiveRecord::RecordNotUnique
+    adopt_existing_channel(source, result.channel_id)
+  end
+
+  def adopt_existing_channel(source, channel_id)
+    existing = Source.find_by(user: source.user, kind: :youtube_channel, external_id: channel_id)
+    return source unless existing
+
+    source.follows.update_all(source_id: existing.id)
+    source.items.update_all(source_id: existing.id)
+    source.destroy!
+    existing
+  end
+
   def extract_and_persist(source)
     extractor = Stray::ExtractorRegistry.find_for_source(source)
     raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind} url=#{source.url}" unless extractor
@@ -47,9 +76,9 @@ class SourcePollJob < ApplicationJob
     upsert_items(source, contents)
     backfill_source_metadata(source, contents)
     source.recalculate_next_crawl!
-    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil)
+    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
   rescue NotImplementedError => e
-    source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current)
+    source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
   end
 
   def extract_and_persist_relay(source, cursor)

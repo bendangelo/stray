@@ -1,11 +1,13 @@
 <% follow = item.source.follows.detect { |f| f.user_id == current_user.id } if defined?(current_user) && current_user %>
 <% if follow %>
   <% exp = ranking_explanation_for(item, follow) %>
-  <details class="mt-1 text-xs text-charcoal-300">
-    <summary class="cursor-pointer hover:text-carrot-500 select-none">why?</summary>
-    <div class="mt-1 pl-2 border-l-2 border-charcoal space-y-0.5">
+  <details>
+    <summary class="flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded cursor-pointer select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500">
+      <%= phosphor_icon "question", class: "w-3.5 h-3.5" %> Why?
+    </summary>
+    <div class="ml-5 pl-2 pr-2 pb-1 space-y-0.5 text-xs text-charcoal-300 border-l-2 border-charcoal">
       <p>Published <%= time_ago(exp.published_at) %>.</p>
-      <p>Weight <%= exp.weight %> from <%= item.source.name %> — <%= offset_label(exp.offset_hours) %>.</p>
+      <p>Weight <%= exp.weight %> from <%= item.source.display_name %> — <%= offset_label(exp.offset_hours) %>.</p>
       <p>Shown as if published <%= time_ago(exp.effective_at) %>.</p>
       <% if exp.muted %>
         <p class="text-cerise">Source muted (3+ hides in the last week).</p>

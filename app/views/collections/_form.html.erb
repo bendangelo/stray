@@ -27,7 +27,7 @@
             <label class="flex items-center gap-2 text-sm text-charcoal">
               <%= check_box_tag "collection[source_ids][]", source.id, collection.sources.include?(source),
                     class: "h-4 w-4 border-3 border-charcoal" %>
-              <%= source.name %>
+              <%= source.display_name %>
               <span class="text-xs text-charcoal-300">(<%= source.kind %>)</span>
             </label>
           <% end %>

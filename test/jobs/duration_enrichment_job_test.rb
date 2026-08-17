@@ -25,7 +25,7 @@ class DurationEnrichmentJobTest < ActiveJob::TestCase
 
   test "populates duration for items missing one" do
     json = '{"id":"vid1","title":"Video 1","duration":185}'
-    Open3.stub(:capture3, [ json, "", status_success ]) do
+    stub_runner_execute([ json, "", status_success ]) do
       DurationEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
@@ -35,7 +35,7 @@ class DurationEnrichmentJobTest < ActiveJob::TestCase
   test "skips items that already have a duration" do
     @item.update!(duration: 300)
     json = '{"id":"vid1","duration":185}'
-    Open3.stub(:capture3, [ json, "", status_success ]) do
+    stub_runner_execute([ json, "", status_success ]) do
       DurationEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
@@ -43,7 +43,7 @@ class DurationEnrichmentJobTest < ActiveJob::TestCase
   end
 
   test "leaves duration nil when yt-dlp returns none" do
-    Open3.stub(:capture3, [ '{"id":"vid1","title":"Video 1"}', "", status_success ]) do
+    stub_runner_execute([ '{"id":"vid1","title":"Video 1"}', "", status_success ]) do
       DurationEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
@@ -56,10 +56,18 @@ class DurationEnrichmentJobTest < ActiveJob::TestCase
     item = rss_source.items.create!(user: @user, external_id: "a", title: "A",
       url: "https://example.com/a", published_at: 1.day.ago)
 
-    Open3.stub(:capture3, ->(*_args) { raise "should not call yt-dlp" }) do
+    stub_runner_execute(->(*_args) { raise "should not call yt-dlp" }) do
       DurationEnrichmentJob.perform_now(rss_source.id, [ item.id ])
     end
 
     assert_nil item.reload.duration
+  end
+
+  private
+
+  def stub_runner_execute(return_value)
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:execute) { |*_args| return_value.is_a?(Proc) ? return_value.call : return_value }
+    Stray::YtDlp::Runner.stub(:new, runner) { yield }
   end
 end

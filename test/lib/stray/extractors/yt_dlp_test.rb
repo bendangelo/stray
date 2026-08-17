@@ -34,7 +34,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract returns ExtractedContent with video metadata" do
-    Open3.stub(:capture3, [ @json, "", status_success ]) do
+    stub_runner(@json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
 
@@ -49,7 +49,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract includes creator_identity" do
-    Open3.stub(:capture3, [ @json, "", status_success ]) do
+    stub_runner(@json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
 
@@ -65,7 +65,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
       "categories" => [ "Education", "Technology" ],
       "tags" => [ "ruby", "rails", "web" ]
     )
-    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+    stub_runner(data.to_json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       content = extractor.extract("https://bitchute.com/video/abc123")
 
@@ -77,7 +77,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
   end
 
   test "extract raises ExtractionFailed when yt-dlp fails" do
-    Open3.stub(:capture3, [ "", "", OpenStruct.new(success?: false) ]) do
+    stub_runner("", "", OpenStruct.new(success?: false)) do
       extractor = Stray::Extractors::YtDlp.new
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         extractor.extract("https://example.com/video")
@@ -87,7 +87,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract canonicalizes channel-prefixed bitchute URLs" do
     data = @data.merge("id" => "abc123", "url" => "https://www.bitchute.com/channel/Foo//video/abc123")
-    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+    stub_runner(data.to_json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://www.bitchute.com/channel/Foo//video/abc123")
 
@@ -97,7 +97,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract leaves non-bitchute URLs unchanged" do
     data = @data.merge("url" => "https://vimeo.com/12345")
-    Open3.stub(:capture3, [ data.to_json, "", status_success ]) do
+    stub_runner(data.to_json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       result = extractor.extract("https://vimeo.com/12345")
 
@@ -107,7 +107,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract_channel canonicalizes bitchute listing URLs" do
     listing = '{"id":"vid1","title":"Video 1","url":"https://www.bitchute.com/channel/Foo//video/vid1","channel":"Test","channel_id":"C1","channel_url":"https://www.bitchute.com/channel/Foo"}'
-    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+    stub_runner("#{listing}\n", "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://www.bitchute.com/channel/Foo")
 
@@ -120,7 +120,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
     listing2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
     multi_json = "#{listing1}\n#{listing2}\n"
 
-    Open3.stub(:capture3, [ multi_json, "", status_success ]) do
+    stub_runner(multi_json, "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://bitchute.com/channel/abc")
 
@@ -133,7 +133,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract_channel falls back to top-level thumbnail field" do
     listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","thumbnail":"https://example.com/top.jpg","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
-    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+    stub_runner("#{listing}\n", "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://bitchute.com/channel/abc")
 
@@ -143,7 +143,7 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract_channel falls back to string thumbnails entry" do
     listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","thumbnails":["https://example.com/str.jpg"],"channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
-    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+    stub_runner("#{listing}\n", "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://bitchute.com/channel/abc")
 
@@ -153,11 +153,19 @@ class Stray::Extractors::YtDlpTest < ActiveSupport::TestCase
 
   test "extract_channel returns nil thumbnail when none present" do
     listing = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
-    Open3.stub(:capture3, [ "#{listing}\n", "", status_success ]) do
+    stub_runner("#{listing}\n", "", status_success) do
       extractor = Stray::Extractors::YtDlp.new
       results = extractor.extract_channel("https://bitchute.com/channel/abc")
 
       assert_nil results[0].thumbnail_url
     end
+  end
+
+  private
+
+  def stub_runner(stdout, stderr, status)
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:execute) { |*_args| [ stdout, stderr, status ] }
+    Stray::YtDlp::Runner.stub(:new, runner) { yield }
   end
 end

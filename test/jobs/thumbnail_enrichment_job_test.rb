@@ -25,7 +25,7 @@ class ThumbnailEnrichmentJobTest < ActiveJob::TestCase
 
   test "populates thumbnail_url for items missing one" do
     json = '{"id":"vid1","title":"Video 1","thumbnail":"https://example.com/thumb.jpg"}'
-    Open3.stub(:capture3, [ json, "", status_success ]) do
+    stub_runner_execute([ json, "", status_success ]) do
       ThumbnailEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
@@ -34,7 +34,7 @@ class ThumbnailEnrichmentJobTest < ActiveJob::TestCase
 
   test "skips items that already have a thumbnail" do
     @item.update!(thumbnail_url: "https://example.com/existing.jpg")
-    Open3.stub(:capture3, [ '{"id":"vid1","thumbnail":"https://example.com/new.jpg"}', "", status_success ]) do
+    stub_runner_execute([ '{"id":"vid1","thumbnail":"https://example.com/new.jpg"}', "", status_success ]) do
       ThumbnailEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
@@ -42,10 +42,18 @@ class ThumbnailEnrichmentJobTest < ActiveJob::TestCase
   end
 
   test "leaves thumbnail nil when yt-dlp returns none" do
-    Open3.stub(:capture3, [ '{"id":"vid1","title":"Video 1"}', "", status_success ]) do
+    stub_runner_execute([ '{"id":"vid1","title":"Video 1"}', "", status_success ]) do
       ThumbnailEnrichmentJob.perform_now(@source.id, [ @item.id ])
     end
 
     assert_nil @item.reload.thumbnail_url
+  end
+
+  private
+
+  def stub_runner_execute(return_value)
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:execute) { |*_args| return_value.is_a?(Proc) ? return_value.call : return_value }
+    Stray::YtDlp::Runner.stub(:new, runner) { yield }
   end
 end

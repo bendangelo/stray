@@ -55,5 +55,8 @@
           class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
       <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
     <% end %>
+
+    <div class="border-t-3 border-charcoal/10 my-1"></div>
+    <%= render "items/why", item: item %>
   </div>
 </div>

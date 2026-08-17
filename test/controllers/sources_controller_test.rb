@@ -47,6 +47,32 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show displays the handle and pending state for a pending source" do
+    sign_in_as(users(:one))
+    source = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@StreetOfSilence", external_id: "pending:abc", status: :pending)
+    Follow.create!(user: users(:one), source: source)
+
+    get source_path(source)
+
+    assert_response :success
+    assert_includes response.body, "@StreetOfSilence"
+    assert_includes response.body, "Resolving"
+  end
+
+  test "sidebar displays pending state for a pending source" do
+    sign_in_as(users(:one))
+    source = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@StreetOfSilence", external_id: "pending:abc", status: :pending)
+    Follow.create!(user: users(:one), source: source)
+
+    get sources_path
+
+    assert_response :success
+    assert_includes response.body, "@StreetOfSilence"
+    assert_includes response.body, "Resolving"
+  end
+
   test "cannot show a source the user does not follow" do
     sign_in_as(users(:two))
     get source_path(sources(:bitchute))
@@ -143,6 +169,23 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   test "create requires authentication" do
     post sources_path, params: { source: { url: "https://example.com", kind: "rss_feed" } }
     assert_redirected_to new_session_path
+  end
+
+  test "create with youtube_channel kind creates pending source, follow, and enqueues intake job" do
+    sign_in_as(users(:one))
+    url = "https://www.youtube.com/@StreetOfSilence"
+
+    assert_enqueued_with(job: LinkIntakeJob) do
+      post sources_path, params: {
+        source: { url: url, kind: "youtube_channel", name: "Street Of Silence", active: "1" }
+      }
+    end
+
+    assert_redirected_to sources_path
+    source = Source.find_by(kind: "youtube_channel", user_id: users(:one).id, url: url)
+    assert source
+    assert source.pending?
+    assert Follow.exists?(user_id: users(:one).id, source_id: source.id)
   end
 
   test "edit renders edit form for followed source" do

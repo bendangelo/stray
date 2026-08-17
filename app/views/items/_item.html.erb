@@ -34,13 +34,10 @@
         </a>
 
         <div class="flex items-center gap-2 mt-1 text-xs text-charcoal-300">
-          <% if item.source.name.present? %>
-            <%= link_to item.source.name, source_path(item.source), class: "hover:text-carrot-600 underline" %>
-            <span>·</span>
-          <% end %>
+          <%= link_to item.source.display_name, source_path(item.source), class: "hover:text-carrot-600 underline" %>
+          <span>·</span>
           <span><%= time_ago(item.published_at) %></span>
         </div>
-        <%= render "items/why", item: item %>
       </div>
 
       <%= render "items/actions_menu", item: item %>

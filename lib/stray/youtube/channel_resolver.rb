@@ -52,9 +52,9 @@ module Stray
         end
 
         def resolve_via_ytdlp(uri)
-          data = Stray::YtDlp::Runner.new.single_video(uri.to_s)
+          data = Stray::YtDlp::Runner.new.channel_metadata(uri.to_s)
 
-          channel_id = data["channel_id"]
+          channel_id = data&.dig("channel_id")
           raise ArgumentError, "yt-dlp did not return a channel_id" unless channel_id
 
           Result.new(

@@ -12,7 +12,7 @@ class LinkIntakeJob < ApplicationJob
     source = Source.find_by(id: source_id)
     next unless source
 
-    source.update!(last_error: error.message, last_error_at: Time.current)
+    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed)
     Turbo::StreamsChannel.broadcast_replace_to(
       "user_#{source.user_id}_sources",
       target: ActionView::RecordIdentifier.dom_id(source),
@@ -44,10 +44,39 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_for_existing_source
+    resolve_pending_youtube_channel if pending_youtube_channel?
     extractor = Stray::ExtractorRegistry.find_for_source(@source)
     contents = Array(extractor.extract_feed(@source.url))
     create_items(@source, contents)
     enqueue_full_poll(@source)
+  end
+
+  def pending_youtube_channel?
+    @source.kind == "youtube_channel" &&
+      @source.status == "pending" &&
+      !Stray::Extractors::YoutubeRss.matches?(@source.url)
+  end
+
+  def resolve_pending_youtube_channel
+    result = Stray::Youtube::ChannelResolver.resolve(@source.url)
+    @source.update!(
+      url: result.rss_url,
+      external_id: result.channel_id,
+      name: result.channel_name.presence || @source.name,
+      status: :ok
+    )
+  rescue ActiveRecord::RecordNotUnique
+    adopt_existing_channel(result.channel_id)
+  end
+
+  def adopt_existing_channel(channel_id)
+    existing = Source.find_by(user: @user, kind: :youtube_channel, external_id: channel_id)
+    return unless existing
+
+    @source.follows.update_all(source_id: existing.id)
+    @source.items.update_all(source_id: existing.id)
+    @source.destroy!
+    @source = existing
   end
 
   def youtube_channel_url?

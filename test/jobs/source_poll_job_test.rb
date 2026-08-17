@@ -395,4 +395,81 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not_nil rc.last_error
     assert_not_nil rc.last_error_at
   end
+
+  test "sets status to ok on successful poll" do
+    @source.update!(status: :pending)
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=st1", title: "Video 1",
+        content_text: "desc", content_html: nil, thumbnail_url: nil,
+        published_at: 1.day.ago, external_id: "st1", duration: 120,
+        creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.ok?
+  end
+
+  test "sets status to failed when extraction fails" do
+    @source.update!(status: :pending)
+    @verify_extractor = false
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise NotImplementedError, "nope" }
+
+    Stray::ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.failed?
+    assert_not_nil @source.last_error
+  end
+
+  test "resolves a pending youtube channel handle URL before polling" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@Handle", external_id: "pending:h", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    resolver_result = Stray::Youtube::ChannelResolver::Result.new(
+      channel_id: "UCResolved",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UCResolved"
+    )
+
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=rp1", title: "V1",
+        content_text: "desc", content_html: nil, thumbnail_url: nil,
+        published_at: 1.day.ago, external_id: "rp1", duration: 120,
+        creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ resolver_result.rss_url ])
+
+    Stray::Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      Stray::ExtractorRegistry.stub(:find_for_source, @extractor) do
+        without_lock do
+          SourcePollJob.perform_now(source.id)
+        end
+      end
+    end
+
+    source.reload
+    assert_equal "UCResolved", source.external_id
+    assert_equal resolver_result.rss_url, source.url
+    assert source.ok?
+    assert_equal 1, source.items.count
+  end
 end

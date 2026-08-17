@@ -24,6 +24,31 @@ class SourcesController < ApplicationController
   end
 
   def create
+    if source_params[:kind] == "youtube_channel"
+      create_youtube_channel
+    else
+      create_regular_source
+    end
+  end
+
+  def create_youtube_channel
+    url = source_params[:url]
+    external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
+    @source = Source.follow!(
+      current_user,
+      kind: :youtube_channel,
+      url: url,
+      external_id: external_id,
+      name: source_params[:name],
+      icon_url: source_params[:icon_url],
+      active: source_params.key?(:active) ? (source_params[:active] == "1") : true,
+      status: :pending
+    )
+    LinkIntakeJob.perform_later(current_user.id, url, @source.id)
+    redirect_to sources_path, notice: "Source added."
+  end
+
+  def create_regular_source
     external_id = Digest::SHA256.hexdigest(source_params[:url])[0, 16]
     @source = Source.find_or_create_by!(
       user: current_user,
@@ -34,6 +59,7 @@ class SourcesController < ApplicationController
       s.name = source_params[:name]
       s.icon_url = source_params[:icon_url]
       s.active = source_params.key?(:active) ? (source_params[:active] == "1") : true
+      s.status = :pending
     end
 
     if @source.valid?

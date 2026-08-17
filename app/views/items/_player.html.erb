@@ -22,26 +22,22 @@
       <%= render "items/actions_menu", item: item %>
     </div>
 
-    <% if item.source.name.present? %>
-      <div class="flex mb-3 items-center gap-2">
-        <% if (icon = source_icon_url(item.source)) %>
-          <img src="<%= icon %>" alt="" loading="lazy"
-               class="w-5 h-5 rounded border-2 border-charcoal object-cover">
-        <% end %>
-        <div>
-          <%= link_to item.source.name, source_path(item.source),
-            class: "text-gray-800 text-sm hover:text-black hover:underline" %>
-          <p class="text-gray-800 text-xs mt-1">
-            <%= time_ago(item.published_at) %>
-            <% if item.duration.present? %>
-              · <%= pretty_duration(item.duration) %>
-            <% end %>
-          </p>
-        </div>
+    <div class="flex mb-3 items-center gap-2">
+      <% if (icon = source_icon_url(item.source)) %>
+        <img src="<%= icon %>" alt="" loading="lazy"
+             class="w-5 h-5 rounded border-2 border-charcoal object-cover">
+      <% end %>
+      <div>
+        <%= link_to item.source.display_name, source_path(item.source),
+          class: "text-gray-800 text-sm hover:text-black hover:underline" %>
+        <p class="text-gray-800 text-xs mt-1">
+          <%= time_ago(item.published_at) %>
+          <% if item.duration.present? %>
+            · <%= pretty_duration(item.duration) %>
+          <% end %>
+        </p>
       </div>
-    <% end %>
-
-    <%= render "items/why", item: item %>
+    </div>
 
     <% if item.content_text.present? %>
       <p class="text-sm text-gray-500 md:text-sm whitespace-pre-line">

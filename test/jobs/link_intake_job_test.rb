@@ -158,6 +158,20 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal 1, Source.where(external_id: "abc", user_id: @user.id).count
   end
 
+  test "marks pre-created source as failed when a pending youtube channel cannot be resolved" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@Unresolvable", external_id: "pending:u", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    Stray::Youtube::ChannelResolver.stub(:resolve, ->(_url) { raise Stray::YtDlp::Error, "yt-dlp failed" }) do
+      LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Unresolvable", source.id)
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "yt-dlp failed", source.last_error
+  end
+
   test "uses pre-created source when source_id is provided" do
     source = Source.create!(user: @user, kind: :youtube_channel,
       url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCpre",
@@ -213,6 +227,49 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     tag = Tag.find_by(user: @user, name: "python")
     assert tag
     assert Tagging.joins(:item).where(tag: tag).exists?
+  end
+
+  test "resolves a pending youtube_channel source with a handle URL" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@RickAstley", external_id: "pending:handle", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    resolver_result = Stray::Youtube::ChannelResolver::Result.new(
+      channel_id: "UCResolved",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UCResolved"
+    )
+
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://www.youtube.com/watch?v=res1",
+        title: "Resolved Video", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: 1.day.ago,
+        external_id: "res1", duration: 120,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Resolved Channel", url: "https://www.youtube.com/channel/UCResolved",
+          external_id: "UCResolved", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ resolver_result.rss_url ])
+
+    Stray::Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      Stray::ExtractorRegistry.stub(:find_for_source, extractor) do
+        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@RickAstley", source.id)
+      end
+    end
+
+    source.reload
+    assert_equal "UCResolved", source.external_id
+    assert_equal resolver_result.rss_url, source.url
+    assert_equal "Resolved Channel", source.name
+    assert source.ok?
+    assert_equal 1, source.items.count
   end
 
   test "backfills source name from RSS feed for /channel/UC... URL" do

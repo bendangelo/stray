@@ -6,6 +6,7 @@ youtube:
   external_id: "UCfeed"
   icon_url: "https://example.com/youtube-avatar.png"
   active: true
+  status: 1
   next_crawl_at: <%= 1.hour.from_now %>
 
 bitchute:
@@ -16,6 +17,7 @@ bitchute:
   external_id: "feedbc"
   icon_url: "https://example.com/bitchute-avatar.png"
   active: true
+  status: 1
   next_crawl_at: <%= 1.hour.from_now %>
 
 inactive:
@@ -25,6 +27,7 @@ inactive:
   name: "Dead Channel"
   external_id: "UCold"
   active: false
+  status: 1
 
 remote:
   user: one
@@ -33,5 +36,6 @@ remote:
   name: "Economics Blogs (remote)"
   external_id: "econblogssecrettoken1234"
   active: true
+  status: 1
   next_crawl_at: <%= 1.hour.from_now %>
 

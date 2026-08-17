@@ -19,7 +19,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video parses JSON output" do
-    Open3.stub(:capture3, [ @json, "", status_success ]) do
+    @runner.stub(:execute, [ @json, "", status_success ]) do
       result = @runner.single_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
       assert_equal "dQw4w9WgXcQ", result["id"]
       assert_equal "Rick Astley - Never Gonna Give You Up (Official Music Video)", result["title"]
@@ -29,7 +29,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video raises ExtractionFailed on non-zero exit" do
-    Open3.stub(:capture3, [ "", "", status_failure ]) do
+    @runner.stub(:execute, [ "", "", status_failure ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -37,7 +37,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video failure message surfaces stderr detail" do
-    Open3.stub(:capture3, [ "", "ERROR: Video unavailable\n", status_failure ]) do
+    @runner.stub(:execute, [ "", "ERROR: Video unavailable\n", status_failure ]) do
       error = assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -46,7 +46,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video failure message falls back when stderr empty" do
-    Open3.stub(:capture3, [ "", "", status_failure ]) do
+    @runner.stub(:execute, [ "", "", status_failure ]) do
       error = assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -55,7 +55,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "single_video raises ExtractionFailed on invalid JSON" do
-    Open3.stub(:capture3, [ "", "not json", status_success ]) do
+    @runner.stub(:execute, [ "", "not json", status_success ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.single_video("https://example.com/video")
       end
@@ -64,7 +64,14 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
 
   test "single_video raises Timeout when yt-dlp exceeds timeout" do
     runner = Stray::YtDlp::Runner.new(timeout: 0.01)
-    Open3.stub(:capture3, ->(*args) { sleep 1; [ "", "", status_success ] }) do
+    fake_stdin = StringIO.new
+    fake_stdout = StringIO.new
+    fake_stderr = StringIO.new
+    fake_wait_thr = Object.new
+    def fake_wait_thr.pid = 99999
+    def fake_wait_thr.value = sleep(1) && OpenStruct.new(success?: true)
+
+    Open3.stub(:popen3, ->(*_args, &block) { block.call(fake_stdin, fake_stdout, fake_stderr, fake_wait_thr) }) do
       assert_raises(Stray::YtDlp::Timeout) do
         runner.single_video("https://example.com/video")
       end
@@ -90,7 +97,7 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
     fixture2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2"}'
     multi_json = "#{fixture1}\n#{fixture2}\n"
 
-    Open3.stub(:capture3, [ multi_json, "", status_success ]) do
+    @runner.stub(:execute, [ multi_json, "", status_success ]) do
       result = @runner.channel_listings("https://bitchute.com/channel/abc")
       assert_equal 2, result.size
       assert_equal "vid1", result[0]["id"]
@@ -99,16 +106,50 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
   end
 
   test "channel_listings returns empty array for no output" do
-    Open3.stub(:capture3, [ "", "", status_success ]) do
+    @runner.stub(:execute, [ "", "", status_success ]) do
       result = @runner.channel_listings("https://example.com/channel/empty")
       assert_equal [], result
     end
   end
 
   test "channel_listings raises ExtractionFailed on non-zero exit" do
-    Open3.stub(:capture3, [ "", "", status_failure ]) do
+    @runner.stub(:execute, [ "", "", status_failure ]) do
       assert_raises(Stray::YtDlp::ExtractionFailed) do
         @runner.channel_listings("https://example.com/channel/bad")
+      end
+    end
+  end
+
+  test "channel_metadata parses first JSON line and ignores the rest" do
+    first = '{"id":"vid1","channel_id":"UC123","channel":"Test"}'
+    second = '{"id":"vid2","channel_id":"UC123","channel":"Test"}'
+    multi_json = "#{first}\n#{second}\n"
+
+    @runner.stub(:execute, [ multi_json, "", status_success ]) do
+      result = @runner.channel_metadata("https://www.youtube.com/@Test")
+      assert_equal "vid1", result["id"]
+      assert_equal "UC123", result["channel_id"]
+    end
+  end
+
+  test "channel_metadata returns nil for empty output" do
+    @runner.stub(:execute, [ "", "", status_success ]) do
+      assert_nil @runner.channel_metadata("https://www.youtube.com/@Empty")
+    end
+  end
+
+  test "channel_metadata raises ExtractionFailed on non-zero exit" do
+    @runner.stub(:execute, [ "", "", status_failure ]) do
+      assert_raises(Stray::YtDlp::ExtractionFailed) do
+        @runner.channel_metadata("https://www.youtube.com/@Bad")
+      end
+    end
+  end
+
+  test "channel_metadata raises ExtractionFailed on invalid JSON" do
+    @runner.stub(:execute, [ "not json\n", "", status_success ]) do
+      assert_raises(Stray::YtDlp::ExtractionFailed) do
+        @runner.channel_metadata("https://www.youtube.com/@Bad")
       end
     end
   end

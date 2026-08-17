@@ -48,7 +48,7 @@
           <div class="border-3 border-charcoal rounded-md bg-athens-400 p-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <%= source_icon(source, size: "w-8 h-8") %>
-              <span class="text-sm text-charcoal"><%= source.name %></span>
+              <span class="text-sm text-charcoal"><%= source.display_name %></span>
             </div>
             <%= link_to "View", source_path(source), class: "text-xs text-charcoal underline hover:no-underline" %>
           </div>

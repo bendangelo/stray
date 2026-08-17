@@ -6,6 +6,7 @@ class Source < ApplicationRecord
   has_one :remote_collection, dependent: :destroy
 
   enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4 }
+  enum :status, { pending: 0, ok: 1, failed: 2 }
 
   validates :url, :kind, presence: true
   validates :external_id, uniqueness: { scope: [ :user_id, :kind ] }
@@ -16,25 +17,43 @@ class Source < ApplicationRecord
   }
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
+  scope :pending, -> { where(status: :pending) }
+  scope :ok, -> { where(status: :ok) }
+  scope :failed, -> { where(status: :failed) }
   scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
 
   def display_name
-    name.presence || begin
+    name.presence || path_segment || begin
       uri = URI.parse(url)
-      host = uri.host&.sub(/^www\./, "")
-      host || external_id
+      uri.host&.sub(/^www\./, "")
     rescue URI::InvalidURIError
-      external_id
-    end
+      nil
+    end || external_id
   end
 
-  def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, active: true)
+  def path_segment
+    uri = URI.parse(url)
+    return nil unless uri.host && uri.path
+
+    parts = uri.path.split("/").reject(&:empty?)
+    return nil if parts.empty?
+
+    last = parts.last
+    return nil if last.match?(/\.[a-z0-9]{1,5}\z/i)
+
+    last.presence
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, active: true, status: :pending)
     source = find_or_create_by!(user: user, external_id: external_id, kind: kind) do |s|
       s.url = url
       s.name = name
       s.icon_url = icon_url
       s.next_crawl_at = 1.hour.from_now
       s.active = active
+      s.status = status
     end
     source.update!(url: url, name: name) if name.present?
     Follow.find_or_create_by!(user: user, source: source)
