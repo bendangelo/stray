@@ -25,7 +25,7 @@ module Extractors
         feed = Feedjira.parse(response.body)
 
         feed.entries.map do |entry|
-          ExtractedContent.new(
+          Stray::ExtractedContent.new(
             url: entry.url,
             title: entry.title,
             content_text: entry.content || entry.summary,
@@ -62,7 +62,7 @@ module Extractors
       def extract_creator(feed)
         return nil unless feed.respond_to?(:title) || feed.respond_to?(:url)
 
-        CreatorIdentity.new(
+        Stray::CreatorIdentity.new(
           name: feed.title,
           url: feed.url,
           external_id: feed.feed_url || feed.url,

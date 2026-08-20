@@ -21,7 +21,7 @@ module Extractors
         content_html = doc.content
         text = extract_text(content_html)
 
-        ExtractedContent.new(
+        Stray::ExtractedContent.new(
           url: url,
           title: extract_title(response.body, doc.title),
           content_text: text,
@@ -87,7 +87,7 @@ module Extractors
 
       def extract_creator(body, url)
         uri = URI.parse(url)
-        CreatorIdentity.new(
+        Stray::CreatorIdentity.new(
           name: uri.host,
           url: "#{uri.scheme}://#{uri.host}",
           external_id: uri.host,

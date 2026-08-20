@@ -16,7 +16,7 @@ module Extractors
       def extract(url)
         data = runner.single_video(url)
 
-        ExtractedContent.new(
+        Stray::ExtractedContent.new(
           url: canonicalize_url(url, data),
           title: data["title"],
           content_text: data["description"],
@@ -34,7 +34,7 @@ module Extractors
         entries = runner.channel_listings(url)
 
         entries.map do |data|
-          ExtractedContent.new(
+        Stray::ExtractedContent.new(
             url: canonicalize_url(data["url"], data),
             title: data["title"],
             content_text: nil,
@@ -81,7 +81,7 @@ module Extractors
       def extract_creator(data)
         return nil unless data["channel_id"] || data["channel"]
 
-        CreatorIdentity.new(
+        Stray::CreatorIdentity.new(
           name: data["channel"],
           url: data["channel_url"],
           external_id: data["channel_id"],

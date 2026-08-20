@@ -20,7 +20,7 @@ module Extractors
         feed = Feedjira.parse(response.body)
 
         feed.entries.map do |entry|
-          ExtractedContent.new(
+          Stray::ExtractedContent.new(
             url: entry.url,
             title: entry.title,
             content_text: entry.content || entry.summary,
@@ -61,7 +61,7 @@ module Extractors
       end
 
       def extract_creator(feed)
-        CreatorIdentity.new(
+        Stray::CreatorIdentity.new(
           name: feed.title,
           url: feed.url,
           external_id: feed.youtube_channel_id,

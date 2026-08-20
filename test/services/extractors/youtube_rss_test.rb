@@ -26,7 +26,7 @@ class Extractors::YoutubeRssTest < ActiveSupport::TestCase
     assert_not Extractors::YoutubeRss.handles_kind?("video_channel")
   end
 
-  test "extract returns array of ExtractedContent from RSS feed" do
+  test "extract returns array of Stray::ExtractedContent from RSS feed" do
     VCR.use_cassette("extractors/youtube_rss_feed") do
       extractor = Extractors::YoutubeRss.new
       results = extractor.extract("https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw")

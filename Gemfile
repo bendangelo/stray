@@ -39,6 +39,8 @@ gem "faraday-follow_redirects"
 gem "faraday-retry"
 gem "nokogiri"
 gem "feedjira"
+gem "chronic"
+gem "chronic_duration"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

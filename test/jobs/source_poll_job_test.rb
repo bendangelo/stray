@@ -25,13 +25,13 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "performs poll: extracts items, upserts, recalculates cadence" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120, creator_identity: nil, tags: [],
       ),
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=vid2",
         title: "Video 2", content_text: "Desc 2", content_html: nil,
         thumbnail_url: "https://example.com/t2.jpg", published_at: 2.days.ago,
@@ -63,7 +63,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=vid1",
         title: "New Title", content_text: "Updated", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
@@ -123,7 +123,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "applies extractor tags to items" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=tagvid1",
         title: "Tagged Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "tagvid1",
@@ -148,7 +148,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues EmbeddingJob for new items" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=newvid1",
         title: "New Vid", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "newvid1",
@@ -170,12 +170,12 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "backfills source name from creator_identity when name is nil" do
     @source.update!(name: nil)
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=vid_name1",
         title: "Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "vid_name1",
         duration: nil,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Backfilled Channel", url: "https://example.com",
           external_id: "UCtest", thumbnail_url: nil
         ),
@@ -213,7 +213,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "clears polling flag after successful poll" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=pollvid1",
         title: "Poll Vid", content_text: "desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
@@ -257,7 +257,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=durvid1",
         title: "Updated Title", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago, external_id: "durvid1",
@@ -285,7 +285,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=pubvid1",
         title: "Updated Title", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: nil, external_id: "pubvid1",
@@ -307,7 +307,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues MetadataEnrichmentJob for items missing duration" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=nodur1",
         title: "No Duration", content_text: "desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: Time.current,
@@ -328,7 +328,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues MetadataEnrichmentJob for items missing thumbnails" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=nothumb1",
         title: "No Thumb", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: Time.current, external_id: "nothumb1",
@@ -349,7 +349,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "enqueues MetadataEnrichmentJob for items missing published_at" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=nopub1",
         title: "No Publish Date", content_text: "desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: nil,
@@ -374,7 +374,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
     feed_result = Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
@@ -397,7 +397,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     rc = RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
     feed_result = Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
@@ -424,7 +424,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     source.items.create!(user: @user, external_id: "known1", title: "Old",
       url: "https://x/1", published_at: 1.day.ago, state: 0)
 
-    items = [ ExtractedContent.new(url: "https://x/1", title: "Old", content_text: nil,
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "Old", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: 1.day.ago, external_id: "known1",
       duration: nil, creator_identity: nil, tags: []) ]
     feed_result = Extractor::FeedResult.new(items: items, next_cursor: "cur2", has_more: true)
@@ -464,7 +464,7 @@ class SourcePollJobTest < ActiveJob::TestCase
   test "sets status to ok on successful poll" do
     @source.update!(status: :pending)
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=st1", title: "Video 1",
         content_text: "desc", content_html: nil, thumbnail_url: nil,
         published_at: 1.day.ago, external_id: "st1", duration: 120,
@@ -544,7 +544,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
     RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
 
-    items = [ ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
       content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
       duration: nil, creator_identity: nil, tags: []) ]
     feed_result = Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false)
@@ -598,7 +598,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=rp1", title: "V1",
         content_text: "desc", content_html: nil, thumbnail_url: nil,
         published_at: 1.day.ago, external_id: "rp1", duration: 120,

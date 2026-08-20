@@ -7,12 +7,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "creates source + follow + items for YouTube channel URL" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://www.youtube.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc 1", content_html: nil,
         thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Test Channel", url: "https://www.youtube.com/channel/UC123",
           external_id: "UC123", thumbnail_url: nil
         ),
@@ -51,12 +51,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
   end
 
   test "creates source + follow + single item for YouTube video URL" do
-    video_content = ExtractedContent.new(
+    video_content = Stray::ExtractedContent.new(
       url: "https://www.youtube.com/watch?v=vid123",
       title: "Test Video", content_text: "Desc", content_html: nil,
       thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
       external_id: "vid123", duration: 300,
-      creator_identity: CreatorIdentity.new(
+      creator_identity: Stray::CreatorIdentity.new(
         name: "Test Channel", url: "https://www.youtube.com/channel/UC123",
         external_id: "UC123", thumbnail_url: nil
       ),
@@ -100,12 +100,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
   end
 
   test "creates source for non-YouTube video URL" do
-    content = ExtractedContent.new(
+    content = Stray::ExtractedContent.new(
       url: "https://bitchute.com/video/bcvid123",
       title: "Bitchute Video", content_text: "Desc", content_html: nil,
       thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
       external_id: "bcvid123", duration: 300,
-      creator_identity: CreatorIdentity.new(
+      creator_identity: Stray::CreatorIdentity.new(
         name: "BC Channel", url: "https://bitchute.com/channel/abc",
         external_id: "abc", thumbnail_url: nil
       ),
@@ -123,14 +123,14 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
     source = Source.find_by(external_id: "abc", user_id: @user.id)
     assert_not_nil source
-    assert_equal "video_channel", source.kind
+    assert_equal "bitchute_channel", source.kind
     assert_equal "BC Channel", source.name
     assert_equal 1.0, source.follows.first.weight
     assert_equal 1, source.items.count
   end
 
   test "creates a generic_page source for a non-video URL without creator identity" do
-    content = ExtractedContent.new(
+    content = Stray::ExtractedContent.new(
       url: "https://example.com/blog/hello-world",
       title: "Hello World", content_text: "Body text", content_html: "<p>Body text</p>",
       thumbnail_url: nil, published_at: nil,
@@ -277,12 +277,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://www.youtube.com/watch?v=pre1",
         title: "Pre Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
         external_id: "pre1", duration: 120,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Chan", url: "https://www.youtube.com/channel/UCpre",
           external_id: "UCpre", thumbnail_url: nil
         ),
@@ -303,12 +303,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
   end
 
   test "applies extractor tags from single video" do
-    content = ExtractedContent.new(
+    content = Stray::ExtractedContent.new(
       url: "https://bitchute.com/video/tagvid1",
       title: "Tagged Video", content_text: "desc", content_html: nil,
       thumbnail_url: nil, published_at: 1.day.ago,
       external_id: "tagvid1", duration: 300,
-      creator_identity: CreatorIdentity.new(
+      creator_identity: Stray::CreatorIdentity.new(
         name: "Chan", url: "https://bitchute.com/channel/abc",
         external_id: "abc", thumbnail_url: nil
       ),
@@ -341,12 +341,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://www.youtube.com/watch?v=res1",
         title: "Resolved Video", content_text: "desc", content_html: nil,
         thumbnail_url: nil, published_at: 1.day.ago,
         external_id: "res1", duration: 120,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Resolved Channel", url: "https://www.youtube.com/channel/UCResolved",
           external_id: "UCResolved", thumbnail_url: nil
         ),
@@ -373,12 +373,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "backfills source name from RSS feed for /channel/UC... URL" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://www.youtube.com/watch?v=vid1",
         title: "Video 1", content_text: "Desc", content_html: nil,
         thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
         external_id: "vid1", duration: 120,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Channel From Feed", url: "https://www.youtube.com/channel/UC456",
           external_id: "UC456", thumbnail_url: nil
         ),
@@ -409,12 +409,12 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
   test "creates an rss_feed source for a pasted RSS feed URL" do
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://blog.example.com/post-1",
         title: "Post 1", content_text: "Body", content_html: "<p>Body</p>",
         thumbnail_url: nil, published_at: 1.day.ago,
         external_id: "post-1", duration: nil,
-        creator_identity: CreatorIdentity.new(
+        creator_identity: Stray::CreatorIdentity.new(
           name: "Example Blog", url: "https://blog.example.com",
           external_id: "https://blog.example.com/feed", thumbnail_url: nil
         ),
@@ -435,6 +435,36 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_not_nil source
     assert_equal "https://blog.example.com/feed", source.url
     assert_equal "Example Blog", source.name
+    assert_equal 1, source.items.count
+  end
+
+  test "creates a rumble_channel source from a channel URL" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://rumble.com/vvid1", title: "Video 1", content_text: nil, content_html: nil,
+        thumbnail_url: "https://img.jpg", published_at: 1.day.ago,
+        external_id: "vid1", duration: 100,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Bright Insight", url: "https://rumble.com/c/BrightInsight",
+          external_id: "BrightInsight", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ "https://rumble.com/c/BrightInsight" ])
+
+    ExtractorRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        LinkIntakeJob.perform_now(@user.id, "https://rumble.com/c/BrightInsight")
+      end
+    end
+
+    source = Source.find_by(kind: "rumble_channel", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "BrightInsight", source.external_id
+    assert_equal "Bright Insight", source.name
     assert_equal 1, source.items.count
   end
 end

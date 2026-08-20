@@ -1,0 +1,99 @@
+{
+  "total": 1,
+  "data": [
+    {
+      "id": 23953,
+      "uuid": "8681e152-265f-42dc-80cd-7333fd4feb6d",
+      "shortUUID": "hBmuCzFjeaHMo3Kbovvc8T",
+      "url": "https://video.tkz.es/videos/watch/8681e152-265f-42dc-80cd-7333fd4feb6d",
+      "name": "Explicación breve del Fediverso",
+      "category": {
+        "id": 15,
+        "label": "Science & Technology"
+      },
+      "licence": {
+        "id": 7,
+        "label": "Public Domain Dedication"
+      },
+      "language": {
+        "id": "es",
+        "label": "Spanish"
+      },
+      "privacy": {
+        "id": 1,
+        "label": "Public"
+      },
+      "nsfw": false,
+      "truncatedDescription": "En este video presentamos un resumen de apenas 2 minutos sobre el Fediverso, como funciona la federación y lo importante que es para mantener un Internet libre.\r\n\r\nVersión YouTube en: https://www.youtube.com/watch?v=2TNyd_cHCNQ\r\nTexto: https://tkz...",
+      "description": "En este video presentamos un resumen de apenas 2 minutos sobre el Fediverso, como funciona la federación y lo importante que es para mantener un Internet libre.\r\n\r\nVersión YouTube en: https://www.youtube.com/watch?v=2TNyd_cHCNQ\r\nTexto: https://tkz...",
+      "isLocal": true,
+      "duration": 145,
+      "views": 43,
+      "viewers": 0,
+      "likes": 1,
+      "dislikes": 0,
+      "thumbnailPath": "/static/thumbnails/673b3c29-b99b-42e3-b2c4-b3e5ae0b9815.jpg",
+      "previewPath": "/lazy-static/previews/191564e4-acc2-4efc-aa99-e80806c995a7.jpg",
+      "embedPath": "/videos/embed/8681e152-265f-42dc-80cd-7333fd4feb6d",
+      "createdAt": "2023-06-17T21:45:02.004Z",
+      "updatedAt": "2023-11-29T07:16:33.133Z",
+      "publishedAt": "2023-06-17T21:50:36.837Z",
+      "originallyPublishedAt": null,
+      "isLive": false,
+      "account": {
+        "id": 4,
+        "displayName": "TKZ.One",
+        "name": "tkz",
+        "url": "https://video.tkz.es/accounts/tkz",
+        "host": "video.tkz.es",
+        "avatars": [
+          {
+            "width": 48,
+            "path": "/lazy-static/avatars/94dd71d4-9e3c-4aaa-a824-1fcfd3293f28.png",
+            "createdAt": "2023-06-12T15:57:25.485Z",
+            "updatedAt": "2023-06-12T15:57:25.485Z"
+          },
+          {
+            "width": 120,
+            "path": "/lazy-static/avatars/1c511953-ed68-4c7e-a6ea-1dc3b023c3dc.png",
+            "createdAt": "2023-06-12T15:57:25.482Z",
+            "updatedAt": "2023-06-12T15:57:25.482Z"
+          }
+        ],
+        "avatar": {
+          "width": 48,
+          "path": "/lazy-static/avatars/94dd71d4-9e3c-4aaa-a824-1fcfd3293f28.png",
+          "createdAt": "2023-06-12T15:57:25.485Z",
+          "updatedAt": "2023-06-12T15:57:25.485Z"
+        }
+      },
+      "channel": {
+        "id": 949,
+        "name": "fedi",
+        "displayName": "Fediverso",
+        "url": "https://video.tkz.es/video-channels/fedi",
+        "host": "video.tkz.es",
+        "avatars": [
+          {
+            "width": 48,
+            "path": "/lazy-static/avatars/ea55376b-f608-4967-80f8-629ae0626e4e.png",
+            "createdAt": "2023-06-17T20:35:41.560Z",
+            "updatedAt": "2023-06-17T20:35:41.560Z"
+          },
+          {
+            "width": 120,
+            "path": "/lazy-static/avatars/602103ae-10f9-422b-8bc2-44f8a5ed2217.png",
+            "createdAt": "2023-06-17T20:35:41.558Z",
+            "updatedAt": "2023-06-17T20:35:41.558Z"
+          }
+        ],
+        "avatar": {
+          "width": 48,
+          "path": "/lazy-static/avatars/ea55376b-f608-4967-80f8-629ae0626e4e.png",
+          "createdAt": "2023-06-17T20:35:41.560Z",
+          "updatedAt": "2023-06-17T20:35:41.560Z"
+        }
+      }
+    }
+  ]
+}

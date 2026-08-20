@@ -32,7 +32,7 @@ module Extractors
         raise "not a stray-collection manifest" unless data["format"] == "stray-collection"
 
         items = (data["items"] || []).first(MAX_ITEMS_PER_PAGE).map do |item|
-          ExtractedContent.new(
+          Stray::ExtractedContent.new(
             url: item["url"],
             title: item["title"],
             content_text: item["content_text"],

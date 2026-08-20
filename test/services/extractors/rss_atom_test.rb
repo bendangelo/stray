@@ -23,7 +23,7 @@ class Extractors::RssAtomTest < ActiveSupport::TestCase
     assert_not Extractors::RssAtom.handles_kind?("video_channel")
   end
 
-  test "extract parses RSS feed and returns ExtractedContent array" do
+  test "extract parses RSS feed and returns Stray::ExtractedContent array" do
     VCR.use_cassette("extractors/rss_atom/feed_xml") do
       extractor = Extractors::RssAtom.new
       results = extractor.extract("https://example.com/feed.xml")

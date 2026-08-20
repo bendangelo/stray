@@ -13,7 +13,7 @@ class ExtractorRegistryTest < ActiveSupport::TestCase
     end
 
     def extract(url)
-      ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
+      Stray::ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
         thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
     end
 
@@ -32,7 +32,7 @@ class ExtractorRegistryTest < ActiveSupport::TestCase
     end
 
     def extract(url)
-      ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
+      Stray::ExtractedContent.new(url: "https://example.com/video", title: "test", content_text: nil, content_html: nil,
         thumbnail_url: nil, published_at: nil, external_id: "x", duration: nil, creator_identity: nil, tags: [])
     end
 
@@ -86,5 +86,27 @@ class ExtractorRegistryTest < ActiveSupport::TestCase
     ExtractorRegistry.reset!
     source = Source.new(kind: :generic_page, url: "https://example.com")
     assert_nil ExtractorRegistry.find_for_source(source)
+  end
+
+  test "real registry resolves new site kinds to their adapters" do
+    originals = ExtractorRegistry.instance_variable_get(:@extractors)
+    ExtractorRegistry.reset!
+    ExtractorRegistry.register(Extractors::Rumble)
+    ExtractorRegistry.register(Extractors::Bitchute)
+    ExtractorRegistry.register(Extractors::Odysee)
+    ExtractorRegistry.register(Extractors::Peertube)
+    ExtractorRegistry.register(Extractors::YtDlp)
+
+    assert_instance_of Extractors::Rumble, ExtractorRegistry.find_for_source(Source.new(kind: :rumble_channel))
+    assert_instance_of Extractors::Bitchute, ExtractorRegistry.find_for_source(Source.new(kind: :bitchute_channel))
+    assert_instance_of Extractors::Odysee, ExtractorRegistry.find_for_source(Source.new(kind: :odysee_channel))
+    assert_instance_of Extractors::Peertube, ExtractorRegistry.find_for_source(Source.new(kind: :peertube_channel))
+    assert_instance_of Extractors::YtDlp, ExtractorRegistry.find_for_source(Source.new(kind: :video_channel))
+
+    assert_instance_of Extractors::Rumble, ExtractorRegistry.find_for("https://rumble.com/c/Foo")
+    assert_instance_of Extractors::Bitchute, ExtractorRegistry.find_for("https://www.bitchute.com/channel/Foo")
+  ensure
+    ExtractorRegistry.reset!
+    originals&.each { |e| ExtractorRegistry.register(e) }
   end
 end

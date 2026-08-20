@@ -21,7 +21,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
     )
 
     contents = [
-      ExtractedContent.new(
+      Stray::ExtractedContent.new(
         url: "https://example.com/watch?v=inttest1",
         title: "Integration Test Video", content_text: "Test description",
         content_html: nil, thumbnail_url: "https://example.com/t.jpg",

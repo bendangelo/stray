@@ -38,7 +38,7 @@ class Extractors::YtDlpTest < ActiveSupport::TestCase
     assert_not Extractors::YtDlp.handles_kind?("rss_feed")
   end
 
-  test "extract returns ExtractedContent with video metadata" do
+  test "extract returns Stray::ExtractedContent with video metadata" do
     stub_runner(@json, "", status_success) do
       extractor = Extractors::YtDlp.new
       result = extractor.extract("https://bitchute.com/video/abc123")
@@ -120,7 +120,7 @@ class Extractors::YtDlpTest < ActiveSupport::TestCase
     end
   end
 
-  test "extract_channel returns array of lightweight ExtractedContent" do
+  test "extract_channel returns array of lightweight Stray::ExtractedContent" do
     listing1 = '{"id":"vid1","title":"Video 1","url":"https://example.com/v1","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
     listing2 = '{"id":"vid2","title":"Video 2","url":"https://example.com/v2","channel":"Test","channel_id":"C1","channel_url":"https://example.com/c1"}'
     multi_json = "#{listing1}\n#{listing2}\n"

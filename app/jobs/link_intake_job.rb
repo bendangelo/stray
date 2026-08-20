@@ -57,6 +57,13 @@ class LinkIntakeJob < ApplicationJob
       when :youtube_video   then extract_youtube_video
       when :rss_feed        then create_rss_source
       when :video_channel   then extract_video
+      when :rumble_channel_feed then extract_channel_feed(:rumble_channel)
+      when :rumble_video        then extract_site_video(:rumble_channel)
+      when :bitchute_channel_feed then extract_channel_feed(:bitchute_channel)
+      when :bitchute_video        then extract_site_video(:bitchute_channel)
+      when :odysee_channel        then extract_channel_feed(:odysee_channel)
+      when :peertube_channel_feed then extract_channel_feed(:peertube_channel)
+      when :peertube_video        then extract_site_video(:peertube_channel)
       when :generic_page    then extract_generic_page
       else
         raise Stray::ExtractionError, "Unsupported URL: #{@url}"
@@ -179,6 +186,45 @@ class LinkIntakeJob < ApplicationJob
     creator = content.creator_identity
     if creator&.external_id
       create_video_source(content, creator)
+    else
+      create_generic_page_source(content)
+    end
+  end
+
+  def extract_channel_feed(kind)
+    extractor = ExtractorRegistry.find_for(@url)
+    contents = Array(extractor.extract_feed(@url))
+
+    creator = contents.map(&:creator_identity).compact.find { |c| c.external_id }
+    source = create_source(
+      kind: kind,
+      url: @url,
+      external_id: creator&.external_id || Digest::SHA256.hexdigest(@url)[0, 16],
+      name: creator&.name,
+      channel_url: @url
+    )
+
+    create_items(source, contents)
+    enqueue_full_poll(source)
+    [ contents, source ]
+  end
+
+  def extract_site_video(kind)
+    extractor = ExtractorRegistry.find_for(@url)
+    content = extractor.extract(@url)
+
+    creator = content.creator_identity
+    if creator&.external_id
+      source = create_source(
+        kind: kind,
+        url: creator.url || @url,
+        external_id: creator.external_id,
+        name: creator.name,
+        channel_url: creator.url
+      )
+      create_items(source, [ content ])
+      enqueue_full_poll(source)
+      [ [ content ], source ]
     else
       create_generic_page_source(content)
     end

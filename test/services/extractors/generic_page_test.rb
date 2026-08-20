@@ -20,7 +20,7 @@ class Extractors::GenericPageTest < ActiveSupport::TestCase
     assert_not Extractors::GenericPage.handles_kind?("video_channel")
   end
 
-  test "extract returns ExtractedContent from article page" do
+  test "extract returns Stray::ExtractedContent from article page" do
     VCR.use_cassette("extractors/generic_page/article") do
       extractor = Extractors::GenericPage.new
       result = extractor.extract("https://example.com/articles/sample")

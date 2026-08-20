@@ -1,8 +1,6 @@
 class UrlClassifier
   Classification = Data.define(:category, :source_kind, :extractor_class, :resolver)
 
-  VIDEO_HOSTS = %w[bitchute.com].freeze
-
   class << self
     def classify(url)
       uri = URI.parse(url)
@@ -16,8 +14,17 @@ class UrlClassifier
         classification(:youtube_video, "youtube_channel", nil, Youtube::ChannelResolver)
       elsif rss_feed?(uri)
         classification(:rss_feed, "rss_feed", Extractors::RssAtom)
-      elsif video_host?(uri)
-        classification(:video_channel, "video_channel", Extractors::YtDlp)
+      elsif rumble?(uri)
+        classification(rumble_channel?(uri) ? :rumble_channel_feed : :rumble_video,
+                      "rumble_channel", Extractors::Rumble)
+      elsif bitchute?(uri)
+        classification(bitchute_channel?(uri) ? :bitchute_channel_feed : :bitchute_video,
+                      "bitchute_channel", Extractors::Bitchute)
+      elsif odysee_channel?(uri)
+        classification(:odysee_channel, "odysee_channel", Extractors::Odysee)
+      elsif peertube?(uri)
+        classification(peertube_channel?(uri) ? :peertube_channel_feed : :peertube_video,
+                      "peertube_channel", Extractors::Peertube)
       else
         classification(:generic_page, "generic_page", Extractors::GenericPage)
       end
@@ -59,8 +66,32 @@ class UrlClassifier
       Extractors::RssAtom.matches?(uri.to_s)
     end
 
-    def video_host?(uri)
-      VIDEO_HOSTS.any? { |h| uri.host&.end_with?(h) }
+    def rumble?(uri)
+      uri.host&.end_with?("rumble.com")
+    end
+
+    def rumble_channel?(uri)
+      uri.path.to_s.match?(%r{^/(c|user)/})
+    end
+
+    def bitchute?(uri)
+      uri.host&.end_with?("bitchute.com")
+    end
+
+    def bitchute_channel?(uri)
+      uri.path.to_s.match?(%r{^/channel/})
+    end
+
+    def odysee_channel?(uri)
+      uri.host&.end_with?("odysee.com") && uri.path.to_s.match?(%r{^/@})
+    end
+
+    def peertube?(uri)
+      uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/|/w/})
+    end
+
+    def peertube_channel?(uri)
+      uri.path.to_s.match?(%r{/(video-channels|c)/})
     end
   end
 end
