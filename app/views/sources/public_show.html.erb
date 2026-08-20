@@ -1,0 +1,18 @@
+<div class="mx-auto max-w-2xl px-4 py-8">
+  <h1 class="text-2xl font-bold"><%= @source.display_name %></h1>
+
+  <p class="mt-2 text-sm text-stone-600">
+    A source on <%= Setting.get(:instance_name) || "this Stray instance" %>.
+  </p>
+
+  <ul class="mt-6 space-y-2 text-sm">
+    <li>
+      <%= phosphor_icon "rss", class: "inline h-4 w-4 align-text-bottom" %>
+      <%= link_to "RSS feed", source_feed_path(slug: @source.slug, format: :xml), class: "ml-1 text-blue-600 hover:underline" %>
+    </li>
+    <li>
+      <%= phosphor_icon "code", class: "inline h-4 w-4 align-text-bottom" %>
+      <%= link_to "Stray manifest (JSON)", source_manifest_path(slug: @source.slug, format: :json), class: "ml-1 text-blue-600 hover:underline" %>
+    </li>
+  </ul>
+</div>

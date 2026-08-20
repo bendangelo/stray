@@ -592,4 +592,86 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     post mute_source_path(sources(:youtube))
     assert_redirected_to new_session_path
   end
+
+  test "feed serves RSS unauthenticated" do
+    source = sources(:youtube)
+    get source_feed_path(slug: source.slug)
+    assert_response :success
+    assert_includes response.body, "<rss"
+    assert_includes response.body, source.display_name
+  end
+
+  test "feed 404 for unknown slug" do
+    get source_feed_path(slug: "nonexistentslug00000000")
+    assert_response :not_found
+  end
+
+  test "feed includes hidden items" do
+    source = sources(:bitchute)
+    get source_feed_path(slug: source.slug)
+    assert_response :success
+    assert_includes response.body, "Hidden Video"
+  end
+
+  test "manifest serves JSON unauthenticated" do
+    source = sources(:youtube)
+    get source_manifest_path(slug: source.slug)
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal "stray-source", json["format"]
+    assert_equal source.display_name, json["source"]["name"]
+  end
+
+  test "manifest 404 for unknown slug" do
+    get source_manifest_path(slug: "nonexistentslug00000000")
+    assert_response :not_found
+  end
+
+  test "manifest paginates with cursor" do
+    source = sources(:youtube)
+    get source_manifest_path(slug: source.slug, cursor: nil)
+    json = JSON.parse(response.body)
+    assert_not json["pagination"]["has_more"]
+  end
+
+  test "public_show renders unauthenticated" do
+    source = sources(:youtube)
+    get public_source_path(slug: source.slug)
+    assert_response :success
+    assert_includes response.body, source.display_name
+  end
+
+  test "public_show 404 for unknown slug" do
+    get public_source_path(slug: "nonexistentslug00000000")
+    assert_response :not_found
+  end
+
+  test "rotate_slug requires authentication" do
+    source = sources(:youtube)
+    post rotate_slug_source_path(source)
+    assert_redirected_to new_session_path
+  end
+
+  test "rotate_slug regenerates slug and invalidates old URL" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    old_slug = source.slug
+
+    post rotate_slug_source_path(source)
+
+    assert_redirected_to source_path(source)
+    source.reload
+    assert_not_equal old_slug, source.slug
+
+    get source_feed_path(slug: old_slug)
+    assert_response :not_found
+    get source_feed_path(slug: source.slug)
+    assert_response :success
+  end
+
+  test "rotate_slug 404 for source the user does not follow" do
+    sign_in_as(users(:two))
+    post rotate_slug_source_path(sources(:bitchute))
+    assert_response :not_found
+  end
 end

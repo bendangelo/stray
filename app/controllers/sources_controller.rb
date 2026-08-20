@@ -1,5 +1,6 @@
 class SourcesController < ApplicationController
   include Pagy::Method
+  allow_unauthenticated_access only: %i[public_show feed manifest]
 
   def index
     base = Source.joins(:follows).where(follows: { user_id: current_user.id })
@@ -123,6 +124,27 @@ class SourcesController < ApplicationController
       format.turbo_stream { render "sources/update_weight", locals: { source: } }
       format.html { redirect_to source_path(source) }
     end
+  end
+
+  def public_show
+    @source = Source.find_by!(slug: params[:slug])
+  end
+
+  def feed
+    @source = Source.find_by!(slug: params[:slug])
+    @items = @source.items.order(published_at: :desc).limit(50)
+    render formats: :xml
+  end
+
+  def manifest
+    source = Source.find_by!(slug: params[:slug])
+    render json: SourceManifest.build(source, cursor: params[:cursor], base_url: request.base_url)
+  end
+
+  def rotate_slug
+    source = scoped_source
+    source.regenerate_slug
+    redirect_to source_path(source), notice: "Feed link rotated."
   end
 
   def edit
