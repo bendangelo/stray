@@ -9,4 +9,12 @@ class CollectionMembershipsController < ApplicationController
     CollectionMembership.find_or_create_by!(collection: collection, source: source)
     head :ok
   end
+
+  def destroy
+    membership = CollectionMembership.joins(:collection).find_by(id: params[:id], collection: { user_id: current_user.id })
+    return head :not_found unless membership
+
+    membership.destroy
+    head :ok
+  end
 end
