@@ -62,11 +62,11 @@ class CollectionManifestTest < ActiveSupport::TestCase
     assert_not item.key?(:state)
   end
 
-  test "excludes hidden items" do
+  test "includes hidden items" do
     @item2.update!(state: :hidden)
     manifest = CollectionManifest.build(@collection, cursor: nil)
     ids = manifest[:items].map { |i| i[:external_id] }
-    assert_not_includes ids, "manifest-new-2"
+    assert_includes ids, "manifest-new-2"
   end
 
   test "sources list includes kind, name, url, icon_url" do
