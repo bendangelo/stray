@@ -1,0 +1,12 @@
+<% if @source %>
+<%= turbo_stream.replace dom_id(@source, :collection_menu_body) do %>
+  <% member_ids = @source.collection_memberships.pluck(:collection_id).to_set %>
+  <%= render "sources/collection_menu_body",
+        source: @source,
+        collections: current_user.collections.order(:name),
+        member_collection_ids: member_ids %>
+<% end %>
+<%= turbo_stream.replace dom_id(@source, :collection_label) do %>
+  <%= render "sources/collection_label", source: @source %>
+<% end %>
+<% end %>

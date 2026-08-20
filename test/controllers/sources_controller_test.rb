@@ -56,6 +56,15 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_kind_of Set, assigns(:member_collection_ids)
     assert_includes assigns(:member_collection_ids), collections(:econ).id
     refute_includes assigns(:member_collection_ids), collections(:private_one).id
+    assert_includes response.body, "In 1 collection"
+  end
+
+  test "show renders Add to collection label for a source with no memberships" do
+    sign_in_as(users(:one))
+    get source_path(sources(:inactive))
+    assert_response :success
+    assert_includes response.body, "Add to collection"
+    assert_includes response.body, "Create new collection…"
   end
 
   test "show displays the handle and pending state for a pending source" do

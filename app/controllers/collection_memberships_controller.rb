@@ -7,14 +7,18 @@ class CollectionMembershipsController < ApplicationController
     return head :not_found unless source
 
     CollectionMembership.find_or_create_by!(collection: collection, source: source)
-    head :ok
+    @source = source
+    @collection = collection
+    respond_to { |format| format.turbo_stream }
   end
 
   def destroy
     membership = CollectionMembership.joins(:collection).find_by(id: params[:id], collection: { user_id: current_user.id })
     return head :not_found unless membership
 
+    @source = membership.source
+    @collection = membership.collection
     membership.destroy
-    head :ok
+    respond_to { |format| format.turbo_stream }
   end
 end

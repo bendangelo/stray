@@ -26,12 +26,18 @@ class CollectionsController < ApplicationController
     if result
       respond_to do |format|
         format.html { redirect_to @collection, notice: "Collection created." }
-        format.turbo_stream { head :ok }
+        format.turbo_stream do
+          @source = source
+          render "collections/create"
+        end
       end
     else
       respond_to do |format|
         format.html { render :new, status: :unprocessable_content }
-        format.turbo_stream { head :unprocessable_content }
+        format.turbo_stream do
+          @source = source
+          render "collections/create_error", status: :unprocessable_content
+        end
       end
     end
   end

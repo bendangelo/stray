@@ -1,0 +1,8 @@
+<% count = source.collection_memberships.count %>
+<% if count.positive? %>
+  <%= phosphor_icon "folder-open", style: :fill, class: "w-3.5 h-3.5" %>
+  <span>In <%= pluralize(count, "collection") %></span>
+<% else %>
+  <%= phosphor_icon "folder-plus", class: "w-3.5 h-3.5" %>
+  <span>Add to collection</span>
+<% end %>

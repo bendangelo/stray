@@ -1,0 +1,6 @@
+<%= turbo_stream.replace dom_id(@source, :collection_label) do %>
+  <%= render "sources/collection_label", source: @source %>
+<% end %>
+<%= turbo_stream.replace dom_id(@source, "collection_row_#{@collection.id}") do %>
+  <%= render "sources/collection_menu_row", source: @source, collection: @collection, member: true %>
+<% end %>

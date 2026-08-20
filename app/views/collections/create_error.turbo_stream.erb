@@ -1,0 +1,11 @@
+<% if @source %>
+<%= turbo_stream.replace dom_id(@source, :collection_menu_body) do %>
+  <% member_ids = @source.collection_memberships.pluck(:collection_id).to_set %>
+  <%= render "sources/collection_menu_body",
+        source: @source,
+        collections: current_user.collections.order(:name),
+        member_collection_ids: member_ids do %>
+    <div class="px-2 py-1 text-xs text-cerise">Name can't be blank</div>
+  <% end %>
+<% end %>
+<% end %>

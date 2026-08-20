@@ -49,6 +49,10 @@
         </div>
       </div>
       <div class="flex items-center gap-2 flex-wrap" data-test="source-actions">
+        <%= render "sources/collection_menu",
+              source: @source,
+              collections: @collections,
+              member_collection_ids: @member_collection_ids %>
         <% if @source.polling? %>
           <span class="flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-athens-500 text-charcoal text-xs font-bold cursor-wait">
             <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>

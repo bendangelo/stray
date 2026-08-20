@@ -1,0 +1,30 @@
+<%= turbo_frame_tag dom_id(source, :collection_menu_body) do %>
+  <% if block_given? %>
+    <%= yield %>
+  <% end %>
+
+  <% if collections.empty? %>
+    <p class="px-2 py-2 text-xs text-charcoal-300">Collections let you group sources you follow.</p>
+  <% else %>
+    <% collections.each do |collection| %>
+      <%= render "sources/collection_menu_row",
+            source: source,
+            collection: collection,
+            member: member_collection_ids.include?(collection.id) %>
+    <% end %>
+  <% end %>
+
+  <div class="border-t-3 border-charcoal/10 my-1"></div>
+
+  <%= form_with url: collections_path, data: { turbo_stream: true } do |f| %>
+    <%= hidden_field_tag "collection[source_id]", source.id %>
+    <div class="flex gap-1 px-1">
+      <%= text_field_tag "collection[name]", nil,
+            placeholder: "Create new collection…",
+            autocomplete: "off",
+            class: "flex-1 h-8 px-2 text-xs border-3 border-charcoal rounded-md bg-athens-400 text-charcoal focus:outline-none" %>
+      <%= f.submit "+",
+            class: "h-8 px-3 bg-carrot-500 hover:bg-carrot-600 text-white text-xs rounded-md border-3 border-charcoal cursor-pointer" %>
+    </div>
+  <% end %>
+<% end %>
