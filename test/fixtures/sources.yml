@@ -8,6 +8,7 @@ youtube:
   active: true
   status: 1
   next_crawl_at: <%= 1.hour.from_now %>
+  slug: "youtubeslug0000000000000"
 
 bitchute:
   user: one
@@ -19,6 +20,7 @@ bitchute:
   active: true
   status: 1
   next_crawl_at: <%= 1.hour.from_now %>
+  slug: "bitchuteslug000000000000"
 
 inactive:
   user: one
@@ -28,6 +30,7 @@ inactive:
   external_id: "UCold"
   active: false
   status: 1
+  slug: "inactiveslug000000000000"
 
 remote:
   user: one
@@ -38,4 +41,5 @@ remote:
   active: true
   status: 1
   next_crawl_at: <%= 1.hour.from_now %>
+  slug: "remotecolslug00000000000"
 
