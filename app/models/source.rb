@@ -8,6 +8,9 @@ class Source < ApplicationRecord
   enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8 }
   enum :status, { pending: 0, ok: 1, failed: 2 }
 
+  has_secure_token :slug, length: 24
+  validates :slug, presence: true, uniqueness: true
+
   validates :url, :kind, presence: true
   validates :external_id, uniqueness: { scope: [ :user_id, :kind ] }
 
