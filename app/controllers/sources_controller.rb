@@ -11,6 +11,8 @@ class SourcesController < ApplicationController
   def show
     @source = scoped_source
     @follow = @source.follows.find_by(user_id: current_user.id)
+    @collections = current_user.collections.order(:name)
+    @member_collection_ids = @source.collection_memberships.pluck(:collection_id).to_set
     @since = params[:since].presence || "all"
     cutoff = since_cutoff(@since)
     @since = "all" unless cutoff

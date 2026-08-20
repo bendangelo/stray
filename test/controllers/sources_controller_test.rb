@@ -47,6 +47,17 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show exposes user collections and membership state for the dropdown" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    get source_path(source)
+    assert_response :success
+    assert_equal users(:one).collections.order(:name).to_a, assigns(:collections).to_a
+    assert_kind_of Set, assigns(:member_collection_ids)
+    assert_includes assigns(:member_collection_ids), collections(:econ).id
+    refute_includes assigns(:member_collection_ids), collections(:private_one).id
+  end
+
   test "show displays the handle and pending state for a pending source" do
     sign_in_as(users(:one))
     source = Source.create!(user: users(:one), kind: :youtube_channel,
