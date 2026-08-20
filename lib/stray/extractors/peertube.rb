@@ -52,6 +52,13 @@ module Stray
         video_hash(JSON.parse(response.body), uri)
       end
 
+      # Fetch just the tags for a single video by its UUID.
+      # The channel-listing API omits tags; only the single-video endpoint returns them.
+      def fetch_tags(host, uuid)
+        response = fetch("https://#{host}/api/v1/videos/#{uuid}")
+        Array(JSON.parse(response.body)["tags"]).first(5)
+      end
+
       private
 
       def video_hash(v, uri)
@@ -94,7 +101,7 @@ module Stray
       end
 
       def fetch(url)
-        response = http_client.get(url)
+        response = PoliteCrawl.get(url, http_client: http_client)
         raise Stray::ExtractionError, "Peertube fetch failed: #{response.status}" unless response.status == 200
 
         response

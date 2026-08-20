@@ -649,4 +649,66 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert source.ok?
     assert_equal 1, source.items.count
   end
+
+  test "backfills tags via extractor enrich_tags when content tags are empty" do
+    @source.update!(kind: :peertube_channel)
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://tube.xy-space.de/w/6aa95cf7-08af-4b22-86af-b7563e2ff4bd",
+        title: "PeerTube Video", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: Time.current, external_id: "6aa95cf7",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:enrich_tags, [ "Documentary", "information" ],
+      [ "https://tube.xy-space.de/w/6aa95cf7-08af-4b22-86af-b7563e2ff4bd" ])
+
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    item = Item.find_by(source: @source, external_id: "6aa95cf7")
+    assert item
+    documentary = Tag.find_by(user: @user, name: "Documentary")
+    assert documentary
+    assert Tagging.find_by(item: item, tag: documentary, source: :user)
+  end
+
+  test "does not call enrich_tags for items that already have user taggings" do
+    @source.update!(kind: :peertube_channel)
+    item = @source.items.create!(
+      user: @user, external_id: "known1", title: "Known", url: "https://tube.xy-space.de/w/known1",
+      published_at: 1.day.ago
+    )
+    tag = Tag.create!(user: @user, name: "Existing")
+    Tagging.create!(item: item, tag: tag, source: :user)
+
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://tube.xy-space.de/w/known1", title: "Known", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: 1.day.ago, external_id: "known1",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    called = false
+    enriching_extractor = Class.new do
+      define_method(:extract_feed) { |_url| contents }
+      define_method(:enrich_tags) { |_url| called = true; [ "x" ] }
+    end.new
+
+    ExtractorRegistry.stub(:find_for_source, enriching_extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    assert_not called
+    item.reload
+    assert_equal 1, item.taggings.where(source: :user).count
+  end
 end

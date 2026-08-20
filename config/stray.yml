@@ -10,6 +10,7 @@ development:
   instance_name: Stray (Dev)
   instance_domain: localhost
   rails_log_level: debug
+  polite_crawl_delay: 1.0
   embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quint8_avx2.onnx"
   embedding_model_sha256: "b941bf19f1f1283680f449fa6a7336bb5600bdcd5f84d10ddc5cd72218a0fd21"
 
@@ -17,5 +18,6 @@ test:
   instance_name: Stray (Test)
   instance_domain: localhost
   rails_log_level: warn
+  polite_crawl_delay: 1.0
   embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quint8_avx2.onnx"
   embedding_model_sha256: "b941bf19f1f1283680f449fa6a7336bb5600bdcd5f84d10ddc5cd72218a0fd21"

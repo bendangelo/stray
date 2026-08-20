@@ -21,7 +21,7 @@ module Extractors
       end
 
       def extract(url)
-        response = http_client.get(url)
+        response = PoliteCrawl.get(url, http_client: http_client)
         feed = Feedjira.parse(response.body)
 
         feed.entries.map do |entry|

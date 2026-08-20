@@ -17,5 +17,15 @@ module Extractors
     def extract_feed(url)
       Stray::Extractors::Peertube.new.channel_feed(url).map { |h| map(h) }
     end
+
+    def enrich_tags(url)
+      uri = URI.parse(url)
+      uuid = uri.path.to_s.match(%r{/w/([^/]+)|/videos/watch/([^/]+)})&.captures&.compact&.first
+      return nil unless uuid
+
+      Stray::Extractors::Peertube.new.fetch_tags(uri.host, uuid)
+    rescue URI::InvalidURIError
+      nil
+    end
   end
 end

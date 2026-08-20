@@ -14,4 +14,8 @@ class Extractor
   def extract_feed(url)
     raise NotImplementedError
   end
+
+  def enrich_tags(url)
+    nil
+  end
 end

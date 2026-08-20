@@ -14,7 +14,8 @@ class Setting < ApplicationRecord
     zero_shot_top_n:     "STRAY_ZERO_SHOT__TOP_N",
     llm_tagging_enabled: "STRAY_LLM_TAGGING__ENABLED",
     llm_tagging_model:   "STRAY_LLM_TAGGING__MODEL",
-    embedding_model:     "STRAY_EMBEDDING__MODEL"
+    embedding_model:     "STRAY_EMBEDDING__MODEL",
+    polite_crawl_delay:  "STRAY_POLITE_CRAWL_DELAY"
   }.freeze
 
   VALID_AI_PROVIDERS = %w[NONE OLLAMA OPENAI_COMPATIBLE].freeze

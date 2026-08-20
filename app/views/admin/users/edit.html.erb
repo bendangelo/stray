@@ -1,0 +1,47 @@
+<% title "Edit user" %>
+
+<main class="max-w-2xl mx-auto px-5 py-8 pb-20">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Edit user</h1>
+    <%= link_to "Back to users", admin_users_path, class: "text-sm text-charcoal underline hover:no-underline" %>
+  </div>
+
+  <%= form_with model: @user, url: admin_user_path(@user), method: :patch, class: "space-y-6" do |form| %>
+    <% if @user.errors.any? %>
+      <div class="px-4 py-3 border-3 border-cerise text-cerise text-sm">
+        <% @user.errors.full_messages.each do |msg| %>
+          <div><%= msg %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div>
+      <%= form.label :username, class: "block text-sm font-medium text-charcoal mb-1" %>
+      <%= form.text_field :username, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :email, class: "block text-sm font-medium text-charcoal mb-1" %>
+      <%= form.email_field :email, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <%= form.check_box :admin, class: "h-6 w-6 border-3 border-charcoal" %>
+      <%= form.label :admin, "Admin privileges", class: "text-sm font-medium text-charcoal" %>
+    </div>
+
+    <div>
+      <%= form.label :password, "New password (blank to keep current)", class: "block text-sm font-medium text-charcoal mb-1" %>
+      <%= form.password_field :password, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :password_confirmation, "Confirm new password", class: "block text-sm font-medium text-charcoal mb-1" %>
+      <%= form.password_field :password_confirmation, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.submit "Save user", class: "h-12 px-6 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+    </div>
+  <% end %>
+</main>

@@ -28,7 +28,7 @@ class SettingsAutoSeedTest < ActiveSupport::TestCase
   end
 
   test "all settings columns have env mapping" do
-    columns = %w[instance_name instance_domain smtp_host smtp_port smtp_username smtp_password ai_provider_name ai_provider_url ai_provider_api_key]
+    columns = %w[instance_name instance_domain smtp_host smtp_port smtp_username smtp_password ai_provider_name ai_provider_url ai_provider_api_key polite_crawl_delay]
     columns.each do |col|
       assert Setting::ENV_MAPPING.key?(col.to_sym), "missing env mapping for #{col}"
     end

@@ -21,29 +21,33 @@ class Extractors::GenericPageTest < ActiveSupport::TestCase
   end
 
   test "extract returns Stray::ExtractedContent from article page" do
-    VCR.use_cassette("extractors/generic_page/article") do
-      extractor = Extractors::GenericPage.new
-      result = extractor.extract("https://example.com/articles/sample")
+    PoliteCrawl.stub(:sleep, nil) do
+      VCR.use_cassette("extractors/generic_page/article") do
+        extractor = Extractors::GenericPage.new
+        result = extractor.extract("https://example.com/articles/sample")
 
-      assert_equal "https://example.com/articles/sample", result.url
-      assert_equal "Example Article Title", result.title
-      assert result.content_text.present?
-      assert_includes result.content_text, "This is the main article body"
-      assert result.content_html.present?
-      assert_equal "https://example.com/image.jpg", result.thumbnail_url
-      assert_equal "example.com", result.creator_identity.external_id
-      assert_equal Digest::SHA256.hexdigest("https://example.com/articles/sample")[0, 32], result.external_id
-      assert_nil result.duration
+        assert_equal "https://example.com/articles/sample", result.url
+        assert_equal "Example Article Title", result.title
+        assert result.content_text.present?
+        assert_includes result.content_text, "This is the main article body"
+        assert result.content_html.present?
+        assert_equal "https://example.com/image.jpg", result.thumbnail_url
+        assert_equal "example.com", result.creator_identity.external_id
+        assert_equal Digest::SHA256.hexdigest("https://example.com/articles/sample")[0, 32], result.external_id
+        assert_nil result.duration
+      end
     end
   end
 
   test "extract_feed returns single-element array" do
-    VCR.use_cassette("extractors/generic_page/article") do
-      extractor = Extractors::GenericPage.new
-      results = extractor.extract_feed("https://example.com/articles/sample")
+    PoliteCrawl.stub(:sleep, nil) do
+      VCR.use_cassette("extractors/generic_page/article") do
+        extractor = Extractors::GenericPage.new
+        results = extractor.extract_feed("https://example.com/articles/sample")
 
-      assert_equal 1, results.size
-      assert_equal "Example Article Title", results.first.title
+        assert_equal 1, results.size
+        assert_equal "Example Article Title", results.first.title
+      end
     end
   end
 
@@ -58,9 +62,11 @@ class Extractors::GenericPageTest < ActiveSupport::TestCase
   test "extract raises Stray::ExtractionError on non-200 response" do
     extractor = Extractors::GenericPage.new
     response = Struct.new(:status, :body).new(404, "not found")
-    extractor.stub(:http_client, stub_get(response)) do
-      assert_raises(Stray::ExtractionError) do
-        extractor.extract("https://example.com/missing")
+    PoliteCrawl.stub(:sleep, nil) do
+      extractor.stub(:http_client, stub_get(response)) do
+        assert_raises(Stray::ExtractionError) do
+          extractor.extract("https://example.com/missing")
+        end
       end
     end
   end

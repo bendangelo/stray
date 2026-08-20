@@ -29,6 +29,7 @@ class MetadataEnrichmentJob < ApplicationJob
       end
 
       item.update!(updates) if updates.any?
+      PoliteCrawl.sleep
     end
   end
 

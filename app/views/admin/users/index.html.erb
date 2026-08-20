@@ -1,0 +1,38 @@
+<% title "Manage users" %>
+
+<main class="max-w-3xl mx-auto px-5 py-8 pb-20">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Manage users</h1>
+    <%= link_to "Back to admin", admin_path, class: "text-sm text-charcoal underline hover:no-underline" %>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left text-charcoal-300 border-b-3 border-charcoal">
+        <th class="py-2 pr-4">User</th>
+        <th class="py-2 pr-4">Email</th>
+        <th class="py-2 pr-4">Role</th>
+        <th class="py-2">Created</th>
+        <th class="py-2 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr class="border-b border-charcoal">
+          <td class="py-2 pr-4 font-medium text-charcoal"><%= user.username %></td>
+          <td class="py-2 pr-4 text-charcoal"><%= user.email %></td>
+          <td class="py-2 pr-4"><%= user.admin? ? "admin" : "user" %></td>
+          <td class="py-2 text-charcoal-300"><%= user.created_at.to_date %></td>
+          <td class="py-2 text-right">
+            <%= link_to "Edit", edit_admin_user_path(user), class: "text-charcoal underline hover:no-underline" %>
+            <% unless user == current_user %>
+              <%= action_link_to "Delete", admin_user_path(user), method: :delete,
+                confirm: "Delete #{user.username}? This removes their data permanently.",
+                class: "text-cerise underline hover:no-underline ml-3" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</main>

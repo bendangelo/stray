@@ -115,6 +115,8 @@ class MetadataEnrichmentJobTest < ActiveJob::TestCase
   def stub_runner_execute(return_value)
     runner = Stray::YtDlp::Runner.new
     runner.define_singleton_method(:execute) { |*_args| return_value.is_a?(Proc) ? return_value.call : return_value }
-    Stray::YtDlp::Runner.stub(:new, runner) { yield }
+    PoliteCrawl.stub(:sleep, nil) do
+      Stray::YtDlp::Runner.stub(:new, runner) { yield }
+    end
   end
 end

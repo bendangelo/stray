@@ -32,7 +32,8 @@ module Admin
         :smtp_host, :smtp_port, :smtp_username, :smtp_password,
         :ai_provider_name, :ai_provider_url, :ai_provider_api_key,
         :llm_tagging_enabled, :llm_tagging_model,
-        :zero_shot_threshold, :zero_shot_top_n, :embedding_model
+        :zero_shot_threshold, :zero_shot_top_n, :embedding_model,
+        :polite_crawl_delay
       )
     end
   end

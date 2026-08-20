@@ -16,7 +16,11 @@ Rails.application.routes.draw do
       post :bulk_create
     end
   end
-  resources :collections
+  resources :collections do
+    member do
+      post :mark_read
+    end
+  end
   get "c/:slug", to: "collections#public_show", as: :public_collection
   get "c/:slug/manifest", to: "collections#manifest", as: :collection_manifest, defaults: { format: :json }
   get "c/:slug/feed", to: "collections#feed", as: :collection_feed, defaults: { format: :xml }
@@ -25,6 +29,7 @@ Rails.application.routes.draw do
       post :pull
       post :mute
       post :unmute
+      post :mark_read
       post :rotate_slug
     end
   end
@@ -47,6 +52,8 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
+    get "/", to: "dashboard#index"
+    resources :users, only: %i[index edit update destroy]
     resource :settings, only: %i[show update] do
       post :download_model
     end

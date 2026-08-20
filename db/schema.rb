@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_071706) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_20_130259) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -125,6 +125,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_071706) do
     t.string "instance_name"
     t.boolean "llm_tagging_enabled", default: false
     t.string "llm_tagging_model", default: "qwen2.5:1.5b"
+    t.float "polite_crawl_delay", default: 1.0
     t.string "smtp_host"
     t.string "smtp_password"
     t.integer "smtp_port", default: 587

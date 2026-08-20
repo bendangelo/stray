@@ -128,6 +128,12 @@ class SourcesController < ApplicationController
     end
   end
 
+  def mark_read
+    source = scoped_source
+    source.items.where(state: :unseen).update_all(state: Item.states[:seen])
+    redirect_back_or_to source_path(source), notice: "Marked all items as read."
+  end
+
   def public_show
     @source = Source.find_by!(slug: params[:slug])
   end

@@ -1,0 +1,48 @@
+<% title "Admin" %>
+
+<main class="max-w-4xl mx-auto px-5 py-8 pb-20">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="font-display text-2xl font-bold text-charcoal">Admin</h1>
+    <div class="flex items-center gap-4 text-sm">
+      <%= link_to "Settings", admin_settings_path, class: "text-charcoal underline hover:no-underline" %>
+      <%= link_to "Jobs", admin_mission_control_jobs_path, class: "text-charcoal underline hover:no-underline" %>
+    </div>
+  </div>
+
+  <section class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+    <% @counts.each do |label, count| %>
+      <div class="border-3 border-charcoal rounded-md p-4 bg-athens-400">
+        <p class="text-3xl font-bold text-charcoal"><%= count %></p>
+        <p class="text-sm text-charcoal-300 capitalize"><%= label.to_s %></p>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="grid md:grid-cols-2 gap-8">
+    <div>
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1 mb-3">
+        Recent users
+        <%= link_to "Manage users", admin_users_path, class: "text-sm font-normal text-charcoal underline ml-2" %>
+      </h2>
+      <ul class="space-y-2">
+        <% @recent_users.each do |user| %>
+          <li class="flex items-center justify-between text-sm">
+            <span class="text-charcoal"><%= user.username %> <span class="text-charcoal-300">· <%= user.email %></span></span>
+            <span class="text-xs <%= user.admin? ? "text-mint-700" : "text-charcoal-300" %>"><%= user.admin? ? "admin" : "user" %></span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1 mb-3">Recent items</h2>
+      <ul class="space-y-2">
+        <% @recent_items.each do |item| %>
+          <li class="text-sm text-charcoal truncate">
+            <%= link_to item.title, item.url, target: "_blank", rel: "noopener", class: "hover:underline" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,38 @@
+<div data-controller="dropdown" class="relative shrink-0">
+  <button type="button"
+          data-dropdown-target="button"
+          data-action="dropdown#toggle click@window->dropdown#hide"
+          aria-expanded="false"
+          aria-controls="sidebar-collection-menu-<%= collection.id %>"
+          class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-1 -mr-1 flex items-center justify-center
+                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
+          aria-label="<%= collection.name %> actions">
+    <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
+  </button>
+
+  <div id="sidebar-collection-menu-<%= collection.id %>"
+       data-dropdown-target="menu"
+       class="hidden absolute right-0 mt-1 z-20 w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
+              transition transform origin-top-right
+              data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
+              data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
+
+    <%= link_to edit_collection_path(collection),
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "pencil", class: "w-3.5 h-3.5" %> Edit
+    <% end %>
+
+    <%= action_link_to mark_read_collection_path(collection), method: :post,
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "checks", class: "w-3.5 h-3.5" %> Mark all read
+    <% end %>
+
+    <div class="border-t-3 border-charcoal/10 my-1"></div>
+
+    <%= action_link_to collection_path(collection), method: :delete,
+          confirm: "Delete this collection?",
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-cerise hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "trash", class: "w-3.5 h-3.5" %> Delete
+    <% end %>
+  </div>
+</div>

@@ -87,7 +87,7 @@ module Stray
       end
 
       def fetch(url)
-        response = http_client.get(url)
+        response = PoliteCrawl.get(url, http_client: http_client)
         raise Stray::ExtractionError, "Odysee fetch failed: #{response.status}" unless response.status == 200
 
         response

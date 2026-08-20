@@ -107,6 +107,17 @@
     </section>
 
     <section class="space-y-4">
+      <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">Crawling</h2>
+
+      <div>
+        <%= form.label :polite_crawl_delay, "Delay between requests (seconds)", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.number_field :polite_crawl_delay, step: 0.1, min: 0,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+        <p class="text-xs text-charcoal-300 mt-1">Be polite to sites you pull from. Applied before each request. 0 = no delay.</p>
+      </div>
+    </section>
+
+    <section class="space-y-4">
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">SMTP</h2>
 
       <div>

@@ -65,6 +65,15 @@ class CollectionsController < ApplicationController
     redirect_to collections_path, notice: "Collection deleted."
   end
 
+  def mark_read
+    collection = current_user.collections.find(params[:id])
+    Item.joins(:source)
+      .where(sources: { id: collection.source_ids })
+      .where(state: :unseen)
+      .update_all(state: Item.states[:seen])
+    redirect_back_or_to collection_path(collection), notice: "Marked all items as read."
+  end
+
   def public_show
     @collection = Collection.find_by!(slug: params[:slug])
     head :not_found unless @collection.unlisted?

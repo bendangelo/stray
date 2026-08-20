@@ -294,6 +294,8 @@ class LinkIntakeJob < ApplicationJob
   def create_items(source, contents)
     return if contents.empty?
 
+    extractor = ExtractorRegistry.find_for_source(source)
+
     complete, incomplete = contents.partition { |c| c.duration.present? && c.thumbnail_url.present? && c.published_at.present? }
 
     id_by_external_id = {}
@@ -303,7 +305,7 @@ class LinkIntakeJob < ApplicationJob
     needs_enrichment_ids = []
     contents.each do |content|
       item_id = id_by_external_id[content.external_id]
-      apply_extractor_tags(source, item_id, content)
+      apply_extractor_tags(source, item_id, content, extractor)
       EmbeddingJob.perform_later("Item", item_id)
       needs_enrichment_ids << item_id if content.duration.blank? || content.thumbnail_url.blank? || content.published_at.blank?
     end
@@ -336,11 +338,18 @@ class LinkIntakeJob < ApplicationJob
     Item.upsert_all(rows, **opts).to_a.each_with_object({}) { |row, h| h[row["external_id"]] = row["id"] }
   end
 
-  def apply_extractor_tags(source, item_id, content)
-    return unless content.tags&.any?
+  def apply_extractor_tags(source, item_id, content, extractor)
+    tags = content.tags || []
+    if tags.empty? && extractor&.respond_to?(:enrich_tags)
+      item = Item.find(item_id)
+      return if item.taggings.where(source: :user).exists?
 
-    item = Item.find(item_id)
-    content.tags.each do |name|
+      tags = Array(extractor.enrich_tags(content.url))
+    end
+    return unless tags.any?
+
+    item ||= Item.find(item_id)
+    tags.each do |name|
       tag = Tag.find_or_create_by!(user_id: @user.id, name: name)
       Tagging.find_or_create_by!(item: item, tag: tag, source: :user)
       EmbeddingJob.perform_later("Tag", tag.id) if tag.embedding.nil?

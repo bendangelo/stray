@@ -3,6 +3,7 @@ require "ostruct"
 
 class Stray::Extractors::PeertubeTest < ActiveSupport::TestCase
   FIXTURE = File.expand_path("../../../fixtures/files/peertube_videos.json", __dir__)
+  VIDEO_FIXTURE = File.expand_path("../../../fixtures/files/peertube_video.json", __dir__)
 
   def stub_json(body)
     resp = OpenStruct.new(status: 200, body: body)
@@ -43,6 +44,21 @@ class Stray::Extractors::PeertubeTest < ActiveSupport::TestCase
   test "channel_feed raises for non-channel URL" do
     assert_raises(Stray::ExtractionError) do
       Stray::Extractors::Peertube.new.channel_feed("https://video.tkz.es/videos/trending")
+    end
+  end
+
+  test "channel_feed listing API omits tags" do
+    stub_json(File.read(FIXTURE)) do |extractor|
+      items = extractor.channel_feed("https://video.tkz.es/video-channels/fedi")
+      assert_equal 1, items.size
+      assert_equal [], items.first[:tags]
+    end
+  end
+
+  test "fetch_tags returns tags from the single-video endpoint" do
+    stub_json(File.read(VIDEO_FIXTURE)) do |extractor|
+      tags = extractor.fetch_tags("tube.xy-space.de", "6aa95cf7-08af-4b22-86af-b7563e2ff4bd")
+      assert_equal [ "Documentary", "information", "Society" ], tags
     end
   end
 end

@@ -8,6 +8,7 @@ class ApplicationController < ActionController::Base
 
   prepend_before_action :redirect_to_setup_if_needed
   before_action :set_sidebar_sources, if: :authenticated?
+  before_action :set_sidebar_collections, if: :authenticated?
 
   private
 
@@ -15,7 +16,12 @@ class ApplicationController < ActionController::Base
     @sources = Source.joins(:follows)
       .where(follows: { user_id: current_user.id })
       .where(active: true)
+      .includes(:follows)
       .order(:name)
+  end
+
+  def set_sidebar_collections
+    @collections = current_user.collections.order(:name)
   end
 
   def redirect_to_setup_if_needed

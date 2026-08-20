@@ -24,24 +24,28 @@ class Extractors::RssAtomTest < ActiveSupport::TestCase
   end
 
   test "extract parses RSS feed and returns Stray::ExtractedContent array" do
-    VCR.use_cassette("extractors/rss_atom/feed_xml") do
-      extractor = Extractors::RssAtom.new
-      results = extractor.extract("https://example.com/feed.xml")
+    PoliteCrawl.stub(:sleep, nil) do
+      VCR.use_cassette("extractors/rss_atom/feed_xml") do
+        extractor = Extractors::RssAtom.new
+        results = extractor.extract("https://example.com/feed.xml")
 
-      assert_equal 2, results.size
-      assert_equal "First Post", results[0].title
-      assert_equal "https://example.com/posts/1", results[0].url
-      assert_equal "https://example.com/posts/1", results[0].external_id
-      assert_equal "Content of first post", results[0].content_text
-      assert_nil results[0].duration
+        assert_equal 2, results.size
+        assert_equal "First Post", results[0].title
+        assert_equal "https://example.com/posts/1", results[0].url
+        assert_equal "https://example.com/posts/1", results[0].external_id
+        assert_equal "Content of first post", results[0].content_text
+        assert_nil results[0].duration
+      end
     end
   end
 
   test "extract_feed delegates to extract" do
-    VCR.use_cassette("extractors/rss_atom/rss") do
-      extractor = Extractors::RssAtom.new
-      results = extractor.extract_feed("https://example.com/rss")
-      assert_equal 1, results.size
+    PoliteCrawl.stub(:sleep, nil) do
+      VCR.use_cassette("extractors/rss_atom/rss") do
+        extractor = Extractors::RssAtom.new
+        results = extractor.extract_feed("https://example.com/rss")
+        assert_equal 1, results.size
+      end
     end
   end
 
@@ -53,13 +57,15 @@ class Extractors::RssAtomTest < ActiveSupport::TestCase
   end
 
   test "extract includes creator_identity from feed metadata" do
-    VCR.use_cassette("extractors/rss_atom/feed") do
-      extractor = Extractors::RssAtom.new
-      results = extractor.extract("https://example.com/feed")
+    PoliteCrawl.stub(:sleep, nil) do
+      VCR.use_cassette("extractors/rss_atom/feed") do
+        extractor = Extractors::RssAtom.new
+        results = extractor.extract("https://example.com/feed")
 
-      creator = results.first.creator_identity
-      assert_equal "Test Blog", creator.name
-      assert_equal "https://example.com", creator.url
+        creator = results.first.creator_identity
+        assert_equal "Test Blog", creator.name
+        assert_equal "https://example.com", creator.url
+      end
     end
   end
 end
