@@ -1,5 +1,3 @@
-require "time"
-
 module Extractors
   class YtDlp < Extractor
       VIDEO_HOSTS = %w[bitchute.com].freeze
@@ -24,7 +22,7 @@ module Extractors
           content_text: data["description"],
           content_html: nil,
           thumbnail_url: data["thumbnail"],
-          published_at: parse_upload_date(data["upload_date"]),
+          published_at: Stray::YtDlp::UploadDate.parse(data["upload_date"]),
           external_id: data["id"],
           duration: data["duration"],
           creator_identity: extract_creator(data),
@@ -42,7 +40,7 @@ module Extractors
             content_text: nil,
             content_html: nil,
             thumbnail_url: extract_listing_thumbnail(data),
-            published_at: parse_upload_date(data["upload_date"]),
+            published_at: Stray::YtDlp::UploadDate.parse(data["upload_date"]),
             external_id: data["id"],
             duration: data["duration"],
             creator_identity: extract_creator(data),
@@ -96,12 +94,6 @@ module Extractors
         tags = Array(data["tags"])
         combined = (cats + tags).map { |t| t.to_s.downcase.strip }.reject(&:empty?).uniq
         combined.first(5)
-      end
-
-      def parse_upload_date(date_str)
-        return nil unless date_str
-
-        Time.strptime(date_str, "%Y%m%d").utc
       end
     end
 end

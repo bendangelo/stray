@@ -1,7 +1,7 @@
 class LinkIntakeJob < ApplicationJob
   queue_as :default
 
-  NO_DURATION_UPDATE = %i[title url content_text content_html thumbnail_url published_at fetched_at].freeze
+  NO_MISSING_METADATA_UPDATE = %i[title url content_text content_html fetched_at].freeze
 
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
 
@@ -231,21 +231,21 @@ class LinkIntakeJob < ApplicationJob
   def create_items(source, contents)
     return if contents.empty?
 
-    with_duration, without_duration = contents.partition { |c| c.duration.present? }
+    complete, incomplete = contents.partition { |c| c.duration.present? && c.thumbnail_url.present? && c.published_at.present? }
 
     id_by_external_id = {}
-    id_by_external_id.merge!(upsert_rows(source, with_duration)) if with_duration.any?
-    id_by_external_id.merge!(upsert_rows(source, without_duration, update_only: NO_DURATION_UPDATE)) if without_duration.any?
+    id_by_external_id.merge!(upsert_rows(source, complete)) if complete.any?
+    id_by_external_id.merge!(upsert_rows(source, incomplete, update_only: NO_MISSING_METADATA_UPDATE)) if incomplete.any?
 
-    missing_duration_ids = []
+    needs_enrichment_ids = []
     contents.each do |content|
       item_id = id_by_external_id[content.external_id]
       apply_extractor_tags(source, item_id, content)
       EmbeddingJob.perform_later("Item", item_id)
-      missing_duration_ids << item_id if content.duration.blank?
+      needs_enrichment_ids << item_id if content.duration.blank? || content.thumbnail_url.blank? || content.published_at.blank?
     end
 
-    DurationEnrichmentJob.perform_later(source.id, missing_duration_ids) if missing_duration_ids.any?
+    MetadataEnrichmentJob.perform_later(source.id, needs_enrichment_ids) if needs_enrichment_ids.any?
   end
 
   def upsert_rows(source, batch, update_only: nil)

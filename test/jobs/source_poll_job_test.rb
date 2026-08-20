@@ -261,7 +261,35 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_equal "Updated Title", item.reload.title
   end
 
-  test "enqueues DurationEnrichmentJob for items missing duration" do
+  test "does not clobber existing published_at when re-poll returns nil published_at" do
+    item = @source.items.create!(
+      user: @user, external_id: "pubvid1", title: "With Date",
+      url: "https://example.com/watch?v=pubvid1", published_at: 1.day.ago,
+      duration: 300
+    )
+
+    contents = [
+      ExtractedContent.new(
+        url: "https://example.com/watch?v=pubvid1",
+        title: "Updated Title", content_text: "desc", content_html: nil,
+        thumbnail_url: nil, published_at: nil, external_id: "pubvid1",
+        duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    assert_equal 1.day.ago.to_i, item.reload.published_at.to_i
+    assert_equal 300, item.reload.duration
+  end
+
+  test "enqueues MetadataEnrichmentJob for items missing duration" do
     contents = [
       ExtractedContent.new(
         url: "https://example.com/watch?v=nodur1",
@@ -275,14 +303,14 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
-        assert_enqueued_with(job: DurationEnrichmentJob) do
+        assert_enqueued_with(job: MetadataEnrichmentJob) do
           SourcePollJob.perform_now(@source.id)
         end
       end
     end
   end
 
-  test "enqueues ThumbnailEnrichmentJob for items missing thumbnails" do
+  test "enqueues MetadataEnrichmentJob for items missing thumbnails" do
     contents = [
       ExtractedContent.new(
         url: "https://example.com/watch?v=nothumb1",
@@ -296,7 +324,28 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     ExtractorRegistry.stub(:find_for_source, @extractor) do
       without_lock do
-        assert_enqueued_with(job: ThumbnailEnrichmentJob) do
+        assert_enqueued_with(job: MetadataEnrichmentJob) do
+          SourcePollJob.perform_now(@source.id)
+        end
+      end
+    end
+  end
+
+  test "enqueues MetadataEnrichmentJob for items missing published_at" do
+    contents = [
+      ExtractedContent.new(
+        url: "https://example.com/watch?v=nopub1",
+        title: "No Publish Date", content_text: "desc", content_html: nil,
+        thumbnail_url: "https://example.com/t.jpg", published_at: nil,
+        external_id: "nopub1", duration: nil, creator_identity: nil, tags: []
+      )
+    ]
+
+    @extractor.expect(:extract_feed, contents, [ @source.url ])
+
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        assert_enqueued_with(job: MetadataEnrichmentJob) do
           SourcePollJob.perform_now(@source.id)
         end
       end

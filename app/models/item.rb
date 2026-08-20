@@ -9,6 +9,12 @@ class Item < ApplicationRecord
   validates :external_id, uniqueness: { scope: :source_id }
   validates :title, :url, presence: true
 
+  scope :incomplete_metadata, -> { where(duration: nil).or(where(thumbnail_url: nil)).or(where(published_at: nil)) }
+
+  def incomplete_metadata?
+    duration.blank? || thumbnail_url.blank? || published_at.blank?
+  end
+
   full_search do
     field :title, weight: 5
     field :content_text, weight: 1
