@@ -57,6 +57,7 @@ class CollectionMembershipsControllerTest < ActionDispatch::IntegrationTest
     other_membership = CollectionMembership.create!(collection: other_collection, source: other_source)
     delete collection_membership_path(other_membership), as: :turbo_stream
     assert_response :not_found
+    assert CollectionMembership.exists?(other_membership.id)
   end
 
   test "destroy requires authentication" do
