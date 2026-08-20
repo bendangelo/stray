@@ -21,6 +21,12 @@ class Source < ApplicationRecord
   scope :ok, -> { where(status: :ok) }
   scope :failed, -> { where(status: :failed) }
   scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
+  scope :stuck, -> {
+    where(active: true)
+      .where(status: [ :ok, :pending ])
+      .where("last_polled_at IS NULL OR last_polled_at < ?", 5.minutes.ago)
+      .where.not(id: Item.select(:source_id).distinct)
+  }
 
   def display_name
     name.presence || path_segment || begin

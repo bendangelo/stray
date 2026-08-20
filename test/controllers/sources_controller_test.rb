@@ -475,6 +475,18 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:notice], "Pull started"
   end
 
+  test "pull notice uses display_name when name is blank" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.update!(name: "")
+
+    post pull_source_path(source)
+
+    assert_redirected_to source_path(source)
+    assert_includes flash[:notice], "Pull started for #{source.display_name}."
+    refute_includes flash[:notice], "for .."
+  end
+
   test "pull resets status to pending, clears error, and marks polling" do
     sign_in_as(users(:one))
     source = sources(:youtube)

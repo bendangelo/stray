@@ -182,6 +182,63 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal "yt-dlp failed", source.last_error
   end
 
+  test "marks source failed and enqueues poll when extract fails after resolution" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@Handle", external_id: "pending:h", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    resolver_result = Youtube::ChannelResolver::Result.new(
+      channel_id: "UCResolved",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UCResolved"
+    )
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise StandardError, "rss boom" }
+
+    Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      ExtractorRegistry.stub(:find_for_source, failing) do
+        assert_enqueued_with(job: SourcePollJob) do
+          LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
+        end
+      end
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "rss boom", source.last_error
+    assert_equal "UCResolved", source.external_id
+    assert_equal resolver_result.rss_url, source.url
+    assert_equal 0, source.items.count
+  end
+
+  test "marks source failed via discard when YtDlp error raised after resolution" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@Handle", external_id: "pending:h2", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    resolver_result = Youtube::ChannelResolver::Result.new(
+      channel_id: "UCResolved2",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved2",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UCResolved2"
+    )
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::Error, "yt-dlp boom" }
+
+    Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      ExtractorRegistry.stub(:find_for_source, failing) do
+        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
+      end
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "yt-dlp boom", source.last_error
+  end
+
   test "uses pre-created source when source_id is provided" do
     source = Source.create!(user: @user, kind: :youtube_channel,
       url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCpre",

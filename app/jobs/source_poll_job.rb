@@ -19,7 +19,7 @@ class SourcePollJob < ApplicationJob
     source.update!(polling: true)
     broadcast_source_update(source)
 
-    source = resolve_pending_youtube_channel(source)
+    source = Youtube::PendingChannelResolver.call(source)
 
     domain = DomainMutex.domain_for(source.url)
 
@@ -38,36 +38,6 @@ class SourcePollJob < ApplicationJob
   end
 
   private
-
-  def resolve_pending_youtube_channel(source)
-    return source unless source.kind == "youtube_channel"
-    return source if Extractors::YoutubeRss.matches?(source.url)
-
-    result = Youtube::ChannelResolver.resolve(source.url)
-    source.update!(
-      url: result.rss_url,
-      external_id: result.channel_id,
-      name: result.channel_name.presence || source.name
-    )
-    source
-  rescue ActiveRecord::RecordNotUnique
-    adopt_existing_channel(source, result.channel_id)
-  rescue Stray::YtDlp::Error
-    raise
-  rescue StandardError => e
-    source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
-    source
-  end
-
-  def adopt_existing_channel(source, channel_id)
-    existing = Source.find_by(user: source.user, kind: :youtube_channel, external_id: channel_id)
-    return source unless existing
-
-    source.follows.update_all(source_id: existing.id)
-    source.items.update_all(source_id: existing.id)
-    source.destroy!
-    existing
-  end
 
   def extract_and_persist(source)
     extractor = ExtractorRegistry.find_for_source(source)

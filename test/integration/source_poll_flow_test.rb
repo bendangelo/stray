@@ -50,22 +50,23 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
   test "sweep enqueues poll jobs for due sources" do
     user = users(:one)
 
-    Source.create!(
+    s1 = Source.create!(
       user: user, kind: :youtube_channel,
       url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCsweep1",
       external_id: "UCsweep1", next_crawl_at: 1.hour.ago
     )
-    Source.create!(
+    s2 = Source.create!(
       user: user, kind: :youtube_channel,
       url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCsweep2",
       external_id: "UCsweep2", next_crawl_at: 1.hour.ago
     )
+    Item.create!(user: user, source: s1, external_id: "s1", title: "S1", url: "https://example.com/s1", published_at: 1.day.ago)
+    Item.create!(user: user, source: s2, external_id: "s2", title: "S2", url: "https://example.com/s2", published_at: 1.day.ago)
 
-    assert_difference -> { enqueued_jobs.size }, 2 do
-      SourcePollSweepJob.perform_now
-    end
+    SourcePollSweepJob.perform_now
 
-    enqueued_source_polls = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" }
-    assert_equal 2, enqueued_source_polls.size
+    poll_args = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" }.map { |j| j["arguments"].first }
+    assert_includes poll_args, s1.id
+    assert_includes poll_args, s2.id
   end
 end

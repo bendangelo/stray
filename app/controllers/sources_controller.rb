@@ -82,7 +82,7 @@ class SourcesController < ApplicationController
       locals: { source: source }
     )
     SourcePollJob.perform_later(source.id)
-    redirect_back_or_to source_path(source), notice: "Pull started for #{source.name}."
+    redirect_back_or_to source_path(source), notice: "Pull started for #{source.display_name}."
   end
 
   def mute

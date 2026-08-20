@@ -48,43 +48,16 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_for_existing_source
-    resolve_pending_youtube_channel if pending_youtube_channel?
+    @source = Youtube::PendingChannelResolver.call(@source)
+    enqueue_full_poll(@source)
     extractor = ExtractorRegistry.find_for_source(@source)
     contents = Array(extractor.extract_feed(@source.url))
     create_items(@source, contents)
-    enqueue_full_poll(@source)
-  end
-
-  def pending_youtube_channel?
-    @source.kind == "youtube_channel" &&
-      @source.status == "pending" &&
-      !Extractors::YoutubeRss.matches?(@source.url)
-  end
-
-  def resolve_pending_youtube_channel
-    result = Youtube::ChannelResolver.resolve(@source.url)
-    @source.update!(
-      url: result.rss_url,
-      external_id: result.channel_id,
-      name: result.channel_name.presence || @source.name,
-      status: :ok
-    )
-  rescue ActiveRecord::RecordNotUnique
-    adopt_existing_channel(result.channel_id)
   rescue Stray::YtDlp::Error
     raise
   rescue StandardError => e
     @source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
-  end
-
-  def adopt_existing_channel(channel_id)
-    existing = Source.find_by(user: @user, kind: :youtube_channel, external_id: channel_id)
-    return unless existing
-
-    @source.follows.update_all(source_id: existing.id)
-    @source.items.update_all(source_id: existing.id)
-    @source.destroy!
-    @source = existing
+    broadcast_source_update(@source)
   end
 
   def resolve_youtube_channel
@@ -244,6 +217,15 @@ class LinkIntakeJob < ApplicationJob
 
   def enqueue_full_poll(source)
     SourcePollJob.set(wait: 10.seconds).perform_later(source.id)
+  end
+
+  def broadcast_source_update(source)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
   end
 
   def create_items(source, contents)
