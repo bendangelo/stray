@@ -5,9 +5,7 @@
           aria-expanded="false"
           aria-controls="source-collections-<%= source.id %>"
           class="flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500">
-    <%= turbo_frame_tag dom_id(source, :collection_label) do %>
-      <%= render "sources/collection_label", source: source %>
-    <% end %>
+    <%= render "sources/collection_label", source: source %>
   </button>
 
   <div id="source-collections-<%= source.id %>"
