@@ -29,6 +29,13 @@ class CollectionMembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "create returns not_found for a source the user does not follow" do
+    source = sources(:remote)
+    collection = collections(:econ)
+    post collection_memberships_path, params: { collection_membership: { source_id: source.id, collection_id: collection.id } }, as: :turbo_stream
+    assert_response :not_found
+  end
+
   test "create requires authentication" do
     sign_out
     post collection_memberships_path, params: { collection_membership: { source_id: 1, collection_id: 1 } }, as: :turbo_stream
