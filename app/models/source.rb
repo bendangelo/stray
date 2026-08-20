@@ -3,6 +3,7 @@ class Source < ApplicationRecord
   has_many :items, dependent: :destroy
   has_many :follows, dependent: :destroy
   has_many :collection_memberships, dependent: :destroy
+  has_many :collections, through: :collection_memberships
   has_one :remote_collection, dependent: :destroy
 
   enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8 }

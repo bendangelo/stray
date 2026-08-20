@@ -197,6 +197,11 @@ class SourceTest < ActiveSupport::TestCase
     assert Follow.exists?(user: users(:one), source: source)
   end
 
+  test "has many collections through collection_memberships" do
+    source = sources(:youtube)
+    assert_includes source.collections, collections(:econ)
+  end
+
   test "follow! does not overwrite url on an existing source" do
     Source.follow!(users(:one), kind: :youtube_channel,
       url: "https://www.youtube.com/@handle", external_id: "UC123", status: :pending)
