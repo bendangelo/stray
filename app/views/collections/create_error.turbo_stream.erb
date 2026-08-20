@@ -5,7 +5,9 @@
         source: @source,
         collections: current_user.collections.order(:name),
         member_collection_ids: member_ids do %>
-    <div class="px-2 py-1 text-xs text-cerise">Name can't be blank</div>
+    <% @collection.errors.full_messages.each do |message| %>
+      <div class="px-2 py-1 text-xs text-cerise"><%= message %></div>
+    <% end %>
   <% end %>
 <% end %>
 <% end %>

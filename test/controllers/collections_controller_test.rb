@@ -58,6 +58,7 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
       end
     end
     assert_response :unprocessable_content
+    assert_includes response.body, "can&#39;t be blank"
   end
 
   test "create with source_id for an unfollowed source returns not_found" do
