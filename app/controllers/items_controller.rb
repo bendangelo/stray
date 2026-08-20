@@ -6,6 +6,7 @@ class ItemsController < ApplicationController
     item = Item.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless item
 
+    item.update!(state: :seen) if item.unseen?
     Ranking.apply_interaction!(user: current_user, item: item, kind: :opened)
     render partial: "items/player", locals: { item: }, layout: false
   end

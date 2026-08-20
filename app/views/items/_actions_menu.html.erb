@@ -56,6 +56,16 @@
       <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
     <% end %>
 
+    <% if item.taggings.includes(:tag).any? %>
+      <div class="border-t-3 border-charcoal/10 my-1"></div>
+      <div class="px-2 py-1">
+        <p class="text-[10px] uppercase tracking-wide text-charcoal-300 mb-1">Tags</p>
+        <div class="flex flex-wrap gap-1">
+          <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="border-t-3 border-charcoal/10 my-1"></div>
     <%= render "items/why", item: item %>
   </div>

@@ -31,19 +31,27 @@ module ApplicationHelper
     when "youtube_channel"
       "https://www.youtube.com/embed/#{item.external_id}"
     when "video_channel"
-      uri = begin
-        URI.parse(item.url)
-      rescue URI::InvalidURIError
-        nil
-      end
+      uri = parse_url(item.url)
       if uri&.host&.include?("bitchute.com")
         "https://www.bitchute.com/embed/#{item.external_id}"
-      else
-        nil
       end
-    else
-      nil
+    when "odysee_channel"
+      uri = parse_url(item.url)
+      "https://odysee.com/$/embed#{uri.path}" if uri&.host&.end_with?("odysee.com")
+    when "rumble_channel"
+      uri = parse_url(item.url)
+      slug = uri&.path.to_s.match(%r{^/(v[a-z0-9]+)})&.match(1)
+      "https://rumble.com/embed/#{slug}/" if slug
+    when "peertube_channel"
+      uri = parse_url(item.url)
+      "#{uri.scheme}://#{uri.host}/videos/embed/#{item.external_id}" if uri&.host
     end
+  end
+
+  def parse_url(url)
+    URI.parse(url)
+  rescue URI::InvalidURIError
+    nil
   end
 
   def missing_thumb
@@ -53,6 +61,7 @@ module ApplicationHelper
   def video?(item = nil)
     item ||= @item
     return false unless item&.source
-    item.source.kind.in?(%w[youtube_channel video_channel])
+    item.source.kind.in?(%w[youtube_channel video_channel rumble_channel
+                            bitchute_channel odysee_channel peertube_channel])
   end
 end

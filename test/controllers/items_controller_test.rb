@@ -155,4 +155,26 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
       get player_item_path(item)
     end
   end
+
+  test "opening player marks an unseen item as seen" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    assert item.unseen?
+
+    get player_item_path(item)
+
+    assert_response :success
+    assert item.reload.seen?
+  end
+
+  test "opening player does not downgrade a saved item" do
+    sign_in_as(users(:one))
+    item = items(:video_saved)
+    assert item.saved?
+
+    get player_item_path(item)
+
+    assert_response :success
+    assert item.reload.saved?
+  end
 end

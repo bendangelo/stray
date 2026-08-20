@@ -35,6 +35,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "https://www.bitchute.com/embed/#{item.external_id}", url
   end
 
+  test "embed_url constructs Odysee embed URL" do
+    source = Source.new(kind: :odysee_channel)
+    item = Item.new(source: source, url: "https://odysee.com/@samtime:1/apple-reacts-framework:f0bfe667")
+    url = embed_url(item)
+    assert_equal "https://odysee.com/$/embed/@samtime:1/apple-reacts-framework:f0bfe667", url
+  end
+
+  test "embed_url constructs Rumble embed URL from the URL slug" do
+    source = Source.new(kind: :rumble_channel)
+    item = Item.new(source: source, url: "https://rumble.com/v7a8neu-what-you-need-to-know.html")
+    url = embed_url(item)
+    assert_equal "https://rumble.com/embed/v7a8neu/", url
+  end
+
+  test "embed_url constructs PeerTube embed URL" do
+    source = Source.new(kind: :peertube_channel)
+    item = Item.new(source: source, url: "https://peertube.example.com/w/abc123", external_id: "abc123")
+    url = embed_url(item)
+    assert_equal "https://peertube.example.com/videos/embed/abc123", url
+  end
+
   test "embed_url returns nil for unknown source kind" do
     source = Source.create!(user: users(:one), kind: :rss_feed, url: "https://example.com/feed", external_id: "feed1")
     item = Item.create!(source: source, user: users(:one), external_id: "e1", title: "Post", url: "https://example.com/post")
@@ -73,5 +94,29 @@ class ApplicationHelperTest < ActionView::TestCase
   test "video? is false when source is nil" do
     item = Item.new(source: nil)
     assert_not video?(item)
+  end
+
+  test "video? is true for rumble_channel" do
+    source = Source.new(kind: :rumble_channel)
+    item = Item.new(source: source)
+    assert video?(item)
+  end
+
+  test "video? is true for bitchute_channel" do
+    source = Source.new(kind: :bitchute_channel)
+    item = Item.new(source: source)
+    assert video?(item)
+  end
+
+  test "video? is true for odysee_channel" do
+    source = Source.new(kind: :odysee_channel)
+    item = Item.new(source: source)
+    assert video?(item)
+  end
+
+  test "video? is true for peertube_channel" do
+    source = Source.new(kind: :peertube_channel)
+    item = Item.new(source: source)
+    assert video?(item)
   end
 end
