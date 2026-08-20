@@ -25,8 +25,12 @@ Rails.application.routes.draw do
       post :pull
       post :mute
       post :unmute
+      post :rotate_slug
     end
   end
+  get "s/:slug",          to: "sources#public_show", as: :public_source
+  get "s/:slug/feed",     to: "sources#feed",        as: :source_feed,     defaults: { format: :xml }
+  get "s/:slug/manifest", to: "sources#manifest",    as: :source_manifest, defaults: { format: :json }
   resources :tags do
     member do
       patch :merge
