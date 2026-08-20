@@ -1,5 +1,5 @@
 <div id="<%= dom_id(item) %>"
-     class="col-span-6 sm:col-span-4 md:col-span-3 xl:col-span-2"
+     class="group col-span-6 sm:col-span-4 md:col-span-3 xl:col-span-2"
      data-player-target="video"
      data-url="<%= player_item_path(item) %>">
   <div class="flex flex-col">
@@ -27,20 +27,19 @@
     </div>
 
     <div class="flex mt-1 items-start gap-1">
-      <div class="flex-1 min-w-0 flex flex-col">
-        <a href="<%= item.url %>" target="_blank" rel="noopener"
-           class="hover:underline break-all text-charcoal text-sm font-semibold line-clamp-2">
+      <div class="flex-1 min-w-0">
+        <a href="<%= item.url %>" target="_blank" rel="noopener" title="<%= item.title %>"
+           class="hover:underline break-words text-charcoal text-sm font-semibold line-clamp-2">
           <%= item.title %>
         </a>
-
-        <div class="flex items-center gap-2 mt-1 text-xs text-charcoal-300">
-          <%= link_to item.source.display_name, source_path(item.source), class: "hover:text-carrot-600 underline" %>
-          <span>·</span>
-          <span><%= time_ago(item.published_at) %></span>
-        </div>
       </div>
 
       <%= render "items/actions_menu", item: item %>
+    </div>
+
+    <div class="flex justify-between items-center gap-2 mt-1 text-xs text-charcoal-300">
+      <%= link_to item.source.display_name, source_path(item.source), class: "hover:text-carrot-600 underline truncate min-w-0" %>
+      <span class="shrink-0"><%= time_ago(item.published_at) %></span>
     </div>
 
     <div id="item_<%= item.id %>_tags" class="flex flex-wrap gap-1 mt-1">

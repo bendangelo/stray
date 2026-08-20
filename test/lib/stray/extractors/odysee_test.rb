@@ -39,6 +39,9 @@ class Stray::Extractors::OdyseeTest < ActiveSupport::TestCase
       assert first[:published_at].is_a?(Time)
       assert first[:external_id].present?
       assert_equal "SAMTIME on Odysee", first[:creator_identity][:name]
+      assert_equal "https://thumbnails.lbry.com/XF2WniCfmEE", first[:thumbnail_url]
+      assert first[:content_html].present?
+      assert_equal "https://thumbnails.lbry.com/UCd6vEDS3SOhWbXZrxbrf_bw", first[:creator_identity][:thumbnail_url]
     end
   end
 

@@ -82,6 +82,40 @@
 
   <%= render "sources/weight_bar", source: @source, follow: @follow %>
 
+  <details class="mb-4 border-3 border-charcoal rounded-md bg-athens-400">
+    <summary class="px-3 py-2 cursor-pointer text-xs font-bold text-charcoal flex items-center gap-1">
+      <%= phosphor_icon "magnifying-glass", class: "w-3.5 h-3.5" %>
+      Source details
+    </summary>
+    <dl class="px-3 pb-3 pt-1 text-xs text-charcoal space-y-1">
+      <div class="flex flex-wrap gap-1 items-baseline">
+        <dt class="font-bold text-charcoal-300"><%= source_ingest_label(@source) %>:</dt>
+        <dd><%= link_to @source.url, @source.url, target: "_blank", rel: "nofollow noopener", class: "underline hover:no-underline break-all" %></dd>
+      </div>
+      <% if @source.channel_url.present? && @source.channel_url != @source.url %>
+        <div class="flex flex-wrap gap-1 items-baseline">
+          <dt class="font-bold text-charcoal-300">Channel page:</dt>
+          <dd><%= link_to @source.channel_url, @source.channel_url, target: "_blank", rel: "nofollow noopener", class: "underline hover:no-underline break-all" %></dd>
+        </div>
+      <% end %>
+      <% if @source.external_id.present? %>
+        <div class="flex flex-wrap gap-1 items-baseline">
+          <dt class="font-bold text-charcoal-300">External ID:</dt>
+          <dd class="font-mono break-all"><%= @source.external_id %></dd>
+        </div>
+      <% end %>
+      <% if @source.extractor_class %>
+        <div class="flex flex-wrap gap-1 items-baseline">
+          <dt class="font-bold text-charcoal-300">Extractor:</dt>
+          <dd class="font-mono"><%= @source.extractor_class.name %></dd>
+        </div>
+      <% end %>
+      <% if source_kind_note(@source).present? %>
+        <p class="text-charcoal-300 pt-1"><%= source_kind_note(@source) %></p>
+      <% end %>
+    </dl>
+  </details>
+
   <%= turbo_frame_tag dom_id(@source, :items) do %>
     <div class="mb-4 flex items-center gap-2 flex-wrap">
       <% [["1m", "Last month"], ["3m", "Last 3 months"], ["1y", "Last year"], ["all", "All time"]].each do |since, label| %>

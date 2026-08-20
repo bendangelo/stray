@@ -87,7 +87,7 @@ class SourcePollJob < ApplicationJob
 
   def handle_feed_result(source, result, cursor)
     if early_stop?(source, result.items)
-      finish_relay_sync(source, cursor)
+      finish_relay_sync(source, cursor, result)
       return
     end
 
@@ -96,7 +96,7 @@ class SourcePollJob < ApplicationJob
     if result.has_more && result.next_cursor.present?
       SourcePollJob.perform_later(source.id, result.next_cursor)
     else
-      finish_relay_sync(source, cursor)
+      finish_relay_sync(source, cursor, result)
     end
   end
 
@@ -107,17 +107,29 @@ class SourcePollJob < ApplicationJob
     external_ids.all? { |id| existing.include?(id) }
   end
 
-  def finish_relay_sync(source, cursor)
+  def finish_relay_sync(source, cursor, result = nil)
     rc = source.remote_collection
     return unless rc
 
-    rc.update!(
+    updates = {
       last_synced_at: Time.current,
       item_count: source.items.count,
       last_cursor: cursor,
       last_error: nil,
       last_error_at: nil
-    )
+    }
+
+    if result&.collection_name
+      updates[:collection_name] = result.collection_name
+      updates[:producer_instance_name] = result.producer_instance_name
+    end
+
+    rc.update!(updates)
+
+    if result&.collection_name && source.name == "Remote collection"
+      source.update!(name: result.collection_name)
+    end
+
     source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
     source.recalculate_next_crawl!
   end

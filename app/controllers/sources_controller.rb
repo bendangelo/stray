@@ -24,6 +24,14 @@ class SourcesController < ApplicationController
   end
 
   def create
+    url = source_params[:url].to_s.strip
+
+    if (manifest_url = Extractors::RemoteCollection.manifest_url_for(url))
+      source = RemoteCollectionSubscriber.call(user: current_user, url: manifest_url)
+      redirect_to source_path(source), notice: "Subscribed. Syncing first page…"
+      return
+    end
+
     if source_params[:kind] == "youtube_channel"
       create_youtube_channel
     else

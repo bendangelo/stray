@@ -8,6 +8,18 @@ module Extractors
         url.to_s.end_with?("/manifest.json") || url.to_s.include?("/manifest.json?cursor=")
       end
 
+      def self.manifest_url_for(url)
+        return url if matches?(url)
+
+        uri = URI.parse(url)
+        return nil unless uri.host
+        return nil unless uri.path =~ %r{^/c/([A-Za-z0-9]{24})$}
+
+        "#{uri.scheme}://#{uri.host}/c/#{$1}/manifest.json"
+      rescue URI::InvalidURIError
+        nil
+      end
+
       def self.handles_kind?(kind)
         kind == "stray_collection"
       end
@@ -50,7 +62,9 @@ module Extractors
         Extractor::FeedResult.new(
           items: items,
           next_cursor: pagination["next_cursor"],
-          has_more: pagination["has_more"] || false
+          has_more: pagination["has_more"] || false,
+          collection_name: data.dig("collection", "name"),
+          producer_instance_name: data.dig("producer", "instance_name")
         )
       end
 

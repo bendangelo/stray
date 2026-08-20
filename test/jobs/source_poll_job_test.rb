@@ -416,6 +416,33 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_nil rc.last_error
   end
 
+  test "populates collection metadata and source name from FeedResult" do
+    source = Source.create!(user: @user, kind: :stray_collection,
+      url: "https://stray.example.com/c/x/manifest.json", external_id: "x", name: "Remote collection")
+    Follow.create!(user: @user, source: source)
+    rc = RemoteCollection.create!(source: source, user: @user, manifest_url: source.url)
+
+    items = [ Stray::ExtractedContent.new(url: "https://x/1", title: "T1", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: Time.current, external_id: "i1",
+      duration: nil, creator_identity: nil, tags: []) ]
+    feed_result = Extractor::FeedResult.new(items: items, next_cursor: nil, has_more: false,
+      collection_name: "Econ", producer_instance_name: "Alice")
+
+    @extractor.expect(:extract_feed, feed_result, [ source.url ])
+
+    ExtractorRegistry.stub(:find_for_source, @extractor) do
+      without_lock do
+        SourcePollJob.perform_now(source.id)
+      end
+    end
+
+    rc.reload
+    assert_equal "Econ", rc.collection_name
+    assert_equal "Alice", rc.producer_instance_name
+    source.reload
+    assert_equal "Econ", source.name
+  end
+
   test "early stops when page contains only known external_ids" do
     source = Source.create!(user: @user, kind: :stray_collection,
       url: "https://stray.example.com/c/x/manifest.json", external_id: "x")

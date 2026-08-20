@@ -4,7 +4,7 @@
           data-action="dropdown#toggle click@window->dropdown#hide"
           aria-expanded="false"
           aria-controls="item-actions-<%= item.id %>"
-          class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-1 -mr-1
+          class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-2 -mr-1 min-w-9 min-h-9 flex items-center justify-center
                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
           aria-label="Item actions">
     <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
@@ -12,7 +12,7 @@
 
   <div id="item-actions-<%= item.id %>"
        data-dropdown-target="menu"
-       class="hidden absolute right-0 mt-1 z-20 w-44 rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
+       class="hidden absolute right-0 mt-1 z-20 w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
               transition transform origin-top-right
               data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">

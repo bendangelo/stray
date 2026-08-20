@@ -40,6 +40,7 @@ module Stray
 
         response = fetch(rss)
         feed = Feedjira.parse(response.body)
+        channel_thumbnail = feed.itunes_image
 
         feed.entries.map do |entry|
           {
@@ -48,9 +49,9 @@ module Stray
             external_id: entry.entry_id || entry.url,
             duration: parse_duration(entry),
             published_at: entry.published,
-            thumbnail_url: extract_thumbnail(entry),
-            content_text: entry.content || entry.summary,
-            content_html: entry.content,
+            thumbnail_url: entry.itunes_image || extract_thumbnail(entry),
+            content_text: entry.summary || entry.content,
+            content_html: entry.summary,
             tags: [],
             views: nil,
             live: nil,
@@ -59,7 +60,7 @@ module Stray
               name: feed.title,
               url: url,
               external_id: self.class.channel_handle(url),
-              thumbnail_url: nil
+              thumbnail_url: channel_thumbnail
             }
           }
         end
@@ -80,7 +81,7 @@ module Stray
       end
 
       def extract_thumbnail(entry)
-        content = entry.content.to_s
+        content = entry.summary.to_s
         match = content.match(/<img src="([^"]+)"/)
         match && match[1]
       end

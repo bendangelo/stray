@@ -34,19 +34,9 @@ class CollectionSyncFlowTest < ActionDispatch::IntegrationTest
     manifest_url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
 
     VCR.use_cassette("remote_collection/integration_manifest", allow_playback_repeats: true) do
-      post remote_collection_path, params: { remote_collection: { manifest_url: manifest_url } }
-      assert_response :success
-      assert_includes response.body, "Economics Blogs"
-
       assert_difference -> { Source.where(kind: :stray_collection).count }, 1 do
         assert_enqueued_with(job: SourcePollJob) do
-          post subscribe_remote_collection_path, params: {
-            remote_collection: {
-              manifest_url: manifest_url,
-              collection_name: "Economics Blogs",
-              producer_instance_name: "Alice's Stray"
-            }
-          }
+          post links_path, params: { url: manifest_url }
         end
       end
 

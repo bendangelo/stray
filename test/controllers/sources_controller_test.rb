@@ -188,6 +188,43 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert Follow.exists?(user_id: users(:one).id, source_id: source.id)
   end
 
+  test "create with a remote collection manifest URL auto-subscribes as stray_collection" do
+    sign_in_as(users(:one))
+    url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
+
+    assert_difference -> { Source.where(kind: :stray_collection).count }, 1 do
+      assert_difference -> { RemoteCollection.count }, 1 do
+        assert_enqueued_with(job: SourcePollJob) do
+          post sources_path, params: {
+            source: { url: url, kind: "rss_feed", name: "Ignored", active: "1" }
+          }
+        end
+      end
+    end
+
+    source = Source.find_by(kind: :stray_collection, url: url)
+    assert_not_nil source
+    assert source.active?
+    assert_redirected_to source_path(source)
+  end
+
+  test "create with a friendly /c/:slug URL auto-subscribes as stray_collection" do
+    sign_in_as(users(:one))
+    url = "https://stray.example.com/c/remotetokensecret1234567"
+
+    assert_difference -> { Source.where(kind: :stray_collection).count }, 1 do
+      assert_enqueued_with(job: SourcePollJob) do
+        post sources_path, params: {
+          source: { url: url, kind: "rss_feed", name: "Ignored", active: "1" }
+        }
+      end
+    end
+
+    source = Source.find_by(kind: :stray_collection, url: "https://stray.example.com/c/remotetokensecret1234567/manifest.json")
+    assert_not_nil source
+    assert_redirected_to source_path(source)
+  end
+
   test "edit renders edit form for followed source" do
     sign_in_as(users(:one))
     get edit_source_path(sources(:youtube))

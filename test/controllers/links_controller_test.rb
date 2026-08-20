@@ -44,4 +44,73 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     post links_path, params: { url: "https://www.youtube.com/@handle" }
     assert_redirected_to new_session_path
   end
+
+  test "create auto-subscribes to a manifest URL" do
+    sign_in_as(users(:one))
+    url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
+
+    assert_difference -> { Source.count }, 1 do
+      assert_difference -> { Follow.count }, 1 do
+        assert_difference -> { RemoteCollection.count }, 1 do
+          assert_enqueued_with(job: SourcePollJob) do
+            post links_path, params: { url: url }
+          end
+        end
+      end
+    end
+
+    source = Source.find_by(kind: :stray_collection, url: url)
+    assert_not_nil source
+    assert source.active?
+    assert_redirected_to source_path(source)
+  end
+
+  test "create auto-subscribes to a friendly /c/:slug URL" do
+    sign_in_as(users(:one))
+    url = "https://stray.example.com/c/remotetokensecret1234567"
+
+    assert_difference -> { Source.count }, 1 do
+      assert_enqueued_with(job: SourcePollJob) do
+        post links_path, params: { url: url }
+      end
+    end
+
+    source = Source.find_by(kind: :stray_collection, url: "https://stray.example.com/c/remotetokensecret1234567/manifest.json")
+    assert_not_nil source
+    assert_redirected_to source_path(source)
+  end
+
+  test "create auto-subscribe to an already-subscribed manifest URL redirects to existing source" do
+    sign_in_as(users(:one))
+    url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
+
+    post links_path, params: { url: url }
+    source = Source.find_by(kind: :stray_collection, url: url)
+
+    assert_no_difference -> { Source.count } do
+      assert_no_difference -> { RemoteCollection.count } do
+        assert_no_enqueued_jobs only: SourcePollJob do
+          post links_path, params: { url: url }
+        end
+      end
+    end
+
+    assert_redirected_to source_path(source)
+  end
+
+  test "bulk_create auto-subscribes to manifest URLs and queues other links" do
+    sign_in_as(users(:one))
+    manifest_url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
+    rss_url = "https://example.com/feed.xml"
+
+    assert_difference -> { Source.where(kind: :stray_collection).count }, 1 do
+      assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, rss_url ]) do
+        post bulk_create_links_path, params: { urls: "#{manifest_url}\n#{rss_url}" }
+      end
+    end
+
+    assert_redirected_to sources_path
+    assert_includes flash[:notice], "Subscribed to 1 collection"
+    assert_includes flash[:notice], "Queued 1 link"
+  end
 end

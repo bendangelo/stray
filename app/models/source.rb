@@ -41,6 +41,10 @@ class Source < ApplicationRecord
     pending? && last_polled_at.nil? && created_at < 10.minutes.ago
   end
 
+  def extractor_class
+    ExtractorRegistry.find_for_source(self)&.class
+  end
+
   def path_segment
     uri = URI.parse(url)
     return nil unless uri.host && uri.path

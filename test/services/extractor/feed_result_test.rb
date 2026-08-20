@@ -15,4 +15,16 @@ class Extractor::FeedResultTest < ActiveSupport::TestCase
     result = Extractor::FeedResult.new(items: [], next_cursor: nil)
     assert_not result.has_more
   end
+
+  test "collection metadata defaults to nil" do
+    result = Extractor::FeedResult.new(items: [], next_cursor: nil)
+    assert_nil result.collection_name
+    assert_nil result.producer_instance_name
+  end
+
+  test "collection metadata can be set" do
+    result = Extractor::FeedResult.new(items: [], next_cursor: nil, collection_name: "Econ", producer_instance_name: "Alice")
+    assert_equal "Econ", result.collection_name
+    assert_equal "Alice", result.producer_instance_name
+  end
 end

@@ -18,6 +18,21 @@ class Extractors::RemoteCollectionTest < ActiveSupport::TestCase
     assert_not Extractors::RemoteCollection.matches?("https://example.com/feed.xml")
   end
 
+  test "manifest_url_for returns URL as-is for manifest URLs" do
+    url = "https://stray.example.com/c/abc/manifest.json"
+    assert_equal url, Extractors::RemoteCollection.manifest_url_for(url)
+  end
+
+  test "manifest_url_for converts friendly /c/:slug URL to manifest URL" do
+    assert_equal "https://stray.example.com/c/remotetokensecret1234567/manifest.json",
+      Extractors::RemoteCollection.manifest_url_for("https://stray.example.com/c/remotetokensecret1234567")
+  end
+
+  test "manifest_url_for returns nil for non-collection URLs" do
+    assert_nil Extractors::RemoteCollection.manifest_url_for("https://example.com/feed.xml")
+    assert_nil Extractors::RemoteCollection.manifest_url_for("not a url")
+  end
+
   test "extract_feed returns FeedResult with items from manifest" do
     VCR.use_cassette("remote_collection/manifest_first_page") do
       extractor = Extractors::RemoteCollection.new

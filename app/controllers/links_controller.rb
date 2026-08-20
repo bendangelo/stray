@@ -3,8 +3,9 @@ class LinksController < ApplicationController
     url = params[:url].to_s.strip
     return redirect_back_or_to(root_path, alert: "No URL provided.") if url.blank?
 
-    if (manifest_url = remote_collection_manifest_url(url))
-      redirect_to new_remote_collection_path(manifest_url: manifest_url) and return
+    if (manifest_url = Extractors::RemoteCollection.manifest_url_for(url))
+      source = RemoteCollectionSubscriber.call(user: current_user, url: manifest_url)
+      redirect_to source_path(source), notice: "Subscribed. Syncing first page…" and return
     end
 
     if UrlClassifier.classify(url)&.category == :youtube_channel
@@ -24,7 +25,7 @@ class LinksController < ApplicationController
     queued = 0
     manifest_urls = []
     urls.each do |url|
-      if (manifest_url = remote_collection_manifest_url(url))
+      if (manifest_url = Extractors::RemoteCollection.manifest_url_for(url))
         manifest_urls << manifest_url
         next
       end
@@ -38,30 +39,19 @@ class LinksController < ApplicationController
       queued += 1
     end
 
-    if manifest_urls.any?
-      flash[:notice] = "Queued #{queued} link#{'s' if queued != 1}." if queued.positive?
-      redirect_to new_remote_collection_path(manifest_url: manifest_urls.first) and return
+    subscribed = 0
+    manifest_urls.each do |manifest_url|
+      RemoteCollectionSubscriber.call(user: current_user, url: manifest_url)
+      subscribed += 1
     end
 
-    redirect_to sources_path, notice: "Queued #{queued} link#{'s' if queued != 1}."
+    notices = []
+    notices << "Subscribed to #{subscribed} collection#{'s' if subscribed != 1}." if subscribed.positive?
+    notices << "Queued #{queued} link#{'s' if queued != 1}." if queued.positive?
+    redirect_to sources_path, notice: notices.join(" ")
   end
 
   private
-
-  def remote_collection_manifest_url(url)
-    return url if Extractors::RemoteCollection.matches?(url)
-    manifest_url_for_friendly_collection(url)
-  end
-
-  def manifest_url_for_friendly_collection(url)
-    uri = URI.parse(url)
-    return nil unless uri.host
-    return nil unless uri.path =~ %r{^/c/([A-Za-z0-9]{24})$}
-
-    "#{uri.scheme}://#{uri.host}/c/#{$1}/manifest.json"
-  rescue URI::InvalidURIError
-    nil
-  end
 
   def create_pending_youtube_channel(url)
     external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
