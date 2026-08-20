@@ -4,7 +4,7 @@ class CollectionManifestTest < ActiveSupport::TestCase
   def setup
     @collection = collections(:econ)
     @source = sources(:youtube)
-    @source.items.destroy_all
+    Item.where(source_id: @collection.sources.select(:id)).destroy_all
     @item1 = @source.items.create!(
       user: users(:one), external_id: "vid1", title: "Older", url: "https://x/1",
       content_text: "old", published_at: 2.days.ago, state: 0
