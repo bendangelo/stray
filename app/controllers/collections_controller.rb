@@ -11,10 +11,26 @@ class CollectionsController < ApplicationController
 
   def create
     @collection = current_user.collections.new(collection_params)
+    source = params[:collection][:source_id].present? ? scoped_source_by_id(params[:collection][:source_id]) : nil
+
+    if source.nil? && params[:collection][:source_id].present?
+      return head :not_found
+    end
+
     if @collection.save
-      redirect_to @collection, notice: "Collection created."
+      if source
+        CollectionMembership.find_or_create_by!(collection: @collection, source: source)
+      end
+
+      respond_to do |format|
+        format.html { redirect_to @collection, notice: "Collection created." }
+        format.turbo_stream { head :ok }
+      end
     else
-      render :new, status: :unprocessable_content
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_content }
+        format.turbo_stream { head :unprocessable_content }
+      end
     end
   end
 
@@ -68,5 +84,9 @@ class CollectionsController < ApplicationController
 
   def collection_params
     params.require(:collection).permit(:name, :description, source_ids: [])
+  end
+
+  def scoped_source_by_id(id)
+    Source.joins(:follows).find_by(id: id, follows: { user_id: current_user.id })
   end
 end

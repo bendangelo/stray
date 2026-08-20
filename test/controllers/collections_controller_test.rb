@@ -35,6 +35,38 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
   end
 
+  test "create with source_id atomically creates collection and adds source" do
+    sign_in_as(users(:one))
+    source = sources(:bitchute)
+    assert_difference -> { Collection.count }, 1 do
+      assert_difference -> { CollectionMembership.count }, 1 do
+        post collections_path, params: { collection: { name: "New With Source", source_id: source.id } }, as: :turbo_stream
+      end
+    end
+    assert_response :success
+    new_collection = Collection.find_by(name: "New With Source")
+    assert new_collection
+    assert_includes new_collection.sources, source
+  end
+
+  test "create with source_id and invalid name re-renders with 422 and creates nothing" do
+    sign_in_as(users(:one))
+    source = sources(:bitchute)
+    assert_no_difference -> { Collection.count } do
+      assert_no_difference -> { CollectionMembership.count } do
+        post collections_path, params: { collection: { name: "", source_id: source.id } }, as: :turbo_stream
+      end
+    end
+    assert_response :unprocessable_content
+  end
+
+  test "create with source_id for an unfollowed source returns not_found" do
+    sign_in_as(users(:one))
+    source = sources(:remote)
+    post collections_path, params: { collection: { name: "Hack", source_id: source.id } }, as: :turbo_stream
+    assert_response :not_found
+  end
+
   test "show displays collection and member sources" do
     sign_in_as(users(:one))
     get collection_path(collections(:econ))
