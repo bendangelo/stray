@@ -8,6 +8,7 @@ class Youtube::ChannelResolverTest < ActiveSupport::TestCase
     assert_equal "https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw", result.rss_url
     assert_equal "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw", result.channel_url
     assert_nil result.channel_name
+    assert_nil result.channel_avatar_url
   end
 
   test "raises for non-YouTube URLs" do
@@ -30,6 +31,22 @@ class Youtube::ChannelResolverTest < ActiveSupport::TestCase
       assert_equal "https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw", result.rss_url
       assert_equal "Rick Astley", result.channel_name
       assert_equal "https://www.youtube.com/@RickAstley", result.channel_url
+    end
+  end
+
+  test "extracts channel avatar from og:image meta tag" do
+    body = <<~HTML
+      <html><head>
+        <meta property="og:title" content="Rick Astley">
+        <meta property="og:image" content="https://yt3.ggpht.com/avatar123">
+        <meta property="og:url" content="https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw">
+      </head></html>
+    HTML
+
+    stub_channel_page(body) do
+      result = Youtube::ChannelResolver.resolve("https://www.youtube.com/@RickAstley")
+
+      assert_equal "https://yt3.ggpht.com/avatar123", result.channel_avatar_url
     end
   end
 
@@ -66,7 +83,8 @@ class Youtube::ChannelResolverTest < ActiveSupport::TestCase
     data = {
       "channel_id" => "UCuAXFkgsw1L7xaCfnd5JJOw",
       "channel" => "Rick Astley",
-      "channel_url" => "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
+      "channel_url" => "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw",
+      "thumbnails" => [ { "url" => "https://yt3.ggpht.com/small" }, { "url" => "https://yt3.ggpht.com/large" } ]
     }
 
     runner = mock_runner(data)
@@ -75,6 +93,7 @@ class Youtube::ChannelResolverTest < ActiveSupport::TestCase
         result = Youtube::ChannelResolver.resolve("https://www.youtube.com/@RickAstley")
 
         assert_equal "UCuAXFkgsw1L7xaCfnd5JJOw", result.channel_id
+        assert_equal "https://yt3.ggpht.com/large", result.channel_avatar_url
       end
     end
   end

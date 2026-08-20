@@ -99,6 +99,22 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not_nil @source.last_error_at
   end
 
+  test "records status-bearing error on extraction error" do
+    @verify_extractor = false
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "youtube rss fetch failed: 404" }
+
+    ExtractorRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_equal "youtube rss fetch failed: 404", @source.last_error
+    assert_not_nil @source.last_error_at
+  end
+
   test "skips non-existent source gracefully" do
     assert_nothing_raised do
       SourcePollJob.perform_now(99999)
@@ -577,7 +593,8 @@ class SourcePollJobTest < ActiveJob::TestCase
       channel_id: "UCResolved",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
       channel_name: "Resolved Channel",
-      channel_url: "https://www.youtube.com/channel/UCResolved"
+      channel_url: "https://www.youtube.com/channel/UCResolved",
+      channel_avatar_url: nil
     )
 
     contents = [

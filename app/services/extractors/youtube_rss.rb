@@ -16,7 +16,7 @@ module Extractors
       end
 
       def extract(url)
-        response = http_client.get(url)
+        response = fetch(url)
         feed = Feedjira.parse(response.body)
 
         feed.entries.map do |entry|
@@ -41,12 +41,21 @@ module Extractors
 
       private
 
+      def fetch(url)
+        response = http_client.get(url)
+        raise Stray::ExtractionError, "youtube rss fetch failed: #{response.status}" unless response.status == 200
+
+        response
+      end
+
       def http_client
         Faraday.new do |conn|
           conn.headers["User-Agent"] = BROWSER_UA
           conn.headers["Accept-Language"] = "en"
           conn.headers["Cookie"] = "CONSENT=YES+cb"
           conn.response :follow_redirects
+          conn.options.timeout = 30
+          conn.options.open_timeout = 10
           conn.adapter :net_http
         end
       end

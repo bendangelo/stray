@@ -4,8 +4,16 @@ class SourcePollJob < ApplicationJob
   NO_MISSING_METADATA_UPDATE = %i[title url content_text content_html fetched_at].freeze
 
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
+  retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
 
   discard_on Stray::YtDlp::Error do |job, error|
+    source = Source.find_by(id: job.arguments.first)
+    return unless source
+
+    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+  end
+
+  discard_on Stray::ExtractionError do |job, error|
     source = Source.find_by(id: job.arguments.first)
     return unless source
 
@@ -53,7 +61,7 @@ class SourcePollJob < ApplicationJob
   rescue NotImplementedError => e
     source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
     reschedule_on_failure!(source)
-  rescue Stray::YtDlp::Error
+  rescue Stray::YtDlp::Error, Stray::ExtractionError
     raise
   rescue StandardError => e
     source.update!(last_error: e.message, last_error_at: Time.current, status: :failed)

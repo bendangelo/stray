@@ -20,6 +20,9 @@
               <% end %>
             <% elsif source.failed? %>
               <span class="text-cerise font-bold" title="<%= source.last_error %>">Failed</span>
+              <% if source.last_error.present? %>
+                <span class="text-cerise truncate max-w-[24ch]" title="<%= source.last_error %>"><%= truncate(source.last_error, length: 40) %></span>
+              <% end %>
             <% elsif source.ok? %>
               <span class="text-mint-700 font-bold">OK</span>
             <% end %>

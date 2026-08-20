@@ -51,6 +51,20 @@ class Extractors::YoutubeRssTest < ActiveSupport::TestCase
     assert_equal "CONSENT=YES+cb", client.headers["Cookie"]
   end
 
+  test "extract raises Stray::ExtractionError with status on non-200 response" do
+    response = Struct.new(:status, :body).new(404, "<html>not found</html>")
+    client = Minitest::Mock.new
+    client.expect(:get, response, [ String ])
+
+    extractor = Extractors::YoutubeRss.new
+    extractor.stub(:http_client, client) do
+      error = assert_raises(Stray::ExtractionError) do
+        extractor.extract("https://www.youtube.com/feeds/videos.xml?channel_id=UC123")
+      end
+      assert_equal "youtube rss fetch failed: 404", error.message
+    end
+  end
+
   test "extract includes creator_identity from feed author" do
     VCR.use_cassette("extractors/youtube_rss_feed") do
       extractor = Extractors::YoutubeRss.new

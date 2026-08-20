@@ -16,6 +16,8 @@ module Youtube
         url: result.rss_url,
         external_id: result.channel_id,
         name: result.channel_name.presence || @source.name,
+        channel_url: result.channel_url.presence || @source.channel_url,
+        icon_url: @source.icon_url.presence || result.channel_avatar_url,
         status: :ok
       )
       @source

@@ -24,7 +24,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UC123",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC123",
       channel_name: "Test Channel",
-      channel_url: "https://www.youtube.com/channel/UC123"
+      channel_url: "https://www.youtube.com/channel/UC123",
+      channel_avatar_url: nil
     )
 
     extractor = Minitest::Mock.new
@@ -74,7 +75,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UC123",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC123",
       channel_name: "Test Channel",
-      channel_url: "https://www.youtube.com/channel/UC123"
+      channel_url: "https://www.youtube.com/channel/UC123",
+      channel_avatar_url: nil
     )
 
     rss_contents = [ video_content ]
@@ -191,7 +193,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UCResolved",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
       channel_name: "Resolved Channel",
-      channel_url: "https://www.youtube.com/channel/UCResolved"
+      channel_url: "https://www.youtube.com/channel/UCResolved",
+      channel_avatar_url: nil
     )
 
     failing = Object.new
@@ -222,7 +225,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UCResolved2",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved2",
       channel_name: "Resolved Channel",
-      channel_url: "https://www.youtube.com/channel/UCResolved2"
+      channel_url: "https://www.youtube.com/channel/UCResolved2",
+      channel_avatar_url: nil
     )
 
     failing = Object.new
@@ -237,6 +241,33 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     source.reload
     assert source.failed?
     assert_equal "yt-dlp boom", source.last_error
+  end
+
+  test "marks source failed via discard when extraction error raised after resolution" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/@Handle", external_id: "pending:h3", status: :pending)
+    Follow.create!(user: @user, source: source)
+
+    resolver_result = Youtube::ChannelResolver::Result.new(
+      channel_id: "UCResolved3",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved3",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UCResolved3",
+      channel_avatar_url: nil
+    )
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "youtube rss fetch failed: 404" }
+
+    Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+      ExtractorRegistry.stub(:find_for_source, failing) do
+        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
+      end
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "youtube rss fetch failed: 404", source.last_error
   end
 
   test "uses pre-created source when source_id is provided" do
@@ -305,7 +336,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UCResolved",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved",
       channel_name: "Resolved Channel",
-      channel_url: "https://www.youtube.com/channel/UCResolved"
+      channel_url: "https://www.youtube.com/channel/UCResolved",
+      channel_avatar_url: nil
     )
 
     contents = [
@@ -358,7 +390,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       channel_id: "UC456",
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC456",
       channel_name: nil,
-      channel_url: "https://www.youtube.com/channel/UC456"
+      channel_url: "https://www.youtube.com/channel/UC456",
+      channel_avatar_url: nil
     )
 
     extractor = Minitest::Mock.new

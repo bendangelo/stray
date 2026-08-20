@@ -56,16 +56,19 @@ class Source < ApplicationRecord
     nil
   end
 
-  def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, active: true, status: :pending)
+  def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, channel_url: nil, active: true, status: :pending)
     source = find_or_create_by!(user: user, external_id: external_id, kind: kind) do |s|
       s.url = url
       s.name = name
       s.icon_url = icon_url
+      s.channel_url = channel_url
       s.next_crawl_at = 1.hour.from_now
       s.active = active
       s.status = status
     end
     source.update!(name: name) if name.present? && source.name != name
+    source.update!(icon_url: icon_url) if icon_url.present? && source.icon_url != icon_url
+    source.update!(channel_url: channel_url) if channel_url.present? && source.channel_url != channel_url
     Follow.find_or_create_by!(user: user, source: source)
     source
   end

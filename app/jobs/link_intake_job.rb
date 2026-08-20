@@ -4,6 +4,7 @@ class LinkIntakeJob < ApplicationJob
   NO_MISSING_METADATA_UPDATE = %i[title url content_text content_html fetched_at].freeze
 
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
+  retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
 
   discard_on Stray::YtDlp::Error do |job, error|
     source_id = job.arguments.third
@@ -13,6 +14,22 @@ class LinkIntakeJob < ApplicationJob
     next unless source
 
     source.update!(last_error: error.message, last_error_at: Time.current, status: :failed)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
+  end
+
+  discard_on Stray::ExtractionError do |job, error|
+    source_id = job.arguments.third
+    next unless source_id
+
+    source = Source.find_by(id: source_id)
+    next unless source
+
+    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
     Turbo::StreamsChannel.broadcast_replace_to(
       "user_#{source.user_id}_sources",
       target: ActionView::RecordIdentifier.dom_id(source),
@@ -53,7 +70,7 @@ class LinkIntakeJob < ApplicationJob
     extractor = ExtractorRegistry.find_for_source(@source)
     contents = Array(extractor.extract_feed(@source.url))
     create_items(@source, contents)
-  rescue Stray::YtDlp::Error
+  rescue Stray::YtDlp::Error, Stray::ExtractionError
     raise
   rescue StandardError => e
     @source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
@@ -212,7 +229,7 @@ class LinkIntakeJob < ApplicationJob
   def create_source(kind:, url:, external_id:, name:, channel_url: nil)
     return @source if @source
 
-    Source.follow!(@user, kind: kind, url: url, external_id: external_id, name: name)
+    Source.follow!(@user, kind: kind, url: url, external_id: external_id, name: name, channel_url: channel_url)
   end
 
   def enqueue_full_poll(source)

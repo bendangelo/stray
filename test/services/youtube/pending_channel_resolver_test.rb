@@ -14,7 +14,8 @@ class Youtube::PendingChannelResolverTest < ActiveSupport::TestCase
       channel_id: channel_id,
       rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=#{channel_id}",
       channel_name: "Resolved Channel",
-      channel_url: "https://www.youtube.com/channel/#{channel_id}"
+      channel_url: "https://www.youtube.com/channel/#{channel_id}",
+      channel_avatar_url: "https://yt3.ggpht.com/avatar"
     )
   end
 
@@ -30,6 +31,8 @@ class Youtube::PendingChannelResolverTest < ActiveSupport::TestCase
     assert_equal "UCResolved", source.external_id
     assert_equal "https://www.youtube.com/feeds/videos.xml?channel_id=UCResolved", source.url
     assert_equal "Resolved Channel", source.name
+    assert_equal "https://www.youtube.com/channel/UCResolved", source.channel_url
+    assert_equal "https://yt3.ggpht.com/avatar", source.icon_url
     assert source.ok?
   end
 

@@ -3,7 +3,7 @@ require "faraday"
 
 module Youtube
   class ChannelResolver
-      Result = Data.define(:channel_id, :rss_url, :channel_name, :channel_url)
+      Result = Data.define(:channel_id, :rss_url, :channel_name, :channel_url, :channel_avatar_url)
 
       RSS_BASE = "https://www.youtube.com/feeds/videos.xml?channel_id="
       BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
@@ -58,7 +58,8 @@ module Youtube
             channel_id:,
             rss_url: build_rss_url(channel_id),
             channel_name: nil,
-            channel_url: uri.to_s
+            channel_url: uri.to_s,
+            channel_avatar_url: nil
           )
         end
 
@@ -73,7 +74,8 @@ module Youtube
             channel_id:,
             rss_url: build_rss_url(channel_id),
             channel_name: extract_channel_name(body),
-            channel_url: uri.to_s
+            channel_url: uri.to_s,
+            channel_avatar_url: extract_channel_avatar(body)
           )
         rescue ArgumentError
           resolve_via_ytdlp(uri)
@@ -89,7 +91,8 @@ module Youtube
             channel_id:,
             rss_url: build_rss_url(channel_id),
             channel_name: data["channel"],
-            channel_url: data["channel_url"] || uri.to_s
+            channel_url: data["channel_url"] || uri.to_s,
+            channel_avatar_url: extract_ytdlp_avatar(data)
           )
         rescue Errno::ENOENT
           raise ArgumentError, "No channel_id in channel page HTML"
@@ -103,6 +106,17 @@ module Youtube
 
         def extract_channel_name(body)
           body[/<meta property="og:title" content="([^"]+)"/, 1]
+        end
+
+        def extract_channel_avatar(body)
+          body[/<meta property="og:image" content="([^"]+)"/, 1]
+        end
+
+        def extract_ytdlp_avatar(data)
+          thumbnails = data["thumbnails"]
+          return nil unless thumbnails.is_a?(Array) && thumbnails.any?
+
+          thumbnails.last&.dig("url")
         end
       end
     end
