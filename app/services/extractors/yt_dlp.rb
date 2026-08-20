@@ -2,11 +2,11 @@ require "time"
 
 module Extractors
   class YtDlp < Extractor
+      VIDEO_HOSTS = %w[bitchute.com].freeze
+
       def self.matches?(url)
         uri = URI.parse(url)
-        return false if uri.host&.end_with?("youtube.com") && uri.path == "/feeds/videos.xml"
-
-        true
+        VIDEO_HOSTS.any? { |host| uri.host&.end_with?(host) }
       rescue URI::InvalidURIError
         false
       end

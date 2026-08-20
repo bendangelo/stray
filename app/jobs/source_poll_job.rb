@@ -52,6 +52,8 @@ class SourcePollJob < ApplicationJob
     source
   rescue ActiveRecord::RecordNotUnique
     adopt_existing_channel(source, result.channel_id)
+  rescue Stray::YtDlp::Error
+    raise
   rescue StandardError => e
     source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
     source

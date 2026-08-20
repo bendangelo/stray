@@ -45,7 +45,7 @@ module Extractors
         raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
 
         response = http_client.get(url)
-        raise Stray::YtDlp::ExtractionFailed, "page fetch failed: #{response.status}" unless response.status == 200
+        raise Stray::ExtractionError, "page fetch failed: #{response.status}" unless response.status == 200
 
         response
       end

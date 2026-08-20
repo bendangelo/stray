@@ -7,15 +7,10 @@ class LinksController < ApplicationController
       redirect_to new_remote_collection_path(manifest_url: manifest_url) and return
     end
 
-    if youtube_channel_url?(url)
+    if UrlClassifier.classify(url)&.category == :youtube_channel
       source = create_pending_youtube_channel(url)
       LinkIntakeJob.perform_later(current_user.id, url, source.id)
       redirect_to source_path(source) and return
-    end
-
-    if youtube_video_id_from_url(url)
-      LinkIntakeJob.perform_later(current_user.id, url)
-      redirect_back_or_to(root_path, notice: "Resolving video…") and return
     end
 
     LinkIntakeJob.perform_later(current_user.id, url)
@@ -34,7 +29,7 @@ class LinksController < ApplicationController
         next
       end
 
-      if youtube_channel_url?(url)
+      if UrlClassifier.classify(url)&.category == :youtube_channel
         source = create_pending_youtube_channel(url)
         LinkIntakeJob.perform_later(current_user.id, url, source.id)
       else
@@ -68,14 +63,6 @@ class LinksController < ApplicationController
     nil
   end
 
-  def youtube_channel_url?(url)
-    uri = URI.parse(url)
-    uri.host&.end_with?("youtube.com") &&
-      uri.path&.match?(%r{^/(channel/UC|@|c/|user/)})
-  rescue URI::InvalidURIError
-    false
-  end
-
   def create_pending_youtube_channel(url)
     external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
     Source.follow!(
@@ -85,16 +72,5 @@ class LinksController < ApplicationController
       external_id: external_id,
       status: :pending
     )
-  end
-
-  def youtube_video_id_from_url(url)
-    uri = URI.parse(url)
-    if uri.host == "youtu.be"
-      uri.path.sub(%r{^/}, "")
-    elsif uri.host&.end_with?("youtube.com") && uri.path == "/watch"
-      uri.query.to_s.split("&").find { |p| p.start_with?("v=") }&.sub("v=", "")
-    end
-  rescue URI::InvalidURIError
-    nil
   end
 end

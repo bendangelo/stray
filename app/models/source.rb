@@ -59,7 +59,7 @@ class Source < ApplicationRecord
       s.active = active
       s.status = status
     end
-    source.update!(url: url, name: name) if name.present?
+    source.update!(name: name) if name.present? && source.name != name
     Follow.find_or_create_by!(user: user, source: source)
     source
   end

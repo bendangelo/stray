@@ -14,10 +14,15 @@ class Extractors::YtDlpTest < ActiveSupport::TestCase
     OpenStruct.new(success?: true)
   end
 
-  test "matches? returns true for any URL (universal fallback)" do
+  test "matches? returns true for known video hosts" do
     assert Extractors::YtDlp.matches?("https://bitchute.com/video/abc123")
-    assert Extractors::YtDlp.matches?("https://rumble.com/vabc123.html")
-    assert Extractors::YtDlp.matches?("https://vimeo.com/12345")
+    assert Extractors::YtDlp.matches?("https://www.bitchute.com/channel/Foo")
+  end
+
+  test "matches? returns false for non-video-host URLs" do
+    assert_not Extractors::YtDlp.matches?("https://rumble.com/vabc123.html")
+    assert_not Extractors::YtDlp.matches?("https://vimeo.com/12345")
+    assert_not Extractors::YtDlp.matches?("https://example.com/blog/post")
   end
 
   test "matches? returns false for YouTube RSS feed URLs (handled by YoutubeRss)" do

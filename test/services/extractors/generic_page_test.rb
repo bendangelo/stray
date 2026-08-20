@@ -54,4 +54,22 @@ class Extractors::GenericPageTest < ActiveSupport::TestCase
       extractor.extract("http://localhost:3000/admin")
     end
   end
+
+  test "extract raises Stray::ExtractionError on non-200 response" do
+    extractor = Extractors::GenericPage.new
+    response = Struct.new(:status, :body).new(404, "not found")
+    extractor.stub(:http_client, stub_get(response)) do
+      assert_raises(Stray::ExtractionError) do
+        extractor.extract("https://example.com/missing")
+      end
+    end
+  end
+
+  private
+
+  def stub_get(response)
+    client = Minitest::Mock.new
+    client.expect(:get, response, [ String ])
+    client
+  end
 end

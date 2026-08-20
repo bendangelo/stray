@@ -62,21 +62,31 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       tags: []
     )
 
-    ytdlp_extractor = Minitest::Mock.new
-    ytdlp_extractor.expect(:extract, video_content, [ "https://www.youtube.com/watch?v=vid123" ])
+    oembed_result = Youtube::Oembed::Result.new(
+      title: "Test Video",
+      author_name: "Test Channel",
+      author_url: "https://www.youtube.com/@TestChannel",
+      thumbnail_url: "https://example.com/t.jpg",
+      external_id: "vid123"
+    )
+
+    resolver_result = Youtube::ChannelResolver::Result.new(
+      channel_id: "UC123",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC123",
+      channel_name: "Test Channel",
+      channel_url: "https://www.youtube.com/channel/UC123"
+    )
 
     rss_contents = [ video_content ]
     rss_extractor = Minitest::Mock.new
     rss_extractor.expect(:extract, rss_contents, [ "https://www.youtube.com/feeds/videos.xml?channel_id=UC123" ])
 
-    ExtractorRegistry.stub(:find_for, ->(url) {
-      if url.include?("feeds/videos.xml")
-        rss_extractor
-      else
-        ytdlp_extractor
+    Youtube::Oembed.stub(:fetch, oembed_result) do
+      Youtube::ChannelResolver.stub(:resolve, resolver_result) do
+        ExtractorRegistry.stub(:find_for, rss_extractor, [ resolver_result.rss_url ]) do
+          LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/watch?v=vid123")
+        end
       end
-    }) do
-      LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/watch?v=vid123")
     end
 
     source = Source.find_by(external_id: "UC123", user_id: @user.id)
@@ -305,5 +315,36 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
     source = Source.find_by(external_id: "UC456", user_id: @user.id)
     assert_equal "Channel From Feed", source.name
+  end
+
+  test "creates an rss_feed source for a pasted RSS feed URL" do
+    contents = [
+      ExtractedContent.new(
+        url: "https://blog.example.com/post-1",
+        title: "Post 1", content_text: "Body", content_html: "<p>Body</p>",
+        thumbnail_url: nil, published_at: 1.day.ago,
+        external_id: "post-1", duration: nil,
+        creator_identity: CreatorIdentity.new(
+          name: "Example Blog", url: "https://blog.example.com",
+          external_id: "https://blog.example.com/feed", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ "https://blog.example.com/feed" ])
+
+    ExtractorRegistry.stub(:find_for, extractor, [ "https://blog.example.com/feed" ]) do
+      assert_enqueued_with(job: SourcePollJob) do
+        LinkIntakeJob.perform_now(@user.id, "https://blog.example.com/feed")
+      end
+    end
+
+    source = Source.find_by(kind: "rss_feed", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "https://blog.example.com/feed", source.url
+    assert_equal "Example Blog", source.name
+    assert_equal 1, source.items.count
   end
 end

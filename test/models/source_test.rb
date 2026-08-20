@@ -196,4 +196,16 @@ class SourceTest < ActiveSupport::TestCase
     assert source.pending?
     assert Follow.exists?(user: users(:one), source: source)
   end
+
+  test "follow! does not overwrite url on an existing source" do
+    Source.follow!(users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@handle", external_id: "UC123", status: :pending)
+
+    Source.follow!(users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@other", external_id: "UC123", name: "Channel Name", status: :pending)
+
+    source = Source.find_by!(user: users(:one), kind: :youtube_channel, external_id: "UC123")
+    assert_equal "https://www.youtube.com/@handle", source.url
+    assert_equal "Channel Name", source.name
+  end
 end

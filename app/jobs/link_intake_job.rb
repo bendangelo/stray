@@ -34,12 +34,16 @@ class LinkIntakeJob < ApplicationJob
   def extract_and_create
     if @source
       extract_for_existing_source
-    elsif youtube_channel_url?
-      resolve_youtube_channel
-    elsif youtube_video_url?
-      extract_youtube_video
     else
-      extract_generic
+      case UrlClassifier.classify(@url)&.category
+      when :youtube_channel then resolve_youtube_channel
+      when :youtube_video   then extract_youtube_video
+      when :rss_feed        then create_rss_source
+      when :video_channel   then extract_video
+      when :generic_page    then extract_generic_page
+      else
+        raise Stray::ExtractionError, "Unsupported URL: #{@url}"
+      end
     end
   end
 
@@ -67,6 +71,8 @@ class LinkIntakeJob < ApplicationJob
     )
   rescue ActiveRecord::RecordNotUnique
     adopt_existing_channel(result.channel_id)
+  rescue Stray::YtDlp::Error
+    raise
   rescue StandardError => e
     @source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
   end
@@ -79,22 +85,6 @@ class LinkIntakeJob < ApplicationJob
     @source.items.update_all(source_id: existing.id)
     @source.destroy!
     @source = existing
-  end
-
-  def youtube_channel_url?
-    uri = URI.parse(@url)
-    uri.host&.end_with?("youtube.com") &&
-      uri.path&.match?(%r{^/(channel/UC|@|c/|user/)})
-  rescue URI::InvalidURIError
-    false
-  end
-
-  def youtube_video_url?
-    uri = URI.parse(@url)
-    (uri.host == "youtu.be" && uri.path.present?) ||
-      (uri.host&.end_with?("youtube.com") && uri.path == "/watch")
-  rescue URI::InvalidURIError
-    false
   end
 
   def resolve_youtube_channel
@@ -122,8 +112,40 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_youtube_video
-    extractor = ExtractorRegistry.find_for(@url)
-    content = extractor.extract(@url)
+    oembed = fetch_oembed
+    if oembed&.author_url
+      extract_youtube_video_via_oembed(oembed)
+    else
+      extract_youtube_video_via_ytdlp
+    end
+  end
+
+  def fetch_oembed
+    Youtube::Oembed.fetch(@url)
+  rescue Stray::ExtractionError, ArgumentError
+    nil
+  end
+
+  def extract_youtube_video_via_oembed(oembed)
+    result = Youtube::ChannelResolver.resolve(oembed.author_url)
+    extractor = ExtractorRegistry.find_for(result.rss_url)
+    contents = Array(extractor.extract(result.rss_url))
+
+    source = create_source(
+      kind: :youtube_channel,
+      url: result.rss_url,
+      external_id: result.channel_id,
+      name: result.channel_name.presence || oembed.author_name,
+      channel_url: result.channel_url
+    )
+
+    create_items(source, contents)
+    enqueue_full_poll(source)
+    [ contents, source ]
+  end
+
+  def extract_youtube_video_via_ytdlp
+    content = Extractors::YtDlp.new.extract(@url)
 
     creator = content.creator_identity
     raise Stray::YtDlp::ExtractionFailed, "No channel info in video metadata" unless creator&.external_id
@@ -143,7 +165,24 @@ class LinkIntakeJob < ApplicationJob
     [ [ content ], source ]
   end
 
-  def extract_generic
+  def create_rss_source
+    extractor = ExtractorRegistry.find_for(@url)
+    contents = Array(extractor.extract_feed(@url))
+
+    creator = contents.map(&:creator_identity).compact.find { |c| c.name }
+    source = create_source(
+      kind: :rss_feed,
+      url: @url,
+      external_id: Digest::SHA256.hexdigest(@url)[0, 16],
+      name: creator&.name
+    )
+
+    create_items(source, contents)
+    enqueue_full_poll(source)
+    [ contents, source ]
+  end
+
+  def extract_video
     extractor = ExtractorRegistry.find_for(@url)
     content = extractor.extract(@url)
 
@@ -153,6 +192,12 @@ class LinkIntakeJob < ApplicationJob
     else
       create_generic_page_source(content)
     end
+  end
+
+  def extract_generic_page
+    extractor = ExtractorRegistry.find_for(@url)
+    content = extractor.extract(@url)
+    create_generic_page_source(content)
   end
 
   def create_video_source(content, creator)
