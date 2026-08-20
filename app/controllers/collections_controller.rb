@@ -11,17 +11,19 @@ class CollectionsController < ApplicationController
 
   def create
     @collection = current_user.collections.new(collection_params)
-    source = params[:collection][:source_id].present? ? scoped_source_by_id(params[:collection][:source_id]) : nil
+    source_id = params[:collection][:source_id]
+    source = scoped_source_by_id(source_id) if source_id.present?
+    return head :not_found if source_id.present? && source.nil?
 
-    if source.nil? && params[:collection][:source_id].present?
-      return head :not_found
+    result = Collection.transaction do
+      @collection.save.tap do |saved|
+        if saved && source
+          CollectionMembership.find_or_create_by!(collection: @collection, source: source)
+        end
+      end
     end
 
-    if @collection.save
-      if source
-        CollectionMembership.find_or_create_by!(collection: @collection, source: source)
-      end
-
+    if result
       respond_to do |format|
         format.html { redirect_to @collection, notice: "Collection created." }
         format.turbo_stream { head :ok }
