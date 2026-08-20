@@ -1,3 +1,7 @@
 econ_youtube:
   collection: econ
   source: youtube
+
+econ_bitchute:
+  collection: econ
+  source: bitchute

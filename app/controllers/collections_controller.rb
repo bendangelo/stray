@@ -60,7 +60,7 @@ class CollectionsController < ApplicationController
     @collection = Collection.find_by!(slug: params[:slug])
     return head :not_found unless @collection.unlisted?
 
-    @items = @collection.items.where.not(state: :hidden).order(published_at: :desc).limit(50)
+    @items = @collection.items.order(published_at: :desc).limit(50)
     render formats: :xml
   end
 

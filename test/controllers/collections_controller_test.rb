@@ -117,4 +117,19 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "<rss"
   end
+
+  test "feed includes hidden items" do
+    # econ collection includes the bitchute source, which has video_hidden (state: 3)
+    get collection_feed_path(slug: collections(:econ).slug)
+    assert_response :success
+    assert_includes response.body, "Hidden Video"
+  end
+
+  test "manifest includes hidden items" do
+    get collection_manifest_path(slug: collections(:econ).slug)
+    assert_response :success
+    json = JSON.parse(response.body)
+    titles = json["items"].map { |i| i["title"] }
+    assert_includes titles, "Hidden Video"
+  end
 end
