@@ -15,6 +15,11 @@ module Bridges
         kind == "youtube_channel"
       end
 
+      def self.trust_level = :hidden_rss
+      def self.site_homepage = "https://www.youtube.com"
+      def self.last_tested_against = "2026-08"
+      def self.author = "Stray"
+
       def extract(url)
         response = fetch(url)
         feed = Feedjira.parse(response.body)

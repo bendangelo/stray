@@ -10,6 +10,11 @@ module Bridges
       kind == "peertube_channel"
     end
 
+    def self.trust_level = :scraped_html
+    def self.site_homepage = "https://joinpeertube.org"
+    def self.last_tested_against = "2026-08"
+    def self.author = "Stray"
+
     def extract(url)
       map(Stray::Bridges::Peertube.new.video_page(url))
     end

@@ -10,6 +10,11 @@ module Bridges
       kind == "bitchute_channel"
     end
 
+    def self.trust_level = :scraped_html
+    def self.site_homepage = "https://www.bitchute.com"
+    def self.last_tested_against = "2026-08"
+    def self.author = "Stray"
+
     def extract(url)
       map(Stray::Bridges::Bitchute.new.video_page(url))
     end

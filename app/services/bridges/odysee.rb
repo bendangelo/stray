@@ -10,6 +10,11 @@ module Bridges
       kind == "odysee_channel"
     end
 
+    def self.trust_level = :hidden_rss
+    def self.site_homepage = "https://odysee.com"
+    def self.last_tested_against = "2026-08"
+    def self.author = "Stray"
+
     def extract(url)
       map(Stray::Bridges::Odysee.new.video_page(url))
     end

@@ -13,6 +13,11 @@ module Bridges
         kind == "video_channel"
       end
 
+      def self.trust_level = :official_api
+      def self.site_homepage = "https://github.com/yt-dlp/yt-dlp"
+      def self.last_tested_against = "2026-08"
+      def self.author = "Stray"
+
       def extract(url)
         data = runner.single_video(url)
 
