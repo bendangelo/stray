@@ -1,0 +1,12 @@
+<% cmd = yt_dlp_download_command(item) %>
+<div data-controller="clipboard"
+     class="flex items-center gap-2 rounded-md border-3 border-charcoal bg-athens-400 p-2">
+  <code class="flex-1 text-xs text-charcoal font-mono break-all"><%= cmd %></code>
+  <button type="button"
+          data-action="clipboard#copy"
+          data-clipboard-text-value="<%= cmd %>"
+          class="shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-carrot-500 text-white text-xs rounded-md border-2 border-charcoal hover:bg-carrot-600">
+    <%= phosphor_icon "copy", class: "w-3.5 h-3.5" %>
+    Copy
+  </button>
+</div>
