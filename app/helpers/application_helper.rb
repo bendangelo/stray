@@ -114,13 +114,16 @@ module ApplicationHelper
   end
 
   def tagging_provenance_icon(tagging)
-    case tagging.source.to_sym
-    when :ai_embedding
-      phosphor_icon "cpu", class: "w-3 h-3 inline", title: "Tagged by embedding similarity"
-    when :ai_llm
-      phosphor_icon "sparkle", class: "w-3 h-3 inline", title: "Tagged by LLM"
-    when :user
-      phosphor_icon "user", class: "w-3 h-3 inline", title: "Tagged by you"
-    end
+    title = case tagging.source.to_sym
+            when :ai_embedding then "Tagged by embedding similarity"
+            when :ai_llm then "Tagged by LLM"
+            when :user then "Tagged by you"
+            end
+    icon = case tagging.source.to_sym
+           when :ai_embedding then phosphor_icon "cpu", class: "w-3 h-3 inline"
+           when :ai_llm then phosphor_icon "sparkle", class: "w-3 h-3 inline"
+           when :user then phosphor_icon "user", class: "w-3 h-3 inline"
+           end
+    content_tag(:span, icon, title: title, class: "text-charcoal-300")
   end
 end
