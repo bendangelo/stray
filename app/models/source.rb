@@ -6,7 +6,7 @@ class Source < ApplicationRecord
   has_many :collections, through: :collection_memberships
   has_one :remote_collection, dependent: :destroy
 
-  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8 }
+  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8, generic_list: 9 }
   enum :status, { pending: 0, ok: 1, failed: 2, degraded: 3 }
 
   has_secure_token :slug, length: 24

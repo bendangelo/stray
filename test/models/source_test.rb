@@ -181,6 +181,12 @@ class SourceTest < ActiveSupport::TestCase
     assert source.degraded?
   end
 
+  test "kind enum includes generic_list" do
+    source = Source.new(user: users(:one), kind: :generic_list, url: "https://example.com", external_id: "x")
+    assert_equal "generic_list", source.kind
+    assert source.valid?
+  end
+
   test "pending, ok, and failed scopes" do
     pending = Source.create!(user: users(:one), kind: :youtube_channel,
       url: "https://www.youtube.com/@a", external_id: "pending:a", status: :pending)
