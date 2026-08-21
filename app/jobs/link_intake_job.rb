@@ -38,10 +38,11 @@ class LinkIntakeJob < ApplicationJob
     )
   end
 
-  def perform(user_id, url, source_id = nil)
+  def perform(user_id, url, source_id = nil, follow_channel: true)
     @user = User.find(user_id)
     @url = url
     @source = source_id && Source.find_by(id: source_id, user_id: user_id)
+    @follow_channel = follow_channel
 
     extract_and_create
   end
@@ -110,6 +111,8 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_youtube_video
+    return create_saved_video_source(Bridges::YtDlp.new.extract(@url)) unless @follow_channel
+
     oembed = fetch_oembed
     if oembed&.author_url
       extract_youtube_video_via_oembed(oembed)
@@ -214,21 +217,37 @@ class LinkIntakeJob < ApplicationJob
     extractor = Stray::BridgeRegistry.find_for(@url)
     content = extractor.extract(@url)
 
-    creator = content.creator_identity
-    if creator&.external_id
-      source = create_source(
-        kind: kind,
-        url: creator.url || @url,
-        external_id: creator.external_id,
-        name: creator.name,
-        channel_url: creator.url
-      )
-      create_items(source, [ content ])
-      enqueue_full_poll(source)
-      [ [ content ], source ]
+    if !@follow_channel
+      create_saved_video_source(content)
     else
-      create_generic_page_source(content)
+      creator = content.creator_identity
+      if creator&.external_id
+        source = create_source(
+          kind: kind,
+          url: creator.url || @url,
+          external_id: creator.external_id,
+          name: creator.name,
+          channel_url: creator.url
+        )
+        create_items(source, [ content ])
+        enqueue_full_poll(source)
+        [ [ content ], source ]
+      else
+        create_generic_page_source(content)
+      end
     end
+  end
+
+  def create_saved_video_source(content)
+    source = create_source(
+      kind: :saved_video,
+      url: content.url,
+      external_id: content.external_id || Digest::SHA256.hexdigest(content.url)[0, 32],
+      name: content.title.presence
+    )
+
+    create_items(source, [ content ])
+    [ [ content ], source ]
   end
 
   def extract_generic_page

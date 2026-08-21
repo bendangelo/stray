@@ -32,6 +32,19 @@ class SourcePollSweepJobTest < ActiveJob::TestCase
     assert_not_includes poll_args, inactive_source.id
   end
 
+  test "does not enqueue poll for a due saved_video source" do
+    saved = Source.create!(
+      user: users(:one), kind: :saved_video,
+      url: "https://bitchute.com/video/bcvid1",
+      external_id: "bcvid1", next_crawl_at: 1.hour.ago, active: true
+    )
+
+    SourcePollSweepJob.perform_now
+
+    poll_args = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" }.map { |j| j["arguments"].first }
+    assert_not_includes poll_args, saved.id
+  end
+
   test "handles empty due set without error" do
     assert_nothing_raised do
       SourcePollSweepJob.perform_now

@@ -7,7 +7,7 @@ class Source < ApplicationRecord
   has_one :remote_collection, dependent: :destroy
   has_many :secrets, class_name: "SourceSecret", dependent: :destroy
 
-  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8, generic_list: 9 }
+  enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8, generic_list: 9, saved_video: 10 }
   enum :status, { pending: 0, ok: 1, failed: 2, degraded: 3 }
 
   has_secure_token :slug, length: 24
@@ -18,6 +18,7 @@ class Source < ApplicationRecord
 
   scope :due_for_poll, -> {
     where(active: true)
+      .where.not(kind: :saved_video)
       .where("next_crawl_at <= ? OR next_crawl_at IS NULL", Time.current)
   }
   scope :active, -> { where(active: true) }
@@ -29,6 +30,7 @@ class Source < ApplicationRecord
   scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
   scope :stuck, -> {
     where(active: true)
+      .where.not(kind: :saved_video)
       .where(status: [ :ok, :pending ])
       .where("last_polled_at IS NULL OR last_polled_at < ?", 5.minutes.ago)
       .where.not(id: Item.select(:source_id).distinct)

@@ -14,6 +14,18 @@ class LinksController < ApplicationController
       redirect_to source_path(source) and return
     end
 
+    if single_video_url?(url)
+      if params[:follow_channel].present?
+        follow_channel = params[:follow_channel] == "true"
+        LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: follow_channel)
+        redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
+      else
+        @url = url
+        render :video_prompt
+      end
+      return
+    end
+
     LinkIntakeJob.perform_later(current_user.id, url)
     redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
   end
@@ -52,6 +64,14 @@ class LinksController < ApplicationController
   end
 
   private
+
+  SINGLE_VIDEO_CATEGORIES = %i[
+    peertube_video youtube_video rumble_video bitchute_video
+  ].freeze
+
+  def single_video_url?(url)
+    UrlClassifier.classify(url)&.category.in?(SINGLE_VIDEO_CATEGORIES)
+  end
 
   def create_pending_youtube_channel(url)
     external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"

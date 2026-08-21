@@ -470,6 +470,62 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal 1, source.items.count
   end
 
+  test "creates a saved_video source and does not poll when follow_channel is false" do
+    content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/bcvid1",
+      title: "Some Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "bcvid1", duration: 300,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "Some Channel", url: "https://bitchute.com/channel/somechannel",
+        external_id: "somechannel", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://bitchute.com/video/bcvid1" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_no_enqueued_jobs only: SourcePollJob do
+        LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/bcvid1", nil, follow_channel: false)
+      end
+    end
+
+    source = Source.find_by(external_id: "bcvid1", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "saved_video", source.kind
+    assert_equal "https://bitchute.com/video/bcvid1", source.url
+    assert_equal "Some Video", source.name
+    assert_equal 1, source.items.count
+  end
+
+  test "follows the channel and polls when follow_channel is true" do
+    content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/bcvid2",
+      title: "Video 2", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "bcvid2", duration: 300,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "BC Channel", url: "https://bitchute.com/channel/abc",
+        external_id: "abc", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://bitchute.com/video/bcvid2" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/bcvid2", nil, follow_channel: true)
+      end
+    end
+
+    source = Source.find_by(external_id: "abc", user_id: @user.id)
+    assert_equal "bitchute_channel", source.kind
+  end
+
   test "creates generic_list source when list page detected" do
     contents = [ Stray::ExtractedContent.new(url: "https://example.com/post-1", title: "Post 1", content_text: nil, content_html: nil,
       thumbnail_url: nil, published_at: nil, external_id: Digest::SHA256.hexdigest("https://example.com/post-1"), duration: nil, creator_identity: nil, tags: []) ]
