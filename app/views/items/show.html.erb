@@ -38,8 +38,9 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen></iframe>
       <% elsif @item.thumbnail_url.present? %>
-        <img class="object-cover w-full aspect-video rounded-md border-3 border-charcoal"
-             src="<%= @item.thumbnail_url %>" alt="<%= @item.title %>">
+        <%= fallback_image_tag(@item.thumbnail_url,
+              alt: @item.title,
+              class: "object-cover w-full aspect-video rounded-md border-3 border-charcoal") %>
       <% end %>
 
       <% if @item.content_text.present? %>
@@ -55,8 +56,9 @@
       </article>
     <% else %>
       <% if @item.thumbnail_url.present? %>
-        <img class="object-cover w-full aspect-video rounded-md border-3 border-charcoal mb-4"
-             src="<%= @item.thumbnail_url %>" alt="<%= @item.title %>">
+        <%= fallback_image_tag(@item.thumbnail_url,
+              alt: @item.title,
+              class: "object-cover w-full aspect-video rounded-md border-3 border-charcoal mb-4") %>
       <% end %>
       <% if @item.content_text.present? %>
         <div class="prose prose-sm max-w-none whitespace-pre-line text-charcoal"><%= @item.content_text %></div>
