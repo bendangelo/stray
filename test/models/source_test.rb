@@ -171,6 +171,14 @@ class SourceTest < ActiveSupport::TestCase
     assert_equal 0, Source.statuses[:pending]
     assert_equal 1, Source.statuses[:ok]
     assert_equal 2, Source.statuses[:failed]
+    assert_equal 3, Source.statuses[:degraded]
+  end
+
+  test "status enum includes degraded" do
+    source = Source.new(kind: :generic_page, url: "https://example.com", external_id: "x")
+    source.status = :degraded
+    assert_equal "degraded", source.status
+    assert source.degraded?
   end
 
   test "pending, ok, and failed scopes" do
