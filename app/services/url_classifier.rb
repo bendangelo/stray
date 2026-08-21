@@ -94,11 +94,11 @@ class UrlClassifier
     end
 
     def peertube?(uri)
-      uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/|/w/})
+      uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/|/a/|/w/})
     end
 
     def peertube_channel?(uri)
-      uri.path.to_s.match?(%r{/(video-channels|c)/})
+      uri.path.to_s.match?(%r{/(video-channels|c|a)/})
     end
   end
 end
