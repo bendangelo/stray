@@ -1,0 +1,53 @@
+{
+  "total": 1,
+  "data": [
+    {
+      "id": 153046,
+      "uuid": "6aa95cf7-08af-4b22-86af-b7563e2ff4bd",
+      "shortUUID": "eaVkdMrJybEeS63hn9JvDp",
+      "url": "https://tube.xy-space.de/videos/watch/6aa95cf7-08af-4b22-86af-b7563e2ff4bd",
+      "name": "The Club Of Rome & The Nefarious Plan For Humanity",
+      "category": { "id": 11, "label": "News & Politics" },
+      "licence": { "id": 5, "label": "Attribution - Non Commercial - Share Alike" },
+      "language": { "id": "en", "label": "English" },
+      "privacy": { "id": 1, "label": "Public" },
+      "nsfw": false,
+      "truncatedDescription": "The Club Of Rome & The Nefarious Plan For Humanity",
+      "description": "The Club Of Rome & The Nefarious Plan For Humanity",
+      "isLocal": true,
+      "duration": 2452,
+      "views": 50,
+      "viewers": 0,
+      "likes": 1,
+      "dislikes": 0,
+      "thumbnailPath": "/lazy-static/thumbnails/d1721ede-d84d-4a00-a688-b0dd0cfa22a2.jpg",
+      "previewPath": "/lazy-static/thumbnails/4ec445fd-ab54-4ca9-a6e5-4995aca2e5be.jpg",
+      "embedPath": "/videos/embed/eaVkdMrJybEeS63v9JvDp",
+      "createdAt": "2024-09-21T22:24:27.390Z",
+      "updatedAt": "2026-08-21T02:29:34.971Z",
+      "publishedAt": "2024-09-21T22:25:56.692Z",
+      "originallyPublishedAt": null,
+      "isLive": false,
+      "account": {
+        "id": 135725,
+        "displayName": "Vox Populi",
+        "name": "voxpopuli",
+        "url": "https://tube.xy-space.de/accounts/voxpopuli",
+        "host": "tube.xy-space.de",
+        "avatars": [],
+        "avatar": {
+          "width": 48,
+          "path": "/lazy-static/avatars/901f6d63-eb78-49b7-be28-f200e4bc8779.jpg"
+        }
+      },
+      "channel": {
+        "id": 4532,
+        "name": "voxpopulimx",
+        "displayName": "Vox Populi",
+        "url": "https://tube.xy-space.de/video-channels/voxpopulimx",
+        "host": "tube.xy-space.de",
+        "avatars": []
+      }
+    }
+  ]
+}
