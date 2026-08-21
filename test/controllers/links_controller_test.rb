@@ -13,7 +13,7 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil source
     assert source.pending?
     assert Follow.exists?(user: users(:one), source: source)
-    assert_redirected_to source_path(source)
+    assert_redirected_to sources_path
   end
 
   test "create creates a pending source for /channel/UC... URL" do
@@ -25,7 +25,7 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     source = Source.find_by(kind: "youtube_channel", user_id: users(:one).id, url: url)
     assert_not_nil source
     assert source.pending?
-    assert_redirected_to source_path(source)
+    assert_redirected_to sources_path
   end
 
   test "create creates a pending source for /c/ and /user/ URLs" do
@@ -36,7 +36,7 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
       source = Source.find_by(kind: "youtube_channel", user_id: users(:one).id, url: url)
       assert_not_nil source
       assert source.pending?
-      assert_redirected_to source_path(source)
+      assert_redirected_to sources_path
     end
   end
 
@@ -131,13 +131,55 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to sources_path
   end
 
+  test "create creates a pending source and enqueues job for a Peertube channel URL" do
+    sign_in_as(users(:one))
+    url = "https://tube.xy-space.de/a/voxpopuli"
+
+    assert_difference -> { Source.count }, 1 do
+      assert_difference -> { Follow.count }, 1 do
+        assert_enqueued_with(job: LinkIntakeJob) do
+          post links_path, params: { url: url }
+        end
+      end
+    end
+
+    source = Source.find_by(user: users(:one), url: url)
+    assert_not_nil source
+    assert source.pending?
+    assert_equal "peertube_channel", source.kind
+    assert Follow.exists?(user: users(:one), source: source)
+    assert_redirected_to sources_path
+  end
+
+  test "failed extraction marks the pending source as failed with last_error" do
+    sign_in_as(users(:one))
+    url = "https://tube.debit-space.de/a/voxpopuli"
+
+    post links_path, params: { url: url }
+
+    source = Source.find_by(user: users(:one), url: url)
+    assert source.pending?
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "Peertube fetch failed: 404" }
+    failing.define_singleton_method(:extract) { |_url| raise Stray::ExtractionError, "Peertube fetch failed: 404" }
+
+    Stray::BridgeRegistry.stub(:find_for_source, failing) do
+      LinkIntakeJob.perform_now(users(:one).id, url, source.id)
+    end
+
+    source.reload
+    assert source.failed?
+    assert_equal "Peertube fetch failed: 404", source.last_error
+  end
+
   test "bulk_create auto-subscribes to manifest URLs and queues other links" do
     sign_in_as(users(:one))
     manifest_url = "https://stray.example.com/c/remotetokensecret12345678/manifest.json"
     rss_url = "https://example.com/feed.xml"
 
     assert_difference -> { Source.where(kind: :stray_collection).count }, 1 do
-      assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, rss_url ]) do
+      assert_enqueued_with(job: LinkIntakeJob) do
         post bulk_create_links_path, params: { urls: "#{manifest_url}\n#{rss_url}" }
       end
     end

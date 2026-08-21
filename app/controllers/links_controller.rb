@@ -8,20 +8,17 @@ class LinksController < ApplicationController
       redirect_to source_path(source), notice: "Subscribed. Syncing first page…" and return
     end
 
-    if UrlClassifier.classify(url)&.category == :youtube_channel
-      source = create_pending_youtube_channel(url)
-      LinkIntakeJob.perform_later(current_user.id, url, source.id)
-      redirect_to source_path(source) and return
-    end
+    classification = UrlClassifier.classify(url)
+    return redirect_back_or_to(root_path, alert: "Could not recognize that URL.") unless classification
 
-    if single_video_url?(url)
-      follow_channel = params[:follow_channel] == "true"
-      LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: follow_channel)
+    if single_video_url?(classification)
+      LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: params[:follow_channel] == "true")
       redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
       return
     end
 
-    LinkIntakeJob.perform_later(current_user.id, url)
+    source = create_pending_source(url, classification.source_kind)
+    LinkIntakeJob.perform_later(current_user.id, url, source.id)
     redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
   end
 
@@ -37,11 +34,14 @@ class LinksController < ApplicationController
         next
       end
 
-      if UrlClassifier.classify(url)&.category == :youtube_channel
-        source = create_pending_youtube_channel(url)
-        LinkIntakeJob.perform_later(current_user.id, url, source.id)
+      classification = UrlClassifier.classify(url)
+      next unless classification
+
+      if single_video_url?(classification)
+        LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: true)
       else
-        LinkIntakeJob.perform_later(current_user.id, url)
+        source = create_pending_source(url, classification.source_kind)
+        LinkIntakeJob.perform_later(current_user.id, url, source.id)
       end
       queued += 1
     end
@@ -64,15 +64,15 @@ class LinksController < ApplicationController
     peertube_video youtube_video rumble_video bitchute_video
   ].freeze
 
-  def single_video_url?(url)
-    UrlClassifier.classify(url)&.category.in?(SINGLE_VIDEO_CATEGORIES)
+  def single_video_url?(classification)
+    classification.category.in?(SINGLE_VIDEO_CATEGORIES)
   end
 
-  def create_pending_youtube_channel(url)
+  def create_pending_source(url, source_kind)
     external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
     Source.follow!(
       current_user,
-      kind: :youtube_channel,
+      kind: source_kind,
       url: url,
       external_id: external_id,
       status: :pending
