@@ -6,8 +6,7 @@ class ItemsController < ApplicationController
     item = Item.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless item
 
-    item.update!(state: :seen) if item.unseen?
-    Ranking.apply_interaction!(user: current_user, item: item, kind: :opened)
+    record_open!(item)
     render partial: "items/player", locals: { item: }, layout: false
   end
 
@@ -25,5 +24,12 @@ class ItemsController < ApplicationController
       format.turbo_stream { render "items/update", locals: { item:, state: } }
       format.html { redirect_to root_path }
     end
+  end
+
+  private
+
+  def record_open!(item)
+    item.update!(state: :seen) if item.unseen?
+    Ranking.apply_interaction!(user: current_user, item: item, kind: :opened)
   end
 end
