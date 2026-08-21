@@ -68,4 +68,48 @@ module ApplicationHelper
   def yt_dlp_download_command(item)
     %(yt-dlp -f "bv*+ba/b" "#{item.url}")
   end
+
+  def context_params_for(item)
+    forwarded = request.query_parameters.slice(:from, :source_id, :collection_id, :q, :tag, :show_muted)
+
+    if forwarded.key?(:from)
+      forwarded
+    else
+      forwarded.merge(inferred_from(item))
+    end
+  end
+
+  def back_to_feed_path
+    qp = request.query_parameters
+    from = qp[:from].presence || infer_from
+    case from
+    when "source"
+      source_path(id: qp[:source_id])
+    when "collection"
+      collection_path(id: qp[:collection_id])
+    else
+      root_path(qp.slice(:q, :tag, :show_muted))
+    end
+  end
+
+  private
+
+  def inferred_from(item)
+    path = request.path.to_s
+    if path.start_with?("/sources/")
+      { from: "source", source_id: item.source_id }
+    elsif path.start_with?("/collections/")
+      collection_id = path[%r{/collections/(\d+)}, 1]
+      { from: "collection", collection_id: collection_id }.compact
+    else
+      { from: "feed" }
+    end
+  end
+
+  def infer_from
+    path = request.path.to_s
+    return "source" if path.start_with?("/sources/")
+    return "collection" if path.start_with?("/collections/")
+    "feed"
+  end
 end
