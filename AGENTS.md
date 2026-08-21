@@ -54,7 +54,7 @@ bin/setup-wizard        # host-only interactive setup → writes .env (never run
 - **Config is ENV-driven only.** Use `AppConfig` (`STRAY_*` env vars, defaults in `config/stray.yml`). Never use `Rails.credentials` or a `master.key`. `SECRET_KEY_BASE` is passed via env.
 - **Icons are Phosphor via the `phosphor_icon` helper.** Never inline raw `<svg>` in ERB. Use `phosphor_icon "name", style: :regular, class: "h-5 w-5"` (weights: `regular`/`bold`/`light`/`duotone`/`fill`/`thin`). Size/color via Tailwind classes (`fill="currentColor"`). Find names at phosphoricons.com.
 - **Data changes go in `db/data/` via `data_migrate`, not schema migrations.** Backfills, normalization, repairs, and one-time transformations belong in data migrations (`bin/rails g data_migration name`), run with `bin/rails data:migrate` (dev) or `bin/rails db:migrate:with_data` (deploy). Schema migrations are for structure only (`add_column`, indexes, constraints). Do not convert already-committed schema migrations that happen to touch data.
-- **Extractors are plugins.** Register new adapters in `config/initializers/extractors.rb`. Ranking/tagging/feed code must never change to add a site.
+- **Bridges are plugins.** Register new adapters in `config/initializers/bridges.rb`. Ranking/tagging/feed code must never change to add a site.
 - **Tagging provenance is mandatory.** Every `Tagging` stores `source` = `:ai_embedding`, `:ai_llm`, or `:user`. The UI shows it; users must be able to trust/distrust by origin.
 - **Dedup key is `external_id` + `source_id`.** Re-polling a feed must never create duplicate `Item`s.
 - **`embedding` is nullable and populated asynchronously** by a background job. Never assume it is present in request/response code.
@@ -63,7 +63,7 @@ bin/setup-wizard        # host-only interactive setup → writes .env (never run
 ## Architecture
 
 ```
-[Source polling job] → fetch/scrape → [Extractor adapter] → normalize → Item created
+[Source polling job] → fetch/scrape → [Bridge adapter] → normalize → Item created
                                                                       ↓
                                                             [Tagging job] (embedding-based, + optional LLM)
                                                                       ↓
@@ -76,13 +76,16 @@ bin/setup-wizard        # host-only interactive setup → writes .env (never run
 
 All steps on the right run as Solid Queue jobs. Nothing in the request/response cycle blocks on scraping, LLM calls, or embedding generation.
 
-### Extractor adapter interface
+### Bridge adapter interface
 
 ```ruby
 module Stray
-  class Extractor
+  class Bridge
     def self.matches?(url) = raise NotImplementedError
+    def self.handles_kind?(kind) = false
     def extract(url) = raise NotImplementedError
+    def extract_feed(url) = raise NotImplementedError
+    def enrich_tags(url) = nil
     # extract returns a Stray::ExtractedContent struct:
     #   title, content_text, content_html, thumbnail_url, published_at,
     #   external_id, creator_identity (nullable — used for "follow this creator")
@@ -90,7 +93,9 @@ module Stray
 end
 ```
 
-v1 adapters: `GenericPageExtractor` (readability-style), `RssAtomExtractor` (`feedjira`), `YoutubeExtractor` (oEmbed/API), `GithubAwesomeListExtractor` (README link list → items).
+Bridges also declare metadata class methods: `trust_level`, `site_homepage`, `last_tested_against`, `requires_auth?`, `secret_fields`, `author`, `source_url`, `license`.
+
+v1 bridges: `Bridges::GenericPage` (readability-style), `Bridges::RssAtom` (`feedjira`), `Bridges::GenericList` (HTML list pages), `Bridges::RemoteCollection` (Stray relay), and the video bridges (`Rumble`, `Bitchute`, `Odysee`, `Peertube`, `YoutubeRss`, `YtDlp`).
 
 ## Data model
 
