@@ -49,6 +49,10 @@ module ApplicationHelper
     case item.source.kind
     when "youtube_channel"
       "https://www.youtube.com/embed/#{item.external_id}"
+    when "saved_video"
+      if youtube_video_item?(item)
+        "https://www.youtube.com/embed/#{item.external_id}"
+      end
     when "video_channel"
       uri = parse_url(item.url)
       if uri&.host&.include?("bitchute.com")
@@ -82,6 +86,14 @@ module ApplicationHelper
     return false unless item&.source
     item.source.kind.in?(%w[youtube_channel video_channel rumble_channel
                             bitchute_channel odysee_channel peertube_channel])
+  end
+
+  def youtube_video_item?(item = nil)
+    item ||= @item
+    return false unless item&.source&.kind == "saved_video"
+
+    uri = parse_url(item.url)
+    uri&.host&.end_with?("youtube.com") || uri&.host == "youtu.be"
   end
 
   def yt_dlp_download_command(item)

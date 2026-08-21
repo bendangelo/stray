@@ -159,4 +159,41 @@ class ApplicationHelperTest < ActionView::TestCase
     item = Item.new(source: source)
     assert video?(item)
   end
+
+  test "youtube_video_item? returns true for a saved_video item with a YouTube watch URL" do
+    item = build_item(source_kind: "saved_video", url: "https://www.youtube.com/watch?v=abc")
+    assert youtube_video_item?(item)
+  end
+
+  test "youtube_video_item? returns true for a saved_video item with a youtu.be URL" do
+    item = build_item(source_kind: "saved_video", url: "https://youtu.be/abc")
+    assert youtube_video_item?(item)
+  end
+
+  test "youtube_video_item? returns false for a saved_video item with a non-YouTube URL" do
+    item = build_item(source_kind: "saved_video", url: "https://bitchute.com/video/abc")
+    assert_not youtube_video_item?(item)
+  end
+
+  test "youtube_video_item? returns false for a youtube_channel source item" do
+    item = build_item(source_kind: "youtube_channel", url: "https://www.youtube.com/watch?v=abc")
+    assert_not youtube_video_item?(item)
+  end
+
+  test "embed_url returns YouTube embed for a saved_video item with a YouTube URL" do
+    item = build_item(source_kind: "saved_video", url: "https://www.youtube.com/watch?v=abc", external_id: "abc")
+    assert_equal "https://www.youtube.com/embed/abc", embed_url(item)
+  end
+
+  test "embed_url returns nil for a saved_video item with a non-video URL" do
+    item = build_item(source_kind: "saved_video", url: "https://example.com/page", external_id: "xyz")
+    assert_nil embed_url(item)
+  end
+
+  private
+
+  def build_item(source_kind:, url: "https://www.youtube.com/watch?v=abc", external_id: "abc")
+    source = Source.new(kind: source_kind, url: url, external_id: external_id, name: "Test")
+    Item.new(source: source, url: url, external_id: external_id, title: "Test")
+  end
 end
