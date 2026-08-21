@@ -8,5 +8,6 @@ Rails.application.config.to_prepare do
   Stray::BridgeRegistry.register(Bridges::RssAtom)
   Stray::BridgeRegistry.register(Bridges::RemoteCollection)
   Stray::BridgeRegistry.register(Bridges::YtDlp)
+  Stray::BridgeRegistry.register(Bridges::GenericList)
   Stray::BridgeRegistry.register(Bridges::GenericPage)
 end
