@@ -43,13 +43,25 @@ module Stray
       end
 
       # Fetch a channel's videos. Returns Array<Hash>.
-      def channel_feed(url)
+      def channel_feed(url, start: 0)
         handle = self.class.channel_handle(url)
         raise Stray::ExtractionError, "Peertube: not a channel URL: #{url}" unless handle
 
         uri = URI.parse(url)
         api_url = self.class.api_url_for(url)
+        api_url = "#{api_url}&start=#{start}" if start.positive?
         feed_from_response(fetch(api_url), uri.to_s)
+      end
+
+      # Total number of videos for a channel, from the API response.
+      def feed_total(url)
+        handle = self.class.channel_handle(url)
+        return 0 unless handle
+
+        uri = URI.parse(url)
+        api_url = self.class.api_url_for(url)
+        data = JSON.parse(fetch(api_url).body)
+        data["total"].to_i
       end
 
       # Parse a feed response body into Array<Hash>. Reused both after fetching

@@ -23,6 +23,23 @@ module Bridges
       Stray::Bridges::Peertube.new.channel_feed(url).map { |h| map(h) }
     end
 
+    def extract_backfill(url, limit:)
+      core = Stray::Bridges::Peertube.new
+      total = core.feed_total(url)
+      return [] if total.zero?
+
+      results = []
+      start = 0
+      while results.size < [ limit, total ].min
+        page = core.channel_feed(url, start: start)
+        break if page.empty?
+
+        results.concat(page)
+        start += page.size
+      end
+      results.first([ limit, total ].min).map { |h| map(h) }
+    end
+
     # Reuse an already-fetched API response instead of re-requesting the feed.
     def extract_feed_from_response(response, url)
       if url.match?(%r{/api/v1/(video-channels|accounts)/[^/]+/videos})

@@ -100,6 +100,20 @@ class MetadataEnrichmentJobTest < ActiveJob::TestCase
     assert_nil item.published_at
   end
 
+  test "runs for site-specific video channel kinds" do
+    bitchute_source = Source.create!(user: @user, kind: :bitchute_channel,
+      url: "https://www.bitchute.com/channel/foo", external_id: "bc1")
+    item = bitchute_source.items.create!(user: @user, external_id: "vid1", title: "Video 1",
+      url: "https://www.bitchute.com/video/vid1")
+
+    json = '{"id":"vid1","title":"Video 1","duration":185}'
+    stub_runner_execute([ json, "", status_success ]) do
+      MetadataEnrichmentJob.perform_now(bitchute_source.id, [ item.id ])
+    end
+
+    assert_equal 185, item.reload.duration
+  end
+
   test "does not clobber existing duration when re-fetched" do
     @item.update!(duration: 300)
     json = '{"id":"vid1","title":"Video 1","duration":185}'

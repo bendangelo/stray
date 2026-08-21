@@ -43,4 +43,37 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
       assert_nil content.creator_identity
     end
   end
+
+  test "extract_backfill loops pages until limit is reached" do
+    page1 = [ { url: "https://rumble.com/v1", title: "V1", external_id: "1", duration: 10, published_at: Time.now, thumbnail_url: "https://img1.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil },
+              { url: "https://rumble.com/v2", title: "V2", external_id: "2", duration: 10, published_at: Time.now, thumbnail_url: "https://img2.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ]
+    page2 = [ { url: "https://rumble.com/v3", title: "V3", external_id: "3", duration: 10, published_at: Time.now, thumbnail_url: "https://img3.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ]
+    pages = [ page1, page2, [] ]
+    requested = []
+
+    core = Stray::Bridges::Rumble.new
+    core.define_singleton_method(:channel_feed) do |url|
+      requested << url
+      pages.shift
+    end
+    Stray::Bridges::Rumble.stub(:new, core) do
+      @results = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 3)
+    end
+
+    assert_equal 3, @results.size
+    assert_equal 2, requested.size
+    assert_includes requested[0], "page=1"
+    assert_includes requested[1], "page=2"
+  end
+
+  test "extract_backfill stops at empty page" do
+    pages = [ [ { url: "https://rumble.com/v1", title: "V1", external_id: "1", duration: 10, published_at: Time.now, thumbnail_url: "https://img1.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ], [] ]
+    core = Stray::Bridges::Rumble.new
+    core.define_singleton_method(:channel_feed) { |_url| pages.shift }
+    Stray::Bridges::Rumble.stub(:new, core) do
+      @results = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 50)
+    end
+
+    assert_equal 1, @results.size
+  end
 end

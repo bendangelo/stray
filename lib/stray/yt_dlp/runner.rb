@@ -23,8 +23,11 @@ module Stray
         raise Error, "yt-dlp binary not found: #{binary}"
       end
 
-      def channel_listings(url, timeout: 120)
-        stdout, stderr, status = run_command("--flat-playlist", "--dump-json", url, timeout: timeout)
+      def channel_listings(url, limit: nil, timeout: 120)
+        args = [ "--flat-playlist", "--dump-json" ]
+        args += [ "--playlist-end", limit.to_s ] if limit
+        args << url
+        stdout, stderr, status = run_command(*args, timeout: timeout)
         raise ExtractionFailed, failure_message(status, stderr) unless status.success?
 
         stdout.lines.map { |line| parse_json(line) }

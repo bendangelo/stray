@@ -85,7 +85,17 @@ class Source < ApplicationRecord
     source.update!(icon_url: icon_url) if icon_url.present? && source.icon_url != icon_url
     source.update!(channel_url: channel_url) if channel_url.present? && source.channel_url != channel_url
     Follow.find_or_create_by!(user: user, source: source)
+    enqueue_backfill(source)
     source
+  end
+
+  VIDEO_CHANNEL_KINDS = %w[youtube_channel video_channel rumble_channel bitchute_channel odysee_channel peertube_channel].freeze
+
+  def self.enqueue_backfill(source)
+    return unless source.backfilled_at.nil?
+    return unless VIDEO_CHANNEL_KINDS.include?(source.kind)
+
+    SourceBackfillJob.perform_later(source.id)
   end
 
 

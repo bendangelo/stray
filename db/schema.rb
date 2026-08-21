@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_033700) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_152659) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -118,6 +118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_033700) do
     t.string "ai_provider_api_key"
     t.string "ai_provider_name", default: "NONE"
     t.string "ai_provider_url"
+    t.integer "backfill_limit"
     t.datetime "created_at", null: false
     t.string "embedding_model"
     t.boolean "embedding_model_present", default: false
@@ -148,6 +149,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_033700) do
 
   create_table "sources", force: :cascade do |t|
     t.boolean "active", default: true
+    t.datetime "backfilled_at"
     t.string "channel_url"
     t.integer "consecutive_empty_polls", default: 0, null: false
     t.datetime "created_at", null: false

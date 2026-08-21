@@ -22,5 +22,26 @@ module Bridges
     def extract_feed(url)
       Stray::Bridges::Rumble.new.channel_feed(url).map { |h| map(h) }
     end
+
+    def extract_backfill(url, limit:)
+      core = Stray::Bridges::Rumble.new
+      results = []
+      page = 1
+      while results.size < limit
+        items = core.channel_feed(page_url(url, page))
+        break if items.empty?
+
+        results.concat(items)
+        page += 1
+      end
+      results.first(limit).map { |h| map(h) }
+    end
+
+    private
+
+    def page_url(url, page)
+      separator = url.include?("?") ? "&" : "?"
+      "#{url}#{separator}page=#{page}"
+    end
   end
 end

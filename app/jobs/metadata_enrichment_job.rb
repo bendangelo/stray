@@ -6,7 +6,7 @@ class MetadataEnrichmentJob < ApplicationJob
   def perform(source_id, item_ids = nil)
     source = Source.find_by(id: source_id)
     return unless source
-    return unless source.kind.in?(%w[video_channel youtube_channel])
+    return unless source.kind.in?(Source::VIDEO_CHANNEL_KINDS)
 
     items = item_ids.presence ? Item.where(id: item_ids) : source.items.incomplete_metadata
     items = items.order(published_at: :desc, created_at: :desc).limit(50)

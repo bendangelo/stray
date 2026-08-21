@@ -1,6 +1,6 @@
 require "test_helper"
 
-class SourceTest < ActiveSupport::TestCase
+class SourceTest < ActiveJob::TestCase
   test "valid source with required attributes" do
     source = Source.new(
       user: users(:one),
@@ -306,5 +306,31 @@ class SourceTest < ActiveSupport::TestCase
     source = Source.find_by!(user: users(:one), kind: :youtube_channel, external_id: "UC123")
     assert_equal "https://www.youtube.com/@handle", source.url
     assert_equal "Channel Name", source.name
+  end
+
+  test "follow! enqueues backfill for a video channel kind" do
+    assert_enqueued_with(job: SourceBackfillJob) do
+      Source.follow!(users(:one), kind: :youtube_channel,
+        url: "https://www.youtube.com/@handle", external_id: "UCbackfill", status: :pending)
+    end
+  end
+
+  test "follow! does not enqueue backfill for a non-video kind" do
+    assert_no_enqueued_jobs(only: SourceBackfillJob) do
+      Source.follow!(users(:one), kind: :rss_feed,
+        url: "https://example.com/feed.xml", external_id: "feed1", status: :pending)
+    end
+  end
+
+  test "follow! does not re-enqueue backfill for an already-backfilled source" do
+    Source.follow!(users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@handle", external_id: "UCdone", status: :pending)
+    Source.find_by!(user: users(:one), kind: :youtube_channel, external_id: "UCdone")
+      .update!(backfilled_at: 1.day.ago)
+
+    assert_no_enqueued_jobs(only: SourceBackfillJob) do
+      Source.follow!(users(:one), kind: :youtube_channel,
+        url: "https://www.youtube.com/@other", external_id: "UCdone", status: :pending)
+    end
   end
 end

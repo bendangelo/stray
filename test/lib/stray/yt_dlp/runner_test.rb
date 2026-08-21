@@ -105,6 +105,22 @@ class Stray::YtDlp::RunnerTest < ActiveSupport::TestCase
     end
   end
 
+  test "channel_listings passes --playlist-end when limit is set" do
+    captured = nil
+    @runner.stub(:execute, ->(*args) { captured = args; [ "", "", status_success ] }) do
+      @runner.channel_listings("https://bitchute.com/channel/abc", limit: 50)
+    end
+    assert_equal [ "yt-dlp", "--flat-playlist", "--dump-json", "--playlist-end", "50", "https://bitchute.com/channel/abc", { timeout: 120 } ], captured
+  end
+
+  test "channel_listings omits --playlist-end when limit is nil" do
+    captured = nil
+    @runner.stub(:execute, ->(*args) { captured = args; [ "", "", status_success ] }) do
+      @runner.channel_listings("https://bitchute.com/channel/abc")
+    end
+    assert_equal [ "yt-dlp", "--flat-playlist", "--dump-json", "https://bitchute.com/channel/abc", { timeout: 120 } ], captured
+  end
+
   test "channel_listings returns empty array for no output" do
     @runner.stub(:execute, [ "", "", status_success ]) do
       result = @runner.channel_listings("https://example.com/channel/empty")

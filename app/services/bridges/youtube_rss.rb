@@ -44,7 +44,51 @@ module Bridges
         extract(url)
       end
 
+      def extract_backfill(url, limit:)
+        channel_id = URI.parse(url).query.to_s[/channel_id=([^&]+)/, 1]
+        return nil unless channel_id
+
+        videos_url = "https://www.youtube.com/channel/#{channel_id}/videos"
+        runner.channel_listings(videos_url, limit: limit).map do |data|
+          Stray::ExtractedContent.new(
+            url: data["url"] || "https://www.youtube.com/watch?v=#{data["id"]}",
+            title: data["title"],
+            content_text: nil,
+            content_html: nil,
+            thumbnail_url: extract_listing_thumbnail(data),
+            published_at: Stray::YtDlp::UploadDate.parse(data["upload_date"]),
+            external_id: data["id"],
+            duration: data["duration"],
+            creator_identity: extract_creator_from_data(data),
+            tags: []
+          )
+        end
+      rescue URI::InvalidURIError
+        nil
+      end
+
       private
+
+      def runner
+        @runner ||= Stray::YtDlp::Runner.new
+      end
+
+      def extract_listing_thumbnail(data)
+        thumbnails = data["thumbnails"]
+        first = thumbnails.is_a?(Array) ? thumbnails.first : nil
+        first.is_a?(Hash) ? first["url"] : first || data["thumbnail"]
+      end
+
+      def extract_creator_from_data(data)
+        return nil unless data["channel_id"] || data["channel"]
+
+        Stray::CreatorIdentity.new(
+          name: data["channel"],
+          url: data["channel_url"],
+          external_id: data["channel_id"],
+          thumbnail_url: nil
+        )
+      end
 
       def fetch(url)
         response = http_client.get(url)

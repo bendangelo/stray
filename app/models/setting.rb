@@ -16,7 +16,8 @@ class Setting < ApplicationRecord
     llm_tagging_model:   "STRAY_LLM_TAGGING__MODEL",
     embedding_model:     "STRAY_EMBEDDING__MODEL",
     polite_crawl_delay:  "STRAY_POLITE_CRAWL_DELAY",
-    publication_buffer_minutes: "STRAY_SOURCE_POLLING__PUBLICATION_BUFFER_MINUTES"
+    publication_buffer_minutes: "STRAY_SOURCE_POLLING__PUBLICATION_BUFFER_MINUTES",
+    backfill_limit:     "STRAY_BACKFILL_LIMIT"
   }.freeze
 
   VALID_AI_PROVIDERS = %w[NONE OLLAMA OPENAI_COMPATIBLE].freeze

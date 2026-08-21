@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class Bridges::YoutubeRssTest < ActiveSupport::TestCase
   test "matches? returns true for YouTube RSS feed URLs" do
@@ -75,5 +76,39 @@ class Bridges::YoutubeRssTest < ActiveSupport::TestCase
       assert_equal "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw", creator.url
       assert_equal "UCuAXFkgsw1L7xaCfnd5JJOw", creator.external_id
     end
+  end
+
+  test "extract_backfill maps flat-playlist JSON to ExtractedContent with video-id external_id" do
+    listing1 = '{"id":"dQw4w9WgXcQ","title":"Video 1","url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","upload_date":"20240101","channel":"Rick Astley","channel_id":"UCuAXFkgsw1L7xaCfnd5JJOw","channel_url":"https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw","thumbnails":[{"url":"https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg"}]}'
+    listing2 = '{"id":"abc123def45","title":"Video 2","url":"https://www.youtube.com/watch?v=abc123def45","upload_date":"20240102","channel":"Rick Astley","channel_id":"UCuAXFkgsw1L7xaCfnd5JJOw","channel_url":"https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw","thumbnails":[{"url":"https://i.ytimg.com/vi/abc123def45/mqdefault.jpg"}]}'
+    multi_json = "#{listing1}\n#{listing2}\n"
+
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:execute) { |*_args| [ multi_json, "", OpenStruct.new(success?: true) ] }
+    Stray::YtDlp::Runner.stub(:new, runner) do
+      extractor = Bridges::YoutubeRss.new
+      results = extractor.extract_backfill("https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw", limit: 50)
+
+      assert_equal 2, results.size
+      first = results.first
+      assert_equal "dQw4w9WgXcQ", first.external_id
+      assert_equal "https://www.youtube.com/watch?v=dQw4w9WgXcQ", first.url
+      assert_equal "Video 1", first.title
+      assert_equal Time.strptime("20240101", "%Y%m%d"), first.published_at
+      assert_equal "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg", first.thumbnail_url
+      assert_equal "Rick Astley", first.creator_identity.name
+    end
+  end
+
+  test "extract_backfill passes the channel videos URL and limit to the runner" do
+    captured = nil
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:execute) { |*args| captured = args; [ "", "", OpenStruct.new(success?: true) ] }
+    Stray::YtDlp::Runner.stub(:new, runner) do
+      Bridges::YoutubeRss.new.extract_backfill("https://www.youtube.com/feeds/videos.xml?channel_id=UCuAXFkgsw1L7xaCfnd5JJOw", limit: 50)
+    end
+    assert_includes captured, "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos"
+    assert_includes captured, "--playlist-end"
+    assert_includes captured, "50"
   end
 end

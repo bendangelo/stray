@@ -5,6 +5,7 @@ module Stray
     def extract(url)              = raise NotImplementedError
     def extract_feed(url)         = raise NotImplementedError
     def enrich_tags(url)          = nil
+    def extract_backfill(url, limit:) = nil
 
     def extract_feed_from_response(response, url)
       extract_feed(url)
