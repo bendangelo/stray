@@ -31,4 +31,13 @@ class ItemsFollowChannelSystemTest < ApplicationSystemTestCase
 
     assert_no_text "Follow channel"
   end
+
+  test "saved_video YouTube item renders the video embed on the show page" do
+    sign_in_as(users(:one))
+    item = items(:video_saved_yt)
+
+    visit item_path(item)
+
+    assert_selector "iframe[src*='youtube.com/embed/savevid1']", wait: 5
+  end
 end

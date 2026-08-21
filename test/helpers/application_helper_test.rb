@@ -190,6 +190,11 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_nil embed_url(item)
   end
 
+  test "video? returns true for a saved_video item" do
+    item = build_item(source_kind: "saved_video", url: "https://www.youtube.com/watch?v=abc")
+    assert video?(item)
+  end
+
   private
 
   def build_item(source_kind:, url: "https://www.youtube.com/watch?v=abc", external_id: "abc")

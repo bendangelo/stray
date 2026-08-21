@@ -85,7 +85,8 @@ module ApplicationHelper
     item ||= @item
     return false unless item&.source
     item.source.kind.in?(%w[youtube_channel video_channel rumble_channel
-                            bitchute_channel odysee_channel peertube_channel])
+                            bitchute_channel odysee_channel peertube_channel
+                            saved_video])
   end
 
   def youtube_video_item?(item = nil)
