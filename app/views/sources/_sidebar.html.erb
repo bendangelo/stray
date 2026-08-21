@@ -15,10 +15,7 @@
         <% active = @source.present? && source.id == @source.id %>
         <div class="flex items-center gap-1 rounded-md hover:bg-athens-400 <%= active ? "bg-athens-400 border-l-3 border-carrot-500" : "" %>">
           <%= link_to source_path(source), class: "flex items-center gap-2 flex-1 min-w-0 p-2" do %>
-            <img src="<%= source_icon_url(source) || missing_thumb %>"
-                 alt=""
-                 class="w-8 h-8 rounded border-2 border-charcoal object-cover shrink-0"
-                 loading="lazy">
+            <%= source_icon_tag(source, size: "w-8 h-8", class: "shrink-0") %>
 
             <span class="flex-1 text-sm text-charcoal truncate <%= "font-bold" if active %>">
               <%= source.display_name %>
