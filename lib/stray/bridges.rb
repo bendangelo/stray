@@ -1,0 +1,5 @@
+require_relative "bridges/helpers"
+require_relative "bridges/rumble"
+require_relative "bridges/bitchute"
+require_relative "bridges/odysee"
+require_relative "bridges/peertube"

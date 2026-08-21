@@ -3,7 +3,7 @@ class LinksController < ApplicationController
     url = params[:url].to_s.strip
     return redirect_back_or_to(root_path, alert: "No URL provided.") if url.blank?
 
-    if (manifest_url = Extractors::RemoteCollection.manifest_url_for(url))
+    if (manifest_url = Bridges::RemoteCollection.manifest_url_for(url))
       source = RemoteCollectionSubscriber.call(user: current_user, url: manifest_url)
       redirect_to source_path(source), notice: "Subscribed. Syncing first page…" and return
     end
@@ -25,7 +25,7 @@ class LinksController < ApplicationController
     queued = 0
     manifest_urls = []
     urls.each do |url|
-      if (manifest_url = Extractors::RemoteCollection.manifest_url_for(url))
+      if (manifest_url = Bridges::RemoteCollection.manifest_url_for(url))
         manifest_urls << manifest_url
         next
       end

@@ -33,7 +33,7 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
     extractor = Minitest::Mock.new
     extractor.expect(:extract_feed, contents, [ source.url ])
 
-    ExtractorRegistry.stub(:find_for_source, extractor) do
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       without_lock do
         SourcePollJob.perform_now(source.id)
       end

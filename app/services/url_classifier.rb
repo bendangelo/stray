@@ -7,26 +7,26 @@ class UrlClassifier
       return nil unless uri.scheme.in?(%w[http https]) && uri.host.present?
 
       if stray_collection?(uri)
-        classification(:stray_collection, "stray_collection", Extractors::RemoteCollection)
+        classification(:stray_collection, "stray_collection", Bridges::RemoteCollection)
       elsif youtube_channel?(uri)
-        classification(:youtube_channel, "youtube_channel", Extractors::YoutubeRss, Youtube::ChannelResolver)
+        classification(:youtube_channel, "youtube_channel", Bridges::YoutubeRss, Youtube::ChannelResolver)
       elsif youtube_video?(uri)
         classification(:youtube_video, "youtube_channel", nil, Youtube::ChannelResolver)
       elsif rss_feed?(uri)
-        classification(:rss_feed, "rss_feed", Extractors::RssAtom)
+        classification(:rss_feed, "rss_feed", Bridges::RssAtom)
       elsif rumble?(uri)
         classification(rumble_channel?(uri) ? :rumble_channel_feed : :rumble_video,
-                      "rumble_channel", Extractors::Rumble)
+                      "rumble_channel", Bridges::Rumble)
       elsif bitchute?(uri)
         classification(bitchute_channel?(uri) ? :bitchute_channel_feed : :bitchute_video,
-                      "bitchute_channel", Extractors::Bitchute)
+                      "bitchute_channel", Bridges::Bitchute)
       elsif odysee_channel?(uri)
-        classification(:odysee_channel, "odysee_channel", Extractors::Odysee)
+        classification(:odysee_channel, "odysee_channel", Bridges::Odysee)
       elsif peertube?(uri)
         classification(peertube_channel?(uri) ? :peertube_channel_feed : :peertube_video,
-                      "peertube_channel", Extractors::Peertube)
+                      "peertube_channel", Bridges::Peertube)
       else
-        classification(:generic_page, "generic_page", Extractors::GenericPage)
+        classification(:generic_page, "generic_page", Bridges::GenericPage)
       end
     rescue URI::InvalidURIError
       nil
@@ -39,7 +39,7 @@ class UrlClassifier
     end
 
     def stray_collection?(uri)
-      Extractors::RemoteCollection.matches?(uri.to_s) ||
+      Bridges::RemoteCollection.matches?(uri.to_s) ||
         uri.path&.match?(%r{^/c/[A-Za-z0-9]{24}$})
     end
 
@@ -63,7 +63,7 @@ class UrlClassifier
     end
 
     def rss_feed?(uri)
-      Extractors::RssAtom.matches?(uri.to_s)
+      Bridges::RssAtom.matches?(uri.to_s)
     end
 
     def rumble?(uri)

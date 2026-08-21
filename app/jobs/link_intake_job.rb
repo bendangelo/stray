@@ -74,7 +74,7 @@ class LinkIntakeJob < ApplicationJob
   def extract_for_existing_source
     @source = Youtube::PendingChannelResolver.call(@source)
     enqueue_full_poll(@source)
-    extractor = ExtractorRegistry.find_for_source(@source)
+    extractor = Stray::BridgeRegistry.find_for_source(@source)
     contents = Array(extractor.extract_feed(@source.url))
     create_items(@source, contents)
   rescue Stray::YtDlp::Error, Stray::ExtractionError
@@ -86,7 +86,7 @@ class LinkIntakeJob < ApplicationJob
 
   def resolve_youtube_channel
     result = Youtube::ChannelResolver.resolve(@url)
-    extractor = ExtractorRegistry.find_for(result.rss_url)
+    extractor = Stray::BridgeRegistry.find_for(result.rss_url)
     contents = Array(extractor.extract(result.rss_url))
 
     name = result.channel_name
@@ -125,7 +125,7 @@ class LinkIntakeJob < ApplicationJob
 
   def extract_youtube_video_via_oembed(oembed)
     result = Youtube::ChannelResolver.resolve(oembed.author_url)
-    extractor = ExtractorRegistry.find_for(result.rss_url)
+    extractor = Stray::BridgeRegistry.find_for(result.rss_url)
     contents = Array(extractor.extract(result.rss_url))
 
     source = create_source(
@@ -142,7 +142,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_youtube_video_via_ytdlp
-    content = Extractors::YtDlp.new.extract(@url)
+    content = Bridges::YtDlp.new.extract(@url)
 
     creator = content.creator_identity
     raise Stray::YtDlp::ExtractionFailed, "No channel info in video metadata" unless creator&.external_id
@@ -163,7 +163,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def create_rss_source
-    extractor = ExtractorRegistry.find_for(@url)
+    extractor = Stray::BridgeRegistry.find_for(@url)
     contents = Array(extractor.extract_feed(@url))
 
     creator = contents.map(&:creator_identity).compact.find { |c| c.name }
@@ -180,7 +180,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_video
-    extractor = ExtractorRegistry.find_for(@url)
+    extractor = Stray::BridgeRegistry.find_for(@url)
     content = extractor.extract(@url)
 
     creator = content.creator_identity
@@ -192,7 +192,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_channel_feed(kind)
-    extractor = ExtractorRegistry.find_for(@url)
+    extractor = Stray::BridgeRegistry.find_for(@url)
     contents = Array(extractor.extract_feed(@url))
 
     creator = contents.map(&:creator_identity).compact.find { |c| c.external_id }
@@ -210,7 +210,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_site_video(kind)
-    extractor = ExtractorRegistry.find_for(@url)
+    extractor = Stray::BridgeRegistry.find_for(@url)
     content = extractor.extract(@url)
 
     creator = content.creator_identity
@@ -231,7 +231,7 @@ class LinkIntakeJob < ApplicationJob
   end
 
   def extract_generic_page
-    extractor = ExtractorRegistry.find_for(@url)
+    extractor = Stray::BridgeRegistry.find_for(@url)
     content = extractor.extract(@url)
     create_generic_page_source(content)
   end
@@ -294,7 +294,7 @@ class LinkIntakeJob < ApplicationJob
   def create_items(source, contents)
     return if contents.empty?
 
-    extractor = ExtractorRegistry.find_for_source(source)
+    extractor = Stray::BridgeRegistry.find_for_source(source)
 
     complete, incomplete = contents.partition { |c| c.duration.present? && c.thumbnail_url.present? && c.published_at.present? }
 

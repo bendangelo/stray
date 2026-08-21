@@ -32,7 +32,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor.expect(:extract, contents, [ resolver_result.rss_url ])
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for, extractor, [ resolver_result.rss_url ]) do
+      Stray::BridgeRegistry.stub(:find_for, extractor, [ resolver_result.rss_url ]) do
         LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/channel/UC123")
       end
     end
@@ -85,7 +85,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
     Youtube::Oembed.stub(:fetch, oembed_result) do
       Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-        ExtractorRegistry.stub(:find_for, rss_extractor, [ resolver_result.rss_url ]) do
+        Stray::BridgeRegistry.stub(:find_for, rss_extractor, [ resolver_result.rss_url ]) do
           LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/watch?v=vid123")
         end
       end
@@ -115,7 +115,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract, content, [ "https://bitchute.com/video/bcvid123" ])
 
-    ExtractorRegistry.stub(:find_for, extractor) do
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
       assert_enqueued_with(job: SourcePollJob) do
         LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/bcvid123")
       end
@@ -143,7 +143,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract, content, [ "https://example.com/blog/hello-world" ])
 
-    ExtractorRegistry.stub(:find_for, extractor) do
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
       LinkIntakeJob.perform_now(@user.id, "https://example.com/blog/hello-world")
     end
 
@@ -163,7 +163,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::ExtractionFailed, "failed" }
 
-    ExtractorRegistry.stub(:find_for_source, failing) do
+    Stray::BridgeRegistry.stub(:find_for_source, failing) do
       LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/channel/abc", source.id)
     end
 
@@ -201,7 +201,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing.define_singleton_method(:extract_feed) { |_url| raise StandardError, "rss boom" }
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for_source, failing) do
+      Stray::BridgeRegistry.stub(:find_for_source, failing) do
         assert_enqueued_with(job: SourcePollJob) do
           LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
         end
@@ -233,7 +233,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::Error, "yt-dlp boom" }
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for_source, failing) do
+      Stray::BridgeRegistry.stub(:find_for_source, failing) do
         LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
       end
     end
@@ -260,7 +260,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "youtube rss fetch failed: 404" }
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for_source, failing) do
+      Stray::BridgeRegistry.stub(:find_for_source, failing) do
         LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
       end
     end
@@ -293,7 +293,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract_feed, contents, [ source.url ])
 
-    ExtractorRegistry.stub(:find_for_source, extractor) do
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/channel/UCpre", source.id)
     end
 
@@ -318,7 +318,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract, content, [ "https://bitchute.com/video/tagvid1" ])
 
-    ExtractorRegistry.stub(:find_for, extractor) do
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
       LinkIntakeJob.perform_now(@user.id, "https://bitchute.com/video/tagvid1")
     end
 
@@ -358,7 +358,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor.expect(:extract_feed, contents, [ resolver_result.rss_url ])
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for_source, extractor) do
+      Stray::BridgeRegistry.stub(:find_for_source, extractor) do
         LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@RickAstley", source.id)
       end
     end
@@ -398,7 +398,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor.expect(:extract, contents, [ resolver_result.rss_url ])
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      ExtractorRegistry.stub(:find_for, extractor, [ resolver_result.rss_url ]) do
+      Stray::BridgeRegistry.stub(:find_for, extractor, [ resolver_result.rss_url ]) do
         LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/channel/UC456")
       end
     end
@@ -425,7 +425,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract_feed, contents, [ "https://blog.example.com/feed" ])
 
-    ExtractorRegistry.stub(:find_for, extractor, [ "https://blog.example.com/feed" ]) do
+    Stray::BridgeRegistry.stub(:find_for, extractor, [ "https://blog.example.com/feed" ]) do
       assert_enqueued_with(job: SourcePollJob) do
         LinkIntakeJob.perform_now(@user.id, "https://blog.example.com/feed")
       end
@@ -455,7 +455,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract_feed, contents, [ "https://rumble.com/c/BrightInsight" ])
 
-    ExtractorRegistry.stub(:find_for, extractor) do
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
       assert_enqueued_with(job: SourcePollJob) do
         LinkIntakeJob.perform_now(@user.id, "https://rumble.com/c/BrightInsight")
       end

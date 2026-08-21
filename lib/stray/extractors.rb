@@ -1,5 +1,0 @@
-require_relative "extractors/helpers"
-require_relative "extractors/rumble"
-require_relative "extractors/bitchute"
-require_relative "extractors/odysee"
-require_relative "extractors/peertube"

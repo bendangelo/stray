@@ -33,7 +33,7 @@ module Youtube
     private
 
     def resolvable?
-      @source.kind == "youtube_channel" && !Extractors::YoutubeRss.matches?(@source.url)
+      @source.kind == "youtube_channel" && !Bridges::YoutubeRss.matches?(@source.url)
     end
 
     def adopt_existing_channel(channel_id)

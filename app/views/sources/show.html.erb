@@ -108,10 +108,10 @@
           <dd class="font-mono break-all"><%= @source.external_id %></dd>
         </div>
       <% end %>
-      <% if @source.extractor_class %>
+      <% if @source.bridge_class %>
         <div class="flex flex-wrap gap-1 items-baseline">
-          <dt class="font-bold text-charcoal-300">Extractor:</dt>
-          <dd class="font-mono"><%= @source.extractor_class.name %></dd>
+          <dt class="font-bold text-charcoal-300">Bridge:</dt>
+          <dd class="font-mono"><%= @source.bridge_class.name %></dd>
         </div>
       <% end %>
       <% if source_kind_note(@source).present? %>

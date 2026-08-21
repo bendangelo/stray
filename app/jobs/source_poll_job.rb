@@ -48,8 +48,8 @@ class SourcePollJob < ApplicationJob
   private
 
   def extract_and_persist(source)
-    extractor = ExtractorRegistry.find_for_source(source)
-    raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind} url=#{source.url}" unless extractor
+    extractor = Stray::BridgeRegistry.find_for_source(source)
+    raise Stray::YtDlp::ExtractionFailed, "No bridge for kind=#{source.kind} url=#{source.url}" unless extractor
 
     contents = extractor.extract_feed(source.url)
     contents = Array(contents)
@@ -59,7 +59,7 @@ class SourcePollJob < ApplicationJob
     source.recalculate_next_crawl!
     source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
   rescue NotImplementedError => e
-    source.update!(last_error: "Extractor missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
+    source.update!(last_error: "Bridge missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
     reschedule_on_failure!(source)
   rescue Stray::YtDlp::Error, Stray::ExtractionError
     raise
@@ -69,13 +69,13 @@ class SourcePollJob < ApplicationJob
   end
 
   def extract_and_persist_relay(source, cursor)
-    extractor = ExtractorRegistry.find_for_source(source)
-    raise Stray::YtDlp::ExtractionFailed, "No extractor for kind=#{source.kind}" unless extractor
+    extractor = Stray::BridgeRegistry.find_for_source(source)
+    raise Stray::YtDlp::ExtractionFailed, "No bridge for kind=#{source.kind}" unless extractor
 
     fetch_url = cursor ? "#{source.url}?cursor=#{cursor}" : source.url
     result = extractor.extract_feed(fetch_url)
 
-    if result.is_a?(Extractor::FeedResult)
+    if result.is_a?(Stray::Bridge::FeedResult)
       handle_feed_result(source, result, cursor)
     else
       upsert_items(source, Array(result))
