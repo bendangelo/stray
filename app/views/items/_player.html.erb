@@ -9,8 +9,9 @@
             allowfullscreen>
     </iframe>
   <% elsif item.thumbnail_url.present? %>
-    <img class="object-cover w-full lg:mx-6 lg:w-1/2 h-72 lg:h-96 rounded-md border-3 border-charcoal"
-         src="<%= item.thumbnail_url %>" alt="<%= item.title %>">
+    <%= fallback_image_tag(item.thumbnail_url,
+          alt: item.title,
+          class: "object-cover w-full lg:mx-6 lg:w-1/2 h-72 lg:h-96 rounded-md border-3 border-charcoal") %>
   <% end %>
 
   <div class="flex-1 mt-4 lg:mt-0 lg:ml-3 lg:mr-12">
@@ -30,10 +31,7 @@
     </div>
 
     <div class="flex mb-3 items-center gap-2">
-      <% if (icon = source_icon_url(item.source)) %>
-        <img src="<%= icon %>" alt="" loading="lazy"
-             class="w-5 h-5 rounded border-2 border-charcoal object-cover">
-      <% end %>
+      <%= source_icon_tag(item.source, size: "w-5 h-5") %>
       <div>
         <%= link_to item.source.display_name, source_path(item.source),
           class: "text-gray-800 text-sm hover:text-black hover:underline" %>
