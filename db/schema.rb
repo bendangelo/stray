@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_011508) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_012251) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -135,6 +135,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_011508) do
     t.integer "zero_shot_top_n", default: 5
   end
 
+  create_table "source_secrets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "field_name", null: false
+    t.integer "source_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.index ["source_id", "field_name"], name: "index_source_secrets_on_source_id_and_field_name", unique: true
+    t.index ["source_id"], name: "index_source_secrets_on_source_id"
+  end
+
   create_table "sources", force: :cascade do |t|
     t.boolean "active", default: true
     t.string "channel_url"
@@ -208,6 +218,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_011508) do
   add_foreign_key "remote_collections", "sources"
   add_foreign_key "remote_collections", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "source_secrets", "sources"
   add_foreign_key "sources", "users"
   add_foreign_key "taggings", "items"
   add_foreign_key "taggings", "tags"
