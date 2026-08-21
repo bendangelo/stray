@@ -72,10 +72,12 @@ class UrlClassifierTest < ActiveSupport::TestCase
   end
 
   test "classifies generic page URL" do
-    c = UrlClassifier.classify("https://example.com/blog/hello-world")
-    assert_equal :generic_page, c.category
-    assert_equal "generic_page", c.source_kind
-    assert_equal Bridges::GenericPage, c.extractor_class
+    Bridges::GenericList.stub(:detect, nil) do
+      c = UrlClassifier.classify("https://example.com/blog/hello-world")
+      assert_equal :generic_page, c.category
+      assert_equal "generic_page", c.source_kind
+      assert_equal Bridges::GenericPage, c.extractor_class
+    end
   end
 
   test "classifies YouTube RSS feed URL as youtube_channel" do
@@ -120,5 +122,23 @@ class UrlClassifierTest < ActiveSupport::TestCase
     assert_equal :peertube_video, c.category
     assert_equal "peertube_channel", c.source_kind
     assert_equal Bridges::Peertube, c.extractor_class
+  end
+
+  test "classifies generic list page when GenericList detects a list" do
+    Bridges::GenericList.stub(:detect, 5) do
+      c = UrlClassifier.classify("https://example.com/blog")
+      assert_equal :generic_list, c.category
+      assert_equal "generic_list", c.source_kind
+      assert_equal Bridges::GenericList, c.extractor_class
+    end
+  end
+
+  test "classifies generic page (bookmark) when GenericList detects no list" do
+    Bridges::GenericList.stub(:detect, nil) do
+      c = UrlClassifier.classify("https://example.com/blog")
+      assert_equal :generic_page, c.category
+      assert_equal "generic_page", c.source_kind
+      assert_equal Bridges::GenericPage, c.extractor_class
+    end
   end
 end

@@ -26,7 +26,12 @@ class UrlClassifier
         classification(peertube_channel?(uri) ? :peertube_channel_feed : :peertube_video,
                       "peertube_channel", Bridges::Peertube)
       else
-        classification(:generic_page, "generic_page", Bridges::GenericPage)
+        list_count = Bridges::GenericList.detect(uri.to_s)
+        if list_count
+          classification(:generic_list, "generic_list", Bridges::GenericList)
+        else
+          classification(:generic_page, "generic_page", Bridges::GenericPage)
+        end
       end
     rescue URI::InvalidURIError
       nil
