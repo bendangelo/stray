@@ -19,7 +19,7 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "Second Video"
     within "##{dom_id(items(:video_two))}" do
       find("button[aria-controls^='item-actions-']").click
-      click_on "Hide"
+      click_on "Hide from feed"
     end
 
     assert_no_text "Second Video"

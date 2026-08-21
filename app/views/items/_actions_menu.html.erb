@@ -28,10 +28,18 @@
       <%= item.saved? ? "Unsave" : "Save" %>
     <% end %>
 
+    <% if item.unseen? %>
+      <%= action_link_to item_path(item), method: :patch, params: { state: "seen" },
+            data: { turbo_stream: true },
+            class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+        <%= phosphor_icon "check", class: "w-3.5 h-3.5" %> Mark as seen
+      <% end %>
+    <% end %>
+
     <%= action_link_to item_path(item), method: :patch, params: { state: "hidden" },
           data: { turbo_stream: true },
           class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
-      <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide
+      <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide from feed
     <% end %>
 
     <%= action_link_to "#",
