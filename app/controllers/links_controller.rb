@@ -15,14 +15,9 @@ class LinksController < ApplicationController
     end
 
     if single_video_url?(url)
-      if params[:follow_channel].present?
-        follow_channel = params[:follow_channel] == "true"
-        LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: follow_channel)
-        redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
-      else
-        @url = url
-        render :video_prompt
-      end
+      follow_channel = params[:follow_channel] == "true"
+      LinkIntakeJob.perform_later(current_user.id, url, nil, follow_channel: follow_channel)
+      redirect_back_or_to(sources_path, notice: "Resolving #{url}…")
       return
     end
 

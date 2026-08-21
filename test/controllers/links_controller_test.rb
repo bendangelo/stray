@@ -98,19 +98,18 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to source_path(source)
   end
 
-  test "create renders a prompt for a single Peertube video URL without follow_channel" do
+  test "create defaults single video URL to follow_channel=false without a prompt" do
     sign_in_as(users(:one))
     url = "https://tilvids.com/w/f6VXVRmGV2GFKcE67Xpv9j"
 
-    assert_no_enqueued_jobs only: LinkIntakeJob do
+    assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, url, nil, { follow_channel: false } ]) do
       post links_path, params: { url: url }
     end
 
-    assert_response :success
-    assert_select "form[action=?]", links_path
+    assert_redirected_to sources_path
   end
 
-  test "create enqueues follow_channel job for a single video URL with follow_channel=true" do
+  test "create enqueues follow_channel job when follow_channel=true is explicitly passed" do
     sign_in_as(users(:one))
     url = "https://tilvids.com/w/f6VXVRmGV2GFKcE67Xpv9j"
 
@@ -121,26 +120,15 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to sources_path
   end
 
-  test "create enqueues just-this-video job with follow_channel=false" do
-    sign_in_as(users(:one))
-    url = "https://tilvids.com/w/f6VXVRmGV2GFKcE67Xpv9j"
-
-    assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, url, nil, { follow_channel: false } ]) do
-      post links_path, params: { url: url, follow_channel: "false" }
-    end
-
-    assert_redirected_to sources_path
-  end
-
-  test "create renders a prompt for a single YouTube video URL" do
+  test "create defaults single YouTube video URL to follow_channel=false without a prompt" do
     sign_in_as(users(:one))
     url = "https://www.youtube.com/watch?v=abc123"
 
-    assert_no_enqueued_jobs only: LinkIntakeJob do
+    assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, url, nil, { follow_channel: false } ]) do
       post links_path, params: { url: url }
     end
 
-    assert_response :success
+    assert_redirected_to sources_path
   end
 
   test "bulk_create auto-subscribes to manifest URLs and queues other links" do
