@@ -23,8 +23,8 @@ class ImagesHelperTest < ActionView::TestCase
     assert_includes html, "image-fallback"
     assert_includes html, "https://example.com/a.jpg"
     assert_includes html, "thumb"
-    assert_includes html, "error->image-fallback#onError"
-    assert_includes html, "image_fallback_target"
+    assert_includes html, "error-&gt;image-fallback#onError"
+    assert_includes html, "data-image-fallback-target"
     assert_includes html, "/fallback.jpg"
     assert_includes html, 'loading="lazy"'
   end
