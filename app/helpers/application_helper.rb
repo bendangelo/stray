@@ -64,4 +64,8 @@ module ApplicationHelper
     item.source.kind.in?(%w[youtube_channel video_channel rumble_channel
                             bitchute_channel odysee_channel peertube_channel])
   end
+
+  def yt_dlp_download_command(item)
+    %(yt-dlp -f "bv*+ba/b" "#{item.url}")
+  end
 end
