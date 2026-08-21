@@ -1,7 +1,3 @@
-module Stray
-  class RateBudgetExhausted < StandardError; end
-end
-
 class PoliteCrawl
   RATE_BUDGET_PER_MINUTE = 6
   RATE_BUDGET_INTERVAL = 60.0 / RATE_BUDGET_PER_MINUTE

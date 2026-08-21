@@ -285,9 +285,10 @@ class SourcePollJobTest < ActiveJob::TestCase
   end
 
   test "does not clobber existing published_at when re-poll returns nil published_at" do
+    published_at = 1.day.ago
     item = @source.items.create!(
       user: @user, external_id: "pubvid1", title: "With Date",
-      url: "https://example.com/watch?v=pubvid1", published_at: 1.day.ago,
+      url: "https://example.com/watch?v=pubvid1", published_at: published_at,
       duration: 300
     )
 
@@ -308,7 +309,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       end
     end
 
-    assert_equal 1.day.ago.to_i, item.reload.published_at.to_i
+    assert_equal published_at.to_i, item.reload.published_at.to_i
     assert_equal 300, item.reload.duration
   end
 
@@ -795,6 +796,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "increments consecutive_empty_polls when no new items created" do
     source = sources(:youtube)
+    source.items.destroy_all
     source.update!(consecutive_empty_polls: 1)
 
     existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
@@ -816,6 +818,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   test "sets status to degraded after 3 consecutive empty polls" do
     source = sources(:youtube)
+    source.items.destroy_all
     source.update!(consecutive_empty_polls: 2)
 
     existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
@@ -852,6 +855,78 @@ class SourcePollJobTest < ActiveJob::TestCase
     end
 
     assert_equal 0, source.reload.consecutive_empty_polls
+    assert_equal "ok", source.status
+  end
+
+  test "does not increment consecutive_empty_polls when polled before predicted publish" do
+    source = sources(:youtube)
+    source.items.destroy_all
+    source.update!(consecutive_empty_polls: 2)
+    now = Time.current
+    source.items.create!(user: source.user, external_id: "p1", title: "P1", url: "https://example.com/p1", published_at: now - 26.hours)
+    source.items.create!(user: source.user, external_id: "p2", title: "P2", url: "https://example.com/p2", published_at: now - 2.hours)
+
+    existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "existing-id", duration: nil, creator_identity: nil, tags: [])
+    Item.create!(source: source, user: source.user, external_id: "existing-id", title: "Existing", url: "https://example.com/v1")
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ existing_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 2, source.reload.consecutive_empty_polls
+    assert_equal "ok", source.status
+  end
+
+  test "increments consecutive_empty_polls when polled after predicted publish" do
+    source = sources(:youtube)
+    source.items.destroy_all
+    source.update!(consecutive_empty_polls: 1)
+    now = Time.current
+    source.items.create!(user: source.user, external_id: "p1", title: "P1", url: "https://example.com/p1", published_at: now - 10.hours)
+    source.items.create!(user: source.user, external_id: "p2", title: "P2", url: "https://example.com/p2", published_at: now - 8.hours)
+
+    existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "existing-id", duration: nil, creator_identity: nil, tags: [])
+    Item.create!(source: source, user: source.user, external_id: "existing-id", title: "Existing", url: "https://example.com/v1")
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ existing_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 2, source.reload.consecutive_empty_polls
+    assert_equal "ok", source.status
+  end
+
+  test "increments consecutive_empty_polls on empty poll when there is no prediction" do
+    source = sources(:youtube)
+    source.items.destroy_all
+    source.update!(consecutive_empty_polls: 1)
+
+    existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "existing-id", duration: nil, creator_identity: nil, tags: [])
+    Item.create!(source: source, user: source.user, external_id: "existing-id", title: "Existing", url: "https://example.com/v1")
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ existing_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 2, source.reload.consecutive_empty_polls
     assert_equal "ok", source.status
   end
 end

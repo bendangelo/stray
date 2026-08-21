@@ -1,4 +1,4 @@
-<%= turbo_frame_tag dom_id(source) do %>
+<%= turbo_frame_tag dom_id(source), class: "block" do %>
   <div class="border-3 border-charcoal rounded-md bg-athens-400 p-4 hover:bg-athens-500
               <%= " opacity-50" unless source.active? %>">
     <div class="flex items-center justify-between gap-4">

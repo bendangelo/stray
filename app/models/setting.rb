@@ -15,7 +15,8 @@ class Setting < ApplicationRecord
     llm_tagging_enabled: "STRAY_LLM_TAGGING__ENABLED",
     llm_tagging_model:   "STRAY_LLM_TAGGING__MODEL",
     embedding_model:     "STRAY_EMBEDDING__MODEL",
-    polite_crawl_delay:  "STRAY_POLITE_CRAWL_DELAY"
+    polite_crawl_delay:  "STRAY_POLITE_CRAWL_DELAY",
+    publication_buffer_minutes: "STRAY_SOURCE_POLLING__PUBLICATION_BUFFER_MINUTES"
   }.freeze
 
   VALID_AI_PROVIDERS = %w[NONE OLLAMA OPENAI_COMPATIBLE].freeze
@@ -53,7 +54,7 @@ class Setting < ApplicationRecord
       setting = current
       raise "Settings table not available" unless setting
 
-      if column == :smtp_port
+      if column == :smtp_port || column == :publication_buffer_minutes
         setting.public_write(column, value.to_i)
       else
         setting.public_write(column, value.presence)

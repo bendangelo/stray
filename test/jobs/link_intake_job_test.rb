@@ -545,4 +545,17 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal "generic_list", source.kind
     assert_equal 1, source.items.count
   end
+
+  test "retries when rate budget is exhausted" do
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::RateBudgetExhausted, "Rate budget exhausted for example.com" }
+
+    Bridges::GenericList.stub(:detect, 5) do
+      Stray::BridgeRegistry.stub(:find_for, failing, [ "https://example.com/blog" ]) do
+        assert_enqueued_with(job: LinkIntakeJob) do
+          LinkIntakeJob.perform_now(@user.id, "https://example.com/blog")
+        end
+      end
+    end
+  end
 end

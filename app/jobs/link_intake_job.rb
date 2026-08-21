@@ -5,6 +5,7 @@ class LinkIntakeJob < ApplicationJob
 
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
   retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
+  retry_on Stray::RateBudgetExhausted, wait: 15.seconds, attempts: 4
 
   discard_on Stray::YtDlp::Error do |job, error|
     source_id = job.arguments.third

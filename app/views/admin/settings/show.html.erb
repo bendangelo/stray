@@ -115,6 +115,13 @@
           class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
         <p class="text-xs text-charcoal-300 mt-1">Be polite to sites you pull from. Applied before each request. 0 = no delay.</p>
       </div>
+
+      <div>
+        <%= form.label :publication_buffer_minutes, "Publication buffer (minutes)", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.number_field :publication_buffer_minutes, min: 0,
+          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+        <p class="text-xs text-charcoal-300 mt-1">Adaptive sources are polled this long after the predicted publish time, so content is available before we fetch.</p>
+      </div>
     </section>
 
     <section class="space-y-4">

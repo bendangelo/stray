@@ -32,6 +32,19 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Second Video"
   end
 
+  test "show displays next poll as a future time, not just now" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    travel_to Time.current do
+      source.update!(next_crawl_at: 2.hours.from_now)
+      get source_path(source)
+
+      assert_response :success
+      assert_includes response.body, "in 2h"
+      assert_not_includes response.body, "next poll just now"
+    end
+  end
+
   test "show displays follow weight" do
     sign_in_as(users(:one))
     source = sources(:bitchute)

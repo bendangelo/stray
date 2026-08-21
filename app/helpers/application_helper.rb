@@ -16,6 +16,25 @@ module ApplicationHelper
     end
   end
 
+  def time_until(time)
+    return "" if time.nil?
+
+    seconds = time - Time.current
+    if seconds <= 0
+      "due now"
+    elsif seconds < 60
+      "in <1m"
+    elsif seconds < 3600
+      "in #{(seconds / 60).to_i}m"
+    elsif seconds < 86400
+      "in #{(seconds / 3600).to_i}h"
+    elsif seconds < 604800
+      "in #{(seconds / 86400).to_i}d"
+    else
+      time.strftime("%b %d, %Y")
+    end
+  end
+
   def pretty_duration(seconds)
     return "" if seconds.nil? || seconds <= 0
 

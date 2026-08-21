@@ -117,6 +117,16 @@ class SettingTest < ActiveSupport::TestCase
     end
   end
 
+  test "get returns publication_buffer_minutes from DB" do
+    Setting.current.update!(publication_buffer_minutes: 25)
+    assert_equal 25, Setting.get(:publication_buffer_minutes)
+  end
+
+  test "set converts publication_buffer_minutes to integer" do
+    Setting.set(:publication_buffer_minutes, "20")
+    assert_equal 20, Setting.current.publication_buffer_minutes
+  end
+
   private
 
   def with_env(vars)

@@ -86,25 +86,36 @@ class Source < ApplicationRecord
   end
 
 
+  def predicted_publish_at
+    recent = items.order(published_at: :desc).limit(5).pluck(:published_at).compact
+    return nil if recent.empty? || recent.first < 1.year.ago
+
+    intervals = recent.each_cons(2).map { |a, b| a - b }.compact
+    avg = intervals.empty? ? 1.hour : intervals.sum / intervals.size
+    recent.first + avg
+  end
+
   def recalculate_next_crawl!
     if poll_interval.present? && poll_interval.positive?
       update!(next_crawl_at: Time.current + poll_interval.seconds)
       return
     end
 
-    recent = items.order(published_at: :desc).limit(5).pluck(:published_at).compact
+    predicted = predicted_publish_at
 
-    if recent.empty?
-      update!(next_crawl_at: 1.hour.from_now)
-    elsif recent.first < 1.year.ago
-      update!(active: false)
-    else
-      intervals = recent.each_cons(2).map { |a, b| a - b }.compact
-      avg = intervals.empty? ? 1.hour : intervals.sum / intervals.size
-      predicted = recent.first + avg
-      predicted = [ predicted, Time.current + 30.minutes ].max
-      predicted = [ predicted, Time.current + 24.hours ].min
-      update!(next_crawl_at: predicted)
+    if predicted.nil?
+      if items.order(published_at: :desc).limit(1).pluck(:published_at).compact.first&.< 1.year.ago
+        update!(active: false)
+      else
+        update!(next_crawl_at: 1.hour.from_now)
+      end
+      return
     end
+
+    buffer = (Setting.get(:publication_buffer_minutes) || 10).minutes
+    scheduled = predicted + buffer
+    scheduled = [ scheduled, Time.current + 30.minutes ].max
+    scheduled = [ scheduled, Time.current + 24.hours ].min
+    update!(next_crawl_at: scheduled)
   end
 end

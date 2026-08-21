@@ -5,6 +5,7 @@ class SourcePollJob < ApplicationJob
 
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
   retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
+  retry_on Stray::RateBudgetExhausted, wait: 15.seconds, attempts: 4
 
   discard_on Stray::YtDlp::Error do |job, error|
     source = Source.find_by(id: job.arguments.first)
@@ -102,9 +103,13 @@ class SourcePollJob < ApplicationJob
   def track_empty_polls(source, new_count)
     if new_count > 0
       source.update!(consecutive_empty_polls: 0)
-    else
-      source.update!(consecutive_empty_polls: source.consecutive_empty_polls + 1)
+      return
     end
+
+    predicted = source.predicted_publish_at
+    return if predicted && Time.current < predicted
+
+    source.update!(consecutive_empty_polls: source.consecutive_empty_polls + 1)
   end
 
   def extract_contents(extractor, response, url)

@@ -149,7 +149,7 @@ GEM
     fugit (1.13.0)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
-    full_search (0.4.8)
+    full_search (0.4.9)
       activerecord (>= 8.0, < 9)
       railties (>= 8.0, < 9)
       sqlite3 (>= 2.0)
@@ -570,7 +570,7 @@ CHECKSUMS
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   ffi (1.17.4-x86_64-linux-musl) sha256=3fdf9888483de005f8ef8d1cf2d3b20d86626af206cbf780f6a6a12439a9c49e
   fugit (1.13.0) sha256=a4f093fce740da52f216740a5041e2a594ea763cdb89e8b2754ca4399634ab18
-  full_search (0.4.8) sha256=d9cdb2fa7f3eb8d850f7cdc25734182b2a308d2f453da1196d1bafc6db5550f9
+  full_search (0.4.9) sha256=cbceac7e120bec1f8717496213389f8e59f32e410932a547a5edbb664257698e
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
   guess_html_encoding (0.0.11) sha256=cab6468b945f38673fc41ad147fbbc89693b3c6c34b03b071e2ed669a603e098
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1

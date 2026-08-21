@@ -87,6 +87,77 @@ class SourceTest < ActiveSupport::TestCase
     assert_not source.active
   end
 
+  test "recalculate_next_crawl! adds the publication buffer to the predicted time" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    now = Time.current
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 26.hours)
+    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 2.hours)
+
+    Setting.current.update!(publication_buffer_minutes: 10)
+    source.recalculate_next_crawl!
+    # avg interval = 24h, last = now - 2h, predicted = now + 22h, +10m buffer = now + 22h10m
+    assert_in_delta 22.hours.from_now + 10.minutes, source.next_crawl_at, 5.seconds
+  ensure
+    Setting.current.update!(publication_buffer_minutes: 10)
+  end
+
+  test "recalculate_next_crawl! respects the 24 hour ceiling after the buffer" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    now = Time.current
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 26.hours)
+    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 2.hours)
+
+    Setting.current.update!(publication_buffer_minutes: 120)
+    source.recalculate_next_crawl!
+    # predicted = now + 22h, +120m buffer = now + 24h, capped at 24h
+    assert_in_delta 24.hours.from_now, source.next_crawl_at, 5.seconds
+  ensure
+    Setting.current.update!(publication_buffer_minutes: 10)
+  end
+
+  test "recalculate_next_crawl! does not add the buffer to a fixed poll_interval" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1", poll_interval: 600)
+    now = Time.current
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 1.hour)
+
+    Setting.current.update!(publication_buffer_minutes: 120)
+    source.recalculate_next_crawl!
+    assert_in_delta 10.minutes.from_now, source.next_crawl_at, 5.seconds
+  ensure
+    Setting.current.update!(publication_buffer_minutes: 10)
+  end
+
+  test "recalculate_next_crawl! does not add the buffer to the empty fallback" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+
+    Setting.current.update!(publication_buffer_minutes: 120)
+    source.recalculate_next_crawl!
+    assert_in_delta 1.hour.from_now, source.next_crawl_at, 5.seconds
+  ensure
+    Setting.current.update!(publication_buffer_minutes: 10)
+  end
+
+  test "predicted_publish_at returns most recent item plus average interval" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    now = Time.current
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 26.hours)
+    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 2.hours)
+
+    assert_in_delta now + 22.hours, source.predicted_publish_at, 5.seconds
+  end
+
+  test "predicted_publish_at returns nil when there are no items" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    assert_nil source.predicted_publish_at
+  end
+
+  test "predicted_publish_at returns nil when the most recent item is over a year old" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: 2.years.ago)
+
+    assert_nil source.predicted_publish_at
+  end
+
   test "active scope returns only active sources" do
     assert_includes Source.active, sources(:youtube)
     assert_not_includes Source.active, sources(:inactive)

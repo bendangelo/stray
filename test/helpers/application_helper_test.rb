@@ -21,6 +21,46 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "", pretty_duration(0)
   end
 
+  test "time_until returns empty string for nil" do
+    assert_equal "", time_until(nil)
+  end
+
+  test "time_until returns in <1m for under a minute" do
+    travel_to Time.current do
+      assert_equal "in <1m", time_until(30.seconds.from_now)
+    end
+  end
+
+  test "time_until returns in Xm for minutes" do
+    travel_to Time.current do
+      assert_equal "in 5m", time_until(5.minutes.from_now)
+    end
+  end
+
+  test "time_until returns in Xh for hours" do
+    travel_to Time.current do
+      assert_equal "in 3h", time_until(3.hours.from_now)
+    end
+  end
+
+  test "time_until returns in Xd for days" do
+    travel_to Time.current do
+      assert_equal "in 2d", time_until(2.days.from_now)
+    end
+  end
+
+  test "time_until returns due now for past times" do
+    travel_to Time.current do
+      assert_equal "due now", time_until(30.seconds.ago)
+    end
+  end
+
+  test "time_until returns formatted date for over a week" do
+    travel_to Time.current do
+      assert_equal 8.days.from_now.strftime("%b %d, %Y"), time_until(8.days.from_now)
+    end
+  end
+
   test "embed_url constructs YouTube embed URL" do
     source = sources(:youtube)
     item = items(:video_one)

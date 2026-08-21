@@ -32,7 +32,7 @@
               <span>· polled <%= time_ago(@source.last_polled_at) %></span>
             <% end %>
             <% if @source.next_crawl_at %>
-              <span>· next poll <%= time_ago(@source.next_crawl_at) %></span>
+              <span title="<%= @source.next_crawl_at.iso8601 %>">· next poll <%= time_until(@source.next_crawl_at) %></span>
             <% end %>
             <% if @source.poll_interval.present? && @source.poll_interval.positive? %>
               <span>· every <%= @source.poll_interval %>s</span>

@@ -35,6 +35,8 @@ class UrlClassifier
       end
     rescue URI::InvalidURIError
       nil
+    rescue Stray::RateBudgetExhausted, Stray::ExtractionError
+      classification(:generic_page, "generic_page", Bridges::GenericPage)
     end
 
     private

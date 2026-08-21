@@ -141,4 +141,22 @@ class UrlClassifierTest < ActiveSupport::TestCase
       assert_equal Bridges::GenericPage, c.extractor_class
     end
   end
+
+  test "classifies generic page when GenericList probe raises rate budget exhausted" do
+    Bridges::GenericList.stub(:detect, ->(_url) { raise Stray::RateBudgetExhausted, "Rate budget exhausted for example.com" }) do
+      c = UrlClassifier.classify("https://example.com/blog")
+      assert_equal :generic_page, c.category
+      assert_equal "generic_page", c.source_kind
+      assert_equal Bridges::GenericPage, c.extractor_class
+    end
+  end
+
+  test "classifies generic page when GenericList probe raises extraction error" do
+    Bridges::GenericList.stub(:detect, ->(_url) { raise Stray::ExtractionError, "page fetch failed" }) do
+      c = UrlClassifier.classify("https://example.com/blog")
+      assert_equal :generic_page, c.category
+      assert_equal "generic_page", c.source_kind
+      assert_equal Bridges::GenericPage, c.extractor_class
+    end
+  end
 end
