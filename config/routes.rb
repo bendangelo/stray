@@ -47,7 +47,7 @@ Rails.application.routes.draw do
   resources :taggings, only: [ :create, :destroy ]
   resources :collection_memberships, only: %i[create destroy]
   resource :remote_collection, only: [:destroy]
-  resources :items, only: [ :update ] do
+  resources :items, only: [ :show, :update ] do
     member { get :player }
   end
 
