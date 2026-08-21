@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_130259) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_011252) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -138,12 +138,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_130259) do
   create_table "sources", force: :cascade do |t|
     t.boolean "active", default: true
     t.string "channel_url"
+    t.integer "consecutive_empty_polls", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "etag"
     t.string "external_id"
     t.string "icon_url"
     t.integer "kind", null: false
     t.string "last_error"
     t.datetime "last_error_at"
+    t.string "last_modified"
     t.datetime "last_polled_at"
     t.string "name"
     t.datetime "next_crawl_at"
