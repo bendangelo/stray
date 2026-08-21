@@ -49,6 +49,27 @@ class Stray::Bridges::PeertubeTest < ActiveSupport::TestCase
     end
   end
 
+  test "channel_feed calls accounts API for /a/ URLs" do
+    fixture = File.read(File.expand_path("../../../fixtures/files/peertube_account_videos.json", __dir__))
+    requested_urls = []
+    resp = OpenStruct.new(status: 200, body: fixture)
+    extractor = Stray::Bridges::Peertube.new
+    extractor.define_singleton_method(:fetch) do |url|
+      requested_urls << url
+      resp
+    end
+
+    items = extractor.channel_feed("https://tube.xy-space.de/a/voxpopuli")
+
+    assert_equal 1, items.size
+    assert_requested_api_url = "https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100"
+    assert_includes requested_urls, assert_requested_api_url,
+      "expected accounts API URL, got: #{requested_urls.inspect}"
+    assert_equal "6aa95cf7-08af-4b22-86af-b7563e2ff4bd", items.first[:external_id]
+    assert_equal "Vox Populi", items.first[:creator_identity][:name]
+    assert_equal "voxpopulimx", items.first[:creator_identity][:external_id]
+  end
+
   test "channel_feed raises for non-channel URL" do
     assert_raises(Stray::ExtractionError) do
       Stray::Bridges::Peertube.new.channel_feed("https://video.tkz.es/videos/trending")

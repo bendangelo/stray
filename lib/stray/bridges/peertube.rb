@@ -34,7 +34,8 @@ module Stray
         raise Stray::ExtractionError, "Peertube: not a channel URL: #{url}" unless handle
 
         uri = URI.parse(url)
-        api_url = "#{uri.scheme}://#{uri.host}/api/v1/video-channels/#{handle}/videos?count=100"
+        scope = uri.path.to_s.match?(%r{/a/}) ? "accounts" : "video-channels"
+        api_url = "#{uri.scheme}://#{uri.host}/api/v1/#{scope}/#{handle}/videos?count=100"
         response = fetch(api_url)
         data = JSON.parse(response.body)
 
