@@ -13,7 +13,7 @@ module Stray
 
       def self.matches?(url)
         uri = URI.parse(url)
-        uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/})
+        uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/|/a/})
       rescue URI::InvalidURIError
         false
       end
@@ -22,7 +22,7 @@ module Stray
       # or https://host/c/fedi
       def self.channel_handle(url)
         uri = URI.parse(url)
-        match = uri.path.to_s.match(%r{/(?:video-channels|c)/([^/]+)})
+        match = uri.path.to_s.match(%r{/(?:video-channels|c|a)/([^/]+)})
         match && match[1]
       rescue URI::InvalidURIError
         nil

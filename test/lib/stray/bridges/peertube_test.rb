@@ -26,6 +26,14 @@ class Stray::Bridges::PeertubeTest < ActiveSupport::TestCase
     assert_equal "fedi", Stray::Bridges::Peertube.channel_handle("https://tilvids.com/c/fedi")
   end
 
+  test "matches? returns true for account /a/ URLs" do
+    assert Stray::Bridges::Peertube.matches?("https://tube.xy-space.de/a/voxpopuli")
+  end
+
+  test "channel_handle parses /a/ account paths" do
+    assert_equal "voxpopuli", Stray::Bridges::Peertube.channel_handle("https://tube.xy-space.de/a/voxpopuli")
+  end
+
   test "channel_feed parses API videos" do
     stub_json(File.read(FIXTURE)) do |extractor|
       items = extractor.channel_feed("https://video.tkz.es/video-channels/fedi")
