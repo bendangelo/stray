@@ -45,36 +45,65 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap">
-        <% if source.polling? %>
-          <span class="flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-athens-500 text-charcoal text-xs font-bold cursor-wait">
-            <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>
-            Pulling…
-          </span>
-        <% else %>
-          <%= button_to pull_source_path(source), method: :post, title: "Pull now",
-                class: "flex items-center gap-1 px-2 py-1 rounded-md border-2 border-charcoal bg-white text-charcoal hover:bg-athens-500 cursor-pointer text-xs font-bold",
-                form: { data: { turbo_frame: "_top" } } do %>
-            <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
-            Pull
+      <div data-controller="dropdown" class="relative shrink-0">
+        <button type="button"
+                data-dropdown-target="button"
+                data-action="dropdown#toggle click@window->dropdown#hide"
+                aria-expanded="false"
+                aria-controls="source-actions-<%= source.id %>"
+                class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-2 -mr-1 min-w-9 min-h-9 flex items-center justify-center
+                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
+                aria-label="Source actions">
+          <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
+        </button>
+
+        <div id="source-actions-<%= source.id %>"
+             data-dropdown-target="menu"
+             class="hidden absolute right-0 mt-1 z-20 w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
+                    transition transform origin-top-right
+                    data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
+                    data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
+          <% if source.polling? %>
+            <span class="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-charcoal-300 rounded border-none bg-transparent">
+              <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>
+              Pulling…
+            </span>
+          <% else %>
+            <%= button_to pull_source_path(source), method: :post,
+                  form: { data: { turbo_frame: "_top" } },
+                  class: "flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+              <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
+              Pull now
+            <% end %>
           <% end %>
-        <% end %>
-        <% if source.active? %>
-          <%= action_link_to "Pause", source_path(source), method: :patch, params: { source: { active: false } },
+
+          <% if source.active? %>
+            <%= action_link_to source_path(source), method: :patch, params: { source: { active: false } },
+                  data: { turbo_frame: "_top" },
+                  class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+              <%= phosphor_icon "pause", class: "w-3.5 h-3.5" %> Pause
+            <% end %>
+          <% else %>
+            <%= action_link_to source_path(source), method: :patch, params: { source: { active: true } },
+                  data: { turbo_frame: "_top" },
+                  class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+              <%= phosphor_icon "play", class: "w-3.5 h-3.5" %> Unpause
+            <% end %>
+          <% end %>
+
+          <%= link_to edit_source_path(source),
                 data: { turbo_frame: "_top" },
-                class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
-        <% else %>
-          <%= action_link_to "Unpause", source_path(source), method: :patch, params: { source: { active: true } },
+                class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+            <%= phosphor_icon "pencil-simple", class: "w-3.5 h-3.5" %> Edit
+          <% end %>
+
+          <%= action_link_to source_path(source), method: :delete,
+                confirm: "Delete this source and all its items?",
                 data: { turbo_frame: "_top" },
-                class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none" %>
-        <% end %>
-        <%= link_to "Edit", edit_source_path(source),
-              class: "text-xs text-charcoal underline hover:no-underline cursor-pointer bg-transparent border-none",
-              data: { turbo_frame: "_top" } %>
-        <%= action_link_to "Delete", source_path(source), method: :delete,
-              confirm: "Delete this source and all its items?",
-              data: { turbo_frame: "_top" },
-              class: "text-xs text-cerise underline hover:no-underline cursor-pointer bg-transparent border-none" %>
+                class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-cerise hover:bg-cerise/10 hover:text-cerise rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-cerise" do %>
+            <%= phosphor_icon "trash", class: "w-3.5 h-3.5" %> Delete
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
