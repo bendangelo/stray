@@ -18,9 +18,12 @@
             size: "w-5 h-5",
             class: "absolute left-2 bottom-2") %>
       <% if item.duration.present? %>
-        <p class="absolute right-2 bottom-2 bg-charcoal/80 backdrop-blur-sm text-champagne text-xs px-1.5 py-0.5 rounded">
+        <p class="absolute right-2 bottom-2 bg-charcoal text-champagne text-xs px-1.5 py-0.5 rounded">
           <%= pretty_duration(item.duration) %>
         </p>
+      <% end %>
+      <% if item.unseen? %>
+        <span class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-mint ring-2 ring-charcoal/50"></span>
       <% end %>
     </div>
 
