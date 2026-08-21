@@ -48,7 +48,10 @@ Rails.application.routes.draw do
   resources :collection_memberships, only: %i[create destroy]
   resource :remote_collection, only: [:destroy]
   resources :items, only: [ :show, :update ] do
-    member { get :player }
+    member do
+      get :player
+      post :follow_channel
+    end
   end
 
   namespace :admin do

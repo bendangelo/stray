@@ -1,4 +1,6 @@
 class ItemsController < ApplicationController
+  include ApplicationHelper
+
   ALLOWED_STATES = %w[ unseen saved hidden ].freeze
   KIND_MAP = { "saved" => :starred, "hidden" => :hidden }.freeze
 
@@ -32,6 +34,19 @@ class ItemsController < ApplicationController
       format.turbo_stream { render "items/update", locals: { item:, state: } }
       format.html { redirect_to root_path }
     end
+  end
+
+  def follow_channel
+    item = Item.find_by(id: params[:id], user_id: current_user.id)
+    return head :not_found unless item
+
+    unless item.source.kind == "saved_video" && youtube_video_item?(item)
+      redirect_to item_path(item), alert: "This item can't follow a channel."
+      return
+    end
+
+    PromoteSavedVideoJob.perform_later(item.id)
+    redirect_to item_path(item), notice: "Following channel — syncing…"
   end
 
   private

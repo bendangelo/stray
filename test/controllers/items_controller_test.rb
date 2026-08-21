@@ -177,4 +177,60 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert item.reload.saved?
   end
+
+  test "follow_channel enqueues promotion job for a saved_video YouTube item" do
+    sign_in_as(users(:one))
+    item = items(:video_saved_yt)
+
+    assert_enqueued_with(job: PromoteSavedVideoJob, args: [ item.id ]) do
+      post follow_channel_item_path(item)
+    end
+
+    assert_redirected_to item_path(item)
+    assert_includes flash[:notice], "Following channel"
+  end
+
+  test "follow_channel rejects a non-saved_video item" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    assert_no_enqueued_jobs only: PromoteSavedVideoJob do
+      post follow_channel_item_path(item)
+    end
+
+    assert_redirected_to item_path(item)
+    assert_includes flash[:alert], "can't follow a channel"
+  end
+
+  test "follow_channel rejects a saved_video item that is not a YouTube video" do
+    sign_in_as(users(:one))
+    source = Source.create!(user: users(:one), kind: :saved_video,
+      url: "https://bitchute.com/video/bcvid9", external_id: "bcvid9", name: "BC Saved")
+    item = Item.create!(source: source, user: users(:one), external_id: "bcvid9",
+      title: "BC Saved", url: "https://bitchute.com/video/bcvid9")
+
+    assert_no_enqueued_jobs only: PromoteSavedVideoJob do
+      post follow_channel_item_path(item)
+    end
+
+    assert_redirected_to item_path(item)
+    assert_includes flash[:alert], "can't follow a channel"
+  end
+
+  test "follow_channel returns 404 for other user items" do
+    sign_in_as(users(:one))
+    item = items(:video_user_two)
+
+    post follow_channel_item_path(item)
+
+    assert_response :not_found
+  end
+
+  test "follow_channel requires authentication" do
+    item = items(:video_one)
+
+    post follow_channel_item_path(item)
+
+    assert_redirected_to new_session_path
+  end
 end
