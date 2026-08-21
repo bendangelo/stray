@@ -5,20 +5,18 @@
   <div class="flex flex-col">
     <div class="relative overflow-hidden">
       <a href="#" data-action="click->player#toggle:prevent">
-        <img class="group-hover:border-2 border-carrot-400 object-cover w-full aspect-video rounded-md border-3 border-charcoal"
-             src="<%= item.thumbnail_url || missing_thumb %>"
-             alt="<%= item.title %>"
-             loading="lazy">
+        <%= fallback_image_tag(item.thumbnail_url,
+              alt: item.title,
+              class: "group-hover:border-2 border-carrot-400 object-cover w-full aspect-video rounded-md border-3 border-charcoal") %>
       </a>
       <% if video?(item) %>
         <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition">
           <%= phosphor_icon "play", style: :fill, class: "w-10 h-10 text-white/80" %>
         </div>
       <% end %>
-      <% if (icon = source_icon_url(item.source)) %>
-        <img src="<%= icon %>" alt="" loading="lazy"
-             class="absolute left-2 bottom-2 w-5 h-5 rounded border-2 border-charcoal bg-charcoal/80 object-cover">
-      <% end %>
+      <%= source_icon_tag(item.source,
+            size: "w-5 h-5",
+            class: "absolute left-2 bottom-2") %>
       <% if item.duration.present? %>
         <p class="absolute right-2 bottom-2 bg-charcoal/80 backdrop-blur-sm text-champagne text-xs px-1.5 py-0.5 rounded">
           <%= pretty_duration(item.duration) %>
