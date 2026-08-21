@@ -6,6 +6,10 @@ module Stray
     def extract_feed(url)         = raise NotImplementedError
     def enrich_tags(url)          = nil
 
+    def extract_feed_from_response(response, url)
+      extract_feed(url)
+    end
+
     def self.trust_level          = :scraped_html
     def self.site_homepage        = nil
     def self.last_tested_against  = nil

@@ -51,13 +51,44 @@ class SourcePollJob < ApplicationJob
     extractor = Stray::BridgeRegistry.find_for_source(source)
     raise Stray::YtDlp::ExtractionFailed, "No bridge for kind=#{source.kind} url=#{source.url}" unless extractor
 
-    contents = extractor.extract_feed(source.url)
+    if extractor.class.respond_to?(:requires_auth?) && extractor.class.requires_auth?
+      secrets = source.secrets.index_by(&:field_name)
+      missing = extractor.class.secret_fields.map(&:to_s) - secrets.keys
+      if missing.any?
+        raise Stray::ExtractionError, "Bridge requires #{missing.join(', ')} secret(s); none configured"
+      end
+      extractor.secrets = secrets
+    end
+
+    cached = PoliteCrawl.get_with_cache(
+      source.url,
+      http_client: http_client,
+      etag: source.etag,
+      last_modified: source.last_modified
+    )
+
+    if cached == :not_modified
+      source.recalculate_next_crawl!
+      source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
+      return
+    end
+
+    contents = extract_contents(extractor, cached.response, source.url)
     contents = Array(contents)
 
-    upsert_items(source, contents, extractor)
+    new_count = upsert_items(source, contents, extractor)
+    track_empty_polls(source, new_count)
     backfill_source_metadata(source, contents)
     source.recalculate_next_crawl!
-    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
+    status = new_count > 0 || source.consecutive_empty_polls < 3 ? :ok : :degraded
+    source.update!(
+      last_polled_at: Time.current,
+      last_error: nil,
+      last_error_at: nil,
+      status: status,
+      etag: cached.etag,
+      last_modified: cached.last_modified
+    )
   rescue NotImplementedError => e
     source.update!(last_error: "Bridge missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
     reschedule_on_failure!(source)
@@ -66,6 +97,31 @@ class SourcePollJob < ApplicationJob
   rescue StandardError => e
     source.update!(last_error: e.message, last_error_at: Time.current, status: :failed)
     reschedule_on_failure!(source)
+  end
+
+  def track_empty_polls(source, new_count)
+    if new_count > 0
+      source.update!(consecutive_empty_polls: 0)
+    else
+      source.update!(consecutive_empty_polls: source.consecutive_empty_polls + 1)
+    end
+  end
+
+  def extract_contents(extractor, response, url)
+    if extractor.respond_to?(:extract_feed_from_response)
+      extractor.extract_feed_from_response(response, url)
+    else
+      extractor.extract_feed(url)
+    end
+  end
+
+  def http_client
+    Faraday.new do |conn|
+      conn.response :follow_redirects, max: 3
+      conn.options.timeout = 30
+      conn.options.open_timeout = 10
+      conn.adapter :net_http
+    end
   end
 
   def extract_and_persist_relay(source, cursor)
@@ -154,13 +210,17 @@ class SourcePollJob < ApplicationJob
   end
 
   def upsert_items(source, contents, extractor = nil)
-    return if contents.empty?
+    return 0 if contents.empty?
+
+    existing_ids = source.items.where(external_id: contents.map(&:external_id)).pluck(:external_id).to_set
 
     complete, incomplete = contents.partition { |c| c.duration.present? && c.thumbnail_url.present? && c.published_at.present? }
 
     id_by_external_id = {}
     id_by_external_id.merge!(upsert_rows(source, complete)) if complete.any?
     id_by_external_id.merge!(upsert_rows(source, incomplete, update_only: NO_MISSING_METADATA_UPDATE)) if incomplete.any?
+
+    new_count = id_by_external_id.keys.count { |id| !existing_ids.include?(id) }
 
     needs_enrichment_ids = []
     contents.each do |content|
@@ -171,6 +231,7 @@ class SourcePollJob < ApplicationJob
     end
 
     MetadataEnrichmentJob.perform_later(source.id, needs_enrichment_ids) if needs_enrichment_ids.any?
+    new_count
   end
 
   def upsert_rows(source, batch, update_only: nil)

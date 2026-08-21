@@ -19,7 +19,14 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   def without_lock
     DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
-      yield
+      cached = PoliteCrawl::CachedResponse.new(
+        response: Struct.new(:status, :body, :headers).new(200, "<html>feed</html>", {}),
+        etag: nil,
+        last_modified: nil
+      )
+      PoliteCrawl.stub(:get_with_cache, cached) do
+        yield
+      end
     end
   end
 
@@ -710,5 +717,141 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not called
     item.reload
     assert_equal 1, item.taggings.where(source: :user).count
+  end
+
+  test "hydrates secrets onto bridge when requires_auth?" do
+    source = sources(:youtube)
+    SourceSecret.create!(source: source, field_name: "token", value: "secret123")
+
+    bridge_class = Class.new do
+      def self.requires_auth? = true
+      def self.secret_fields = [ :token ]
+      attr_accessor :secrets
+      def extract_feed(_url) = []
+      def extract_feed_from_response(_response, url) = extract_feed(url)
+    end
+    bridge = bridge_class.new
+
+    Stray::BridgeRegistry.stub(:find_for_source, bridge) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal "secret123", bridge.secrets["token"].value
+  end
+
+  test "fails fast when a required secret is missing" do
+    source = sources(:youtube)
+    bridge = Class.new do
+      def self.requires_auth? = true
+      def self.secret_fields = [ :api_key ]
+    end.new
+
+    Stray::BridgeRegistry.stub(:find_for_source, bridge) do
+      assert_raises(Stray::ExtractionError) do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+  end
+
+  test "skips parsing and refreshes last_polled_at on 304 Not Modified" do
+    source = sources(:youtube)
+    source.update!(etag: "etag-abc", last_modified: "Wed, 01 Jan 2025 00:00:00 GMT")
+
+    extractor = Minitest::Mock.new
+
+    PoliteCrawl.stub(:get_with_cache, :not_modified) do
+      Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert source.reload.last_polled_at.present?
+    assert_equal "ok", source.status
+    assert_equal 0, source.consecutive_empty_polls
+  end
+
+  test "updates etag and last_modified on Source after successful fetch" do
+    source = sources(:youtube)
+    response = Struct.new(:status, :body, :headers).new(200, "<html>feed</html>", { "etag" => "new-etag", "last-modified" => "Thu, 02 Jan 2025 00:00:00 GMT" })
+    cached_response = PoliteCrawl::CachedResponse.new(response: response, etag: "new-etag", last_modified: "Thu, 02 Jan 2025 00:00:00 GMT")
+
+    bridge = Class.new do
+      attr_reader :called
+      def extract_feed(_url) = []
+      def extract_feed_from_response(_response, url) = extract_feed(url)
+    end.new
+
+    PoliteCrawl.stub(:get_with_cache, cached_response) do
+      Stray::BridgeRegistry.stub(:find_for_source, bridge) do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal "new-etag", source.reload.etag
+    assert_equal "Thu, 02 Jan 2025 00:00:00 GMT", source.reload.last_modified
+  end
+
+  test "increments consecutive_empty_polls when no new items created" do
+    source = sources(:youtube)
+    source.update!(consecutive_empty_polls: 1)
+
+    existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "existing-id", duration: nil, creator_identity: nil, tags: [])
+    Item.create!(source: source, user: source.user, external_id: "existing-id", title: "Existing", url: "https://example.com/v1")
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ existing_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 2, source.reload.consecutive_empty_polls
+    assert_equal "ok", source.status
+  end
+
+  test "sets status to degraded after 3 consecutive empty polls" do
+    source = sources(:youtube)
+    source.update!(consecutive_empty_polls: 2)
+
+    existing_content = Stray::ExtractedContent.new(url: "https://example.com/v1", title: "Existing", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "existing-id", duration: nil, creator_identity: nil, tags: [])
+    Item.create!(source: source, user: source.user, external_id: "existing-id", title: "Existing", url: "https://example.com/v1")
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ existing_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 3, source.reload.consecutive_empty_polls
+    assert_equal "degraded", source.status
+  end
+
+  test "resets consecutive_empty_polls when new items are created" do
+    source = sources(:youtube)
+    source.update!(consecutive_empty_polls: 2)
+
+    new_content = Stray::ExtractedContent.new(url: "https://example.com/new", title: "New", content_text: nil,
+      content_html: nil, thumbnail_url: nil, published_at: nil, external_id: "new-id", duration: nil, creator_identity: nil, tags: [])
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, [ new_content ], [ source.url ])
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      without_lock do
+        SourcePollJob.new.send(:extract_and_persist, source)
+      end
+    end
+
+    assert_equal 0, source.reload.consecutive_empty_polls
+    assert_equal "ok", source.status
   end
 end

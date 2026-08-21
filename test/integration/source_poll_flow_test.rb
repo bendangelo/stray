@@ -5,7 +5,14 @@ class SourcePollFlowTest < ActionDispatch::IntegrationTest
 
   def without_lock
     DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
-      yield
+      cached = PoliteCrawl::CachedResponse.new(
+        response: Struct.new(:status, :body, :headers).new(200, "<html>feed</html>", {}),
+        etag: nil,
+        last_modified: nil
+      )
+      PoliteCrawl.stub(:get_with_cache, cached) do
+        yield
+      end
     end
   end
 
