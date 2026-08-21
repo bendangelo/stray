@@ -11,12 +11,21 @@
           <div class="text-xs text-charcoal-300 flex items-center flex-wrap gap-x-2 mt-1.5">
             <span><%= source.kind.humanize %></span>
             <% if source.pending? %>
-              <span class="flex items-center gap-1 text-charcoal font-bold">
-                <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
-                Resolving…
-              </span>
               <% if source.stuck_pending? %>
-                <span class="text-cerise font-bold" title="No successful poll yet. Check the jobs dashboard for a queued or failed job.">stuck</span>
+                <span class="text-cerise font-bold" title="No successful poll yet. Check the jobs dashboard.">stuck</span>
+              <% else %>
+                <span class="flex items-center gap-1 text-charcoal font-bold">
+                  <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
+                  Resolving…
+                </span>
+              <% end %>
+            <% elsif source.recovering? %>
+              <span class="flex items-center gap-1 text-carrot-500 font-bold" title="<%= source.last_error %>">
+                <%= phosphor_icon "arrow-clockwise", class: "w-3 h-3 animate-spin" %>
+                Retrying<%= " #{time_until(source.next_crawl_at)}" if source.next_crawl_at %>
+              </span>
+              <% if source.last_error.present? %>
+                <span class="text-cerise truncate max-w-[24ch]" title="<%= source.last_error %>"><%= truncate(source.last_error, length: 40) %></span>
               <% end %>
             <% elsif source.failed? %>
               <span class="text-cerise font-bold" title="<%= source.last_error %>">Failed</span>

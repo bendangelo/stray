@@ -28,17 +28,36 @@ module Stray
         nil
       end
 
+      # Convert a channel page URL to the REST API endpoint used for polling.
+      # The API URL becomes source.url so polls fetch it directly and can reuse
+      # the cached response via extract_feed_from_response.
+      def self.api_url_for(url)
+        handle = channel_handle(url)
+        return nil unless handle
+
+        uri = URI.parse(url)
+        scope = uri.path.to_s.match?(%r{/a/}) ? "accounts" : "video-channels"
+        "#{uri.scheme}://#{uri.host}/api/v1/#{scope}/#{handle}/videos?count=100"
+      rescue URI::InvalidURIError
+        nil
+      end
+
       # Fetch a channel's videos. Returns Array<Hash>.
       def channel_feed(url)
         handle = self.class.channel_handle(url)
         raise Stray::ExtractionError, "Peertube: not a channel URL: #{url}" unless handle
 
         uri = URI.parse(url)
-        scope = uri.path.to_s.match?(%r{/a/}) ? "accounts" : "video-channels"
-        api_url = "#{uri.scheme}://#{uri.host}/api/v1/#{scope}/#{handle}/videos?count=100"
-        response = fetch(api_url)
-        data = JSON.parse(response.body)
+        api_url = self.class.api_url_for(url)
+        feed_from_response(fetch(api_url), uri.to_s)
+      end
 
+      # Parse a feed response body into Array<Hash>. Reused both after fetching
+      # (channel_feed) and when the poll job hands back an already-fetched
+      # response (extract_feed_from_response) to avoid a second request.
+      def feed_from_response(response, url)
+        uri = URI.parse(url)
+        data = JSON.parse(response.body)
         (data["data"] || []).map { |v| video_hash(v, uri) }
       end
 

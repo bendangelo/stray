@@ -92,4 +92,43 @@ class SourcePollSweepJobTest < ActiveJob::TestCase
     assert_includes poll_args, stuck_source.id
     assert_not_includes poll_args, healthy_source.id
   end
+
+  test "recovers abandoned pending sources older than 10 minutes" do
+    abandoned = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/a", external_id: "a", status: :pending,
+      polling: false, created_at: 20.minutes.ago)
+    fresh_pending = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/b", external_id: "b", status: :pending,
+      polling: false, created_at: 2.minutes.ago)
+
+    SourcePollSweepJob.perform_now
+
+    assert abandoned.reload.recovering?
+    assert fresh_pending.reload.pending?
+  end
+
+  test "does not recover a pending source that is still polling" do
+    polling = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/p", external_id: "p", status: :pending,
+      polling: true, created_at: 20.minutes.ago)
+
+    SourcePollSweepJob.perform_now
+
+    assert polling.reload.pending?
+  end
+
+  test "enqueues poll for recovering sources whose next_crawl_at is due" do
+    due = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/d", external_id: "d", status: :recovering,
+      next_crawl_at: 5.minutes.ago, polling: false)
+    not_due = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/n", external_id: "n", status: :recovering,
+      next_crawl_at: 30.minutes.from_now, polling: false)
+
+    SourcePollSweepJob.perform_now
+
+    poll_args = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" }.map { |j| j["arguments"].first }
+    assert_includes poll_args, due.id
+    assert_not_includes poll_args, not_due.id
+  end
 end

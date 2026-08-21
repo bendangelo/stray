@@ -17,16 +17,16 @@ module Youtube
         external_id: result.channel_id,
         name: result.channel_name.presence || @source.name,
         channel_url: result.channel_url.presence || @source.channel_url,
-        icon_url: @source.icon_url.presence || result.channel_avatar_url,
-        status: :ok
+        icon_url: @source.icon_url.presence || result.channel_avatar_url
       )
+      Source::StatusMachine.mark_ok!(@source, etag: @source.etag, last_modified: @source.last_modified)
       @source
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
       adopt_existing_channel(result.channel_id)
     rescue Stray::YtDlp::Error
       raise
     rescue StandardError => e
-      @source.update!(last_error: e.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+      Source::StatusMachine.mark_recovering!(@source, message: e.message)
       @source
     end
 

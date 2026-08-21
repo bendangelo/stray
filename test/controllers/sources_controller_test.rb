@@ -572,6 +572,20 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_nil source.next_crawl_at
   end
 
+  test "pull on a recovering source resets to pending via StatusMachine" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+    source.update!(status: :recovering, last_error: "boom", recovery_attempts: 3, next_crawl_at: 1.hour.from_now)
+
+    post pull_source_path(source)
+
+    source.reload
+    assert source.pending?
+    assert_nil source.last_error
+    assert source.polling?
+    assert_nil source.next_crawl_at
+  end
+
   test "pull returns 404 for a source the user does not follow" do
     sign_in_as(users(:two))
     assert_no_enqueued_jobs only: SourcePollJob do

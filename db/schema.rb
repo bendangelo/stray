@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_022357) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_033700) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -163,6 +163,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_022357) do
     t.datetime "next_crawl_at"
     t.integer "poll_interval"
     t.boolean "polling", default: false, null: false
+    t.integer "recovery_attempts", default: 0, null: false
     t.string "slug"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false

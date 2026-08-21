@@ -70,12 +70,14 @@ class LinksController < ApplicationController
 
   def create_pending_source(url, source_kind)
     external_id = "pending:#{Digest::SHA256.hexdigest(url)[0, 16]}"
-    Source.follow!(
+    source = Source.follow!(
       current_user,
       kind: source_kind,
       url: url,
       external_id: external_id,
       status: :pending
     )
+    source.update!(next_crawl_at: 1.minute.from_now)
+    source
   end
 end

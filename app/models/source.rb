@@ -8,7 +8,7 @@ class Source < ApplicationRecord
   has_many :secrets, class_name: "SourceSecret", dependent: :destroy
 
   enum :kind, { youtube_channel: 0, video_channel: 1, rss_feed: 2, generic_page: 3, stray_collection: 4, rumble_channel: 5, bitchute_channel: 6, odysee_channel: 7, peertube_channel: 8, generic_list: 9, saved_video: 10 }
-  enum :status, { pending: 0, ok: 1, failed: 2, degraded: 3 }
+  enum :status, { pending: 0, ok: 1, failed: 2, degraded: 3, recovering: 4 }
 
   has_secure_token :slug, length: 24
   validates :slug, presence: true, uniqueness: true
@@ -27,6 +27,7 @@ class Source < ApplicationRecord
   scope :ok, -> { where(status: :ok) }
   scope :failed, -> { where(status: :failed) }
   scope :degraded, -> { where(status: :degraded) }
+  scope :recovering, -> { where(status: :recovering) }
   scope :matching, ->(q) { q.blank? ? all : where("name LIKE ? OR url LIKE ?", "%#{q}%", "%#{q}%") }
   scope :stuck, -> {
     where(active: true)
@@ -38,7 +39,8 @@ class Source < ApplicationRecord
 
   def display_name
     name.presence || path_segment || begin
-      uri = URI.parse(url)
+      base = channel_url.presence || url
+      uri = URI.parse(base)
       uri.host&.sub(/^www\./, "")
     rescue URI::InvalidURIError
       nil
@@ -46,7 +48,7 @@ class Source < ApplicationRecord
   end
 
   def stuck_pending?
-    pending? && last_polled_at.nil? && created_at < 10.minutes.ago
+    pending? && polling == false && last_polled_at.nil? && created_at < 10.minutes.ago
   end
 
   def bridge_class
@@ -54,7 +56,8 @@ class Source < ApplicationRecord
   end
 
   def path_segment
-    uri = URI.parse(url)
+    base = channel_url.presence || url
+    uri = URI.parse(base)
     return nil unless uri.host && uri.path
 
     parts = uri.path.split("/").reject(&:empty?)

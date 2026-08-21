@@ -23,6 +23,15 @@ module Bridges
       Stray::Bridges::Peertube.new.channel_feed(url).map { |h| map(h) }
     end
 
+    # Reuse an already-fetched API response instead of re-requesting the feed.
+    def extract_feed_from_response(response, url)
+      if url.match?(%r{/api/v1/(video-channels|accounts)/[^/]+/videos})
+        Stray::Bridges::Peertube.new.feed_from_response(response, url).map { |h| map(h) }
+      else
+        extract_feed(url)
+      end
+    end
+
     def enrich_tags(url)
       uri = URI.parse(url)
       uuid = uri.path.to_s.match(%r{/w/([^/]+)|/videos/watch/([^/]+)})&.captures&.compact&.first

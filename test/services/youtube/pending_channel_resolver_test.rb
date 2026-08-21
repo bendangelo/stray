@@ -34,6 +34,8 @@ class Youtube::PendingChannelResolverTest < ActiveSupport::TestCase
     assert_equal "https://www.youtube.com/channel/UCResolved", source.channel_url
     assert_equal "https://yt3.ggpht.com/avatar", source.icon_url
     assert source.ok?
+    assert_equal 0, source.recovery_attempts
+    assert_not_nil source.last_polled_at
   end
 
   test "returns source unchanged when url is already an RSS feed" do
@@ -76,7 +78,7 @@ class Youtube::PendingChannelResolverTest < ActiveSupport::TestCase
     end
   end
 
-  test "marks source failed on generic resolution error" do
+  test "marks source recovering on generic resolution error" do
     source = build_source(url: "https://www.youtube.com/@Handle")
 
     Youtube::ChannelResolver.stub(:resolve, ->(_url) { raise StandardError, "boom" }) do
@@ -85,8 +87,9 @@ class Youtube::PendingChannelResolverTest < ActiveSupport::TestCase
     end
 
     source.reload
-    assert source.failed?
+    assert source.recovering?
     assert_equal "boom", source.last_error
-    assert source.next_crawl_at <= 5.minutes.from_now
+    assert_equal 1, source.recovery_attempts
+    assert_in_delta 1.minute, source.next_crawl_at - Time.current, 5.seconds
   end
 end

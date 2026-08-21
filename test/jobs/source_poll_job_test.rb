@@ -535,7 +535,7 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_not_nil @source.last_error
   end
 
-  test "records error and reschedules on generic StandardError" do
+  test "records error and marks recovering on generic StandardError" do
     @source.update!(status: :ok, last_error: nil, next_crawl_at: 1.hour.from_now)
     @verify_extractor = false
     failing = Object.new
@@ -548,11 +548,11 @@ class SourcePollJobTest < ActiveJob::TestCase
     end
 
     @source.reload
-    assert @source.failed?
+    assert @source.recovering?
     assert_equal "timed out", @source.last_error
     assert_not_nil @source.last_error_at
-    assert @source.next_crawl_at <= 5.minutes.from_now
-    assert @source.next_crawl_at > Time.current
+    assert_equal 1, @source.recovery_attempts
+    assert_in_delta 1.minute, @source.next_crawl_at - Time.current, 5.seconds
   end
 
   test "reschedules next_crawl_at on NotImplementedError failure" do
@@ -613,10 +613,10 @@ class SourcePollJobTest < ActiveJob::TestCase
     end
 
     source.reload
-    assert source.failed?
+    assert source.recovering?
     assert_equal "blocked", source.last_error
-    assert source.next_crawl_at <= 5.minutes.from_now
-    assert source.next_crawl_at > Time.current
+    assert_equal 1, source.recovery_attempts
+    assert_in_delta 1.minute, source.next_crawl_at - Time.current, 5.seconds
   end
 
   test "resolves a pending youtube channel handle URL before polling" do
@@ -928,5 +928,46 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     assert_equal 2, source.reload.consecutive_empty_polls
     assert_equal "ok", source.status
+  end
+
+  test "marks source recovering when DomainMutex::LockTimeout escapes retries" do
+    @source.update!(status: :pending)
+    DomainMutex.stub(:with_lock, ->(_domain, &_block) { raise DomainMutex::LockTimeout, "locked" }) do
+      SourcePollJob.perform_now(@source.id)
+    end
+
+    @source.reload
+    assert @source.recovering?
+    assert_equal 1, @source.recovery_attempts
+    assert_in_delta 1.minute, @source.next_crawl_at - Time.current, 5.seconds
+    assert_not @source.polling
+  end
+
+  test "outer rescue marks recovering when PendingChannelResolver raises unexpected error" do
+    @source.update!(kind: :youtube_channel, url: "https://www.youtube.com/@bad")
+    Youtube::PendingChannelResolver.stub(:call, ->(_s) { raise StandardError, "boom" }) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.recovering?
+    assert_equal "boom", @source.last_error
+  end
+
+  test "UrlGuard::Blocked from bridge marks failed, not recovering" do
+    @source.update!(status: :pending)
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise UrlGuard::Blocked, "blocked" }
+
+    Stray::BridgeRegistry.stub(:find_for_source, failing) do
+      without_lock do
+        SourcePollJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert @source.failed?
   end
 end

@@ -55,6 +55,7 @@ class SourcesController < ApplicationController
       active: source_params.key?(:active) ? (source_params[:active] == "1") : true,
       status: :pending
     )
+    @source.update!(next_crawl_at: 1.minute.from_now)
     LinkIntakeJob.perform_later(current_user.id, url, @source.id)
     redirect_to sources_path, notice: "Source added."
   end
@@ -71,6 +72,7 @@ class SourcesController < ApplicationController
       s.icon_url = source_params[:icon_url]
       s.active = source_params.key?(:active) ? (source_params[:active] == "1") : true
       s.status = :pending
+      s.next_crawl_at = 1.minute.from_now
     end
 
     if @source.valid?
@@ -85,7 +87,7 @@ class SourcesController < ApplicationController
 
   def pull
     source = scoped_source
-    source.update!(status: :pending, last_error: nil, last_error_at: nil, polling: true, next_crawl_at: nil)
+    Source::StatusMachine.reset_for_poll!(source)
     Turbo::StreamsChannel.broadcast_replace_to(
       "user_#{source.user_id}_sources",
       target: ActionView::RecordIdentifier.dom_id(source),

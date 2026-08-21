@@ -90,4 +90,30 @@ class Stray::Bridges::PeertubeTest < ActiveSupport::TestCase
       assert_equal [ "Documentary", "information", "Society" ], tags
     end
   end
+
+  test "api_url_for converts channel page URLs to API endpoints" do
+    assert_equal "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100",
+      Stray::Bridges::Peertube.api_url_for("https://tilvids.com/video-channels/fedi")
+    assert_equal "https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100",
+      Stray::Bridges::Peertube.api_url_for("https://tube.xy-space.de/a/voxpopuli")
+    assert_nil Stray::Bridges::Peertube.api_url_for("https://example.com/not-a-channel")
+  end
+
+  test "feed_from_response parses API JSON without re-fetching" do
+    fixture = File.read(FIXTURE)
+    resp = OpenStruct.new(status: 200, body: fixture)
+    extractor = Stray::Bridges::Peertube.new
+    items = extractor.feed_from_response(resp, "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
+    assert_equal 1, items.size
+    assert_equal "8681e152-265f-42dc-80cd-7333fd4feb6d", items.first[:external_id]
+  end
+
+  test "extract_feed_from_response parses an already-fetched API response" do
+    fixture = File.read(FIXTURE)
+    resp = OpenStruct.new(status: 200, body: fixture)
+    wrapper = Bridges::Peertube.new
+    items = wrapper.extract_feed_from_response(resp, "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
+    assert_equal 1, items.size
+    assert_equal "8681e152-265f-42dc-80cd-7333fd4feb6d", items.first.external_id
+  end
 end

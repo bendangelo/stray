@@ -219,6 +219,12 @@ class SourceTest < ActiveSupport::TestCase
     assert_equal "UC123", source.display_name
   end
 
+  test "display_name prefers channel_url path over an API url" do
+    source = Source.new(url: "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100",
+      channel_url: "https://tilvids.com/video-channels/fedi", external_id: "fedi")
+    assert_equal "fedi", source.display_name
+  end
+
   test "stray_collection kind is a valid enum value" do
     source = Source.new(user: users(:one), kind: :stray_collection, url: "https://x/c/y/manifest.json")
     assert source.valid?
@@ -243,13 +249,16 @@ class SourceTest < ActiveSupport::TestCase
     assert_equal 1, Source.statuses[:ok]
     assert_equal 2, Source.statuses[:failed]
     assert_equal 3, Source.statuses[:degraded]
+    assert_equal 4, Source.statuses[:recovering]
   end
 
-  test "status enum includes degraded" do
-    source = Source.new(kind: :generic_page, url: "https://example.com", external_id: "x")
-    source.status = :degraded
-    assert_equal "degraded", source.status
-    assert source.degraded?
+  test "status enum includes recovering and recovery_attempts defaults to 0" do
+    source = Source.create!(user: users(:one), kind: :generic_page,
+      url: "https://example.com", external_id: "x")
+    source.status = :recovering
+    assert_equal "recovering", source.status
+    assert source.recovering?
+    assert_equal 0, source.recovery_attempts
   end
 
   test "kind enum includes generic_list" do

@@ -200,10 +200,16 @@ class LinkIntakeJob < ApplicationJob
     extractor = Stray::BridgeRegistry.find_for(@url)
     contents = Array(extractor.extract_feed(@url))
 
+    if kind == :peertube_channel
+      feed_url = Stray::Bridges::Peertube.api_url_for(@url) || @url
+    else
+      feed_url = @url
+    end
+
     creator = contents.map(&:creator_identity).compact.find { |c| c.external_id }
     source = create_source(
       kind: kind,
-      url: @url,
+      url: feed_url,
       external_id: creator&.external_id || Digest::SHA256.hexdigest(@url)[0, 16],
       name: creator&.name,
       channel_url: @url

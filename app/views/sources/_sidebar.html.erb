@@ -24,6 +24,8 @@
                   <%= phosphor_icon "spinner-gap", class: "w-3 h-3 animate-spin" %>
                   Resolving…
                 </span>
+              <% elsif source.recovering? %>
+                <span class="text-xs text-carrot-500 font-normal" title="<%= source.last_error %>">Retrying…</span>
               <% elsif source.failed? %>
                 <span class="text-xs text-cerise font-normal" title="<%= source.last_error %>">Failed</span>
               <% end %>

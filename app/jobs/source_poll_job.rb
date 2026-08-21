@@ -3,22 +3,25 @@ class SourcePollJob < ApplicationJob
 
   NO_MISSING_METADATA_UPDATE = %i[title url content_text content_html fetched_at].freeze
 
+  retry_on DomainMutex::LockTimeout, wait: 30.seconds, attempts: 3
   retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
   retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
   retry_on Stray::RateBudgetExhausted, wait: 15.seconds, attempts: 4
 
-  discard_on Stray::YtDlp::Error do |job, error|
-    source = Source.find_by(id: job.arguments.first)
-    return unless source
+  discard_on DomainMutex::LockTimeout do |job, error|
+    mark_source(job, error, :recovering)
+  end
 
-    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+  discard_on Stray::YtDlp::Error do |job, error|
+    mark_source(job, error, :recovering)
   end
 
   discard_on Stray::ExtractionError do |job, error|
-    source = Source.find_by(id: job.arguments.first)
-    return unless source
+    mark_source(job, error, :recovering)
+  end
 
-    source.update!(last_error: error.message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+  discard_on Stray::RateBudgetExhausted do |job, error|
+    mark_source(job, error, :recovering)
   end
 
   def perform(source_id, cursor = nil)
@@ -39,11 +42,36 @@ class SourcePollJob < ApplicationJob
         extract_and_persist(source)
       end
     end
+  rescue UrlGuard::Blocked => e
+    Source::StatusMachine.mark_failed!(source, message: e.message)
+    broadcast_source_update(source)
+  rescue DomainMutex::LockTimeout, Stray::YtDlp::Error, Stray::ExtractionError, Stray::RateBudgetExhausted
+    raise
+  rescue StandardError => e
+    Source::StatusMachine.mark_recovering!(source, message: e.message)
+    broadcast_source_update(source)
   ensure
     if source&.persisted?
       source.update!(polling: false)
       broadcast_source_update(source)
     end
+  end
+
+  def self.mark_source(job, error, kind)
+    source = Source.find_by(id: job.arguments.first)
+    return unless source
+
+    if kind == :recovering
+      Source::StatusMachine.mark_recovering!(source, message: error.message)
+    else
+      Source::StatusMachine.mark_failed!(source, message: error.message)
+    end
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "user_#{source.user_id}_sources",
+      target: ActionView::RecordIdentifier.dom_id(source),
+      partial: "sources/source",
+      locals: { source: source }
+    )
   end
 
   private
@@ -70,7 +98,7 @@ class SourcePollJob < ApplicationJob
 
     if cached == :not_modified
       source.recalculate_next_crawl!
-      source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
+      Source::StatusMachine.mark_ok!(source, etag: source.etag, last_modified: source.last_modified)
       return
     end
 
@@ -81,23 +109,21 @@ class SourcePollJob < ApplicationJob
     track_empty_polls(source, new_count)
     backfill_source_metadata(source, contents)
     source.recalculate_next_crawl!
-    status = new_count > 0 || source.consecutive_empty_polls < 3 ? :ok : :degraded
-    source.update!(
-      last_polled_at: Time.current,
-      last_error: nil,
-      last_error_at: nil,
-      status: status,
-      etag: cached.etag,
-      last_modified: cached.last_modified
-    )
+    if new_count > 0 || source.consecutive_empty_polls < 3
+      Source::StatusMachine.mark_ok!(source, etag: cached.etag, last_modified: cached.last_modified)
+    else
+      Source::StatusMachine.mark_degraded!(source)
+      source.update!(etag: cached.etag, last_modified: cached.last_modified)
+    end
   rescue NotImplementedError => e
-    source.update!(last_error: "Bridge missing extract_feed: #{e.message}", last_error_at: Time.current, status: :failed)
+    Source::StatusMachine.mark_failed!(source, message: "Bridge missing extract_feed: #{e.message}")
     reschedule_on_failure!(source)
   rescue Stray::YtDlp::Error, Stray::ExtractionError
     raise
+  rescue UrlGuard::Blocked => e
+    Source::StatusMachine.mark_failed!(source, message: e.message)
   rescue StandardError => e
-    source.update!(last_error: e.message, last_error_at: Time.current, status: :failed)
-    reschedule_on_failure!(source)
+    Source::StatusMachine.mark_recovering!(source, message: e.message)
   end
 
   def track_empty_polls(source, new_count)
@@ -191,12 +217,12 @@ class SourcePollJob < ApplicationJob
       source.update!(name: result.collection_name)
     end
 
-    source.update!(last_polled_at: Time.current, last_error: nil, last_error_at: nil, status: :ok)
+    Source::StatusMachine.mark_ok!(source, etag: source.etag, last_modified: source.last_modified)
     source.recalculate_next_crawl!
   end
 
   def update_relay_error(source, message)
-    source.update!(last_error: message, last_error_at: Time.current, status: :failed, next_crawl_at: 5.minutes.from_now)
+    Source::StatusMachine.mark_recovering!(source, message: message)
     rc = source.remote_collection
     rc&.update!(last_error: message, last_error_at: Time.current)
   end

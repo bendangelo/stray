@@ -558,4 +558,36 @@ class LinkIntakeJobTest < ActiveJob::TestCase
       end
     end
   end
+
+  test "creates a peertube channel source with the API URL as source.url" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://tilvids.com/w/abc", title: "Vid", content_text: nil, content_html: nil,
+        thumbnail_url: nil, published_at: 1.day.ago, external_id: "abc", duration: 120,
+        creator_identity: Stray::CreatorIdentity.new(
+          name: "Fedi", url: "https://tilvids.com/video-channels/fedi",
+          external_id: "fedi", thumbnail_url: nil
+        ),
+        tags: []
+      )
+    ]
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ "https://tilvids.com/video-channels/fedi" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor, [ "https://tilvids.com/video-channels/fedi" ]) do
+      Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+        assert_enqueued_with(job: SourcePollJob) do
+          LinkIntakeJob.perform_now(@user.id, "https://tilvids.com/video-channels/fedi")
+        end
+      end
+    end
+
+    source = Source.find_by(external_id: "fedi", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "peertube_channel", source.kind
+    assert_equal "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100", source.url
+    assert_equal "https://tilvids.com/video-channels/fedi", source.channel_url
+    assert_equal "Fedi", source.name
+  end
 end
