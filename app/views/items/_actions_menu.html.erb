@@ -16,6 +16,11 @@
               transition transform origin-top-right
               data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
+    <%= link_to item_path(item, context_params_for(item)),
+          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+      <%= phosphor_icon "arrow-square-out", class: "w-3.5 h-3.5" %> Open details
+    <% end %>
+
     <%= action_link_to item_path(item), method: :patch, params: { state: item.saved? ? "unseen" : "saved" },
           data: { turbo_stream: true },
           class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
