@@ -1,6 +1,8 @@
 require "test_helper"
 
 class SourcesHelperTest < ActionView::TestCase
+  include ImagesHelper
+
   test "source_icon_url returns icon_url when present" do
     source = Source.new(url: "https://example.com", icon_url: "https://example.com/icon.png")
     assert_equal "https://example.com/icon.png", source_icon_url(source)

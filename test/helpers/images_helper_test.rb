@@ -2,6 +2,7 @@ require "test_helper"
 
 class ImagesHelperTest < ActionView::TestCase
   include ApplicationHelper
+  include SourcesHelper
 
   test "fallback_image_tag with nil src renders fallback directly without controller" do
     html = fallback_image_tag(nil, fallback: "/fallback.jpg", alt: "x", class: "w-10")

@@ -36,13 +36,6 @@ module SourcesHelper
   end
 
   def source_icon(source, size: "w-8 h-8")
-    icon = source_icon_url(source)
-    if icon.present?
-      image_tag icon, alt: source.name, class: "#{size} rounded border-2 border-charcoal shrink-0 object-contain bg-white p-0.5"
-    else
-      letter = source.name.to_s.first.upcase
-      content_tag :div, letter,
-        class: "#{size} rounded border-2 border-charcoal bg-charcoal text-white font-bold text-sm flex items-center justify-center shrink-0"
-    end
+    source_icon_tag(source, size: size)
   end
 end
