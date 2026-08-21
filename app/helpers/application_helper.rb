@@ -112,4 +112,15 @@ module ApplicationHelper
     return "collection" if path.start_with?("/collections/")
     "feed"
   end
+
+  def tagging_provenance_icon(tagging)
+    case tagging.source.to_sym
+    when :ai_embedding
+      phosphor_icon "cpu", class: "w-3 h-3 inline", title: "Tagged by embedding similarity"
+    when :ai_llm
+      phosphor_icon "sparkle", class: "w-3 h-3 inline", title: "Tagged by LLM"
+    when :user
+      phosphor_icon "user", class: "w-3 h-3 inline", title: "Tagged by you"
+    end
+  end
 end
