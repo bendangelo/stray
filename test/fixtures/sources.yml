@@ -43,3 +43,13 @@ remote:
   next_crawl_at: <%= 1.hour.from_now %>
   slug: "remotecolslug00000000000"
 
+saved_youtube:
+  user: one
+  kind: 10
+  url: "https://www.youtube.com/watch?v=savevid1"
+  name: "Saved YouTube Video"
+  external_id: "savevid1"
+  active: true
+  status: 1
+  slug: "savedytslug0000000000000"
+

@@ -17,3 +17,8 @@ four:
   user: one
   source: inactive
   weight: 1.0
+
+saved_youtube:
+  user: one
+  source: saved_youtube
+  weight: 1.0

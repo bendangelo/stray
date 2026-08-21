@@ -75,3 +75,15 @@ video_user_two:
   content_text: "Belongs to user two"
   published_at: <%= 1.hour.ago %>
   state: 0
+
+video_saved_yt:
+  source: saved_youtube
+  user: one
+  external_id: "savevid1"
+  title: "Saved YouTube Video"
+  url: "https://www.youtube.com/watch?v=savevid1"
+  content_text: "A saved YouTube video"
+  thumbnail_url: "https://example.com/saveyt.jpg"
+  duration: 200
+  published_at: <%= 3.days.ago %>
+  state: 0
