@@ -143,8 +143,10 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     extractor = Minitest::Mock.new
     extractor.expect(:extract, content, [ "https://example.com/blog/hello-world" ])
 
-    Stray::BridgeRegistry.stub(:find_for, extractor) do
-      LinkIntakeJob.perform_now(@user.id, "https://example.com/blog/hello-world")
+    Bridges::GenericList.stub(:detect, nil) do
+      Stray::BridgeRegistry.stub(:find_for, extractor) do
+        LinkIntakeJob.perform_now(@user.id, "https://example.com/blog/hello-world")
+      end
     end
 
     source = Source.find_by(kind: "generic_page", user_id: @user.id)
@@ -465,6 +467,26 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_not_nil source
     assert_equal "BrightInsight", source.external_id
     assert_equal "Bright Insight", source.name
+    assert_equal 1, source.items.count
+  end
+
+  test "creates generic_list source when list page detected" do
+    contents = [ Stray::ExtractedContent.new(url: "https://example.com/post-1", title: "Post 1", content_text: nil, content_html: nil,
+      thumbnail_url: nil, published_at: nil, external_id: Digest::SHA256.hexdigest("https://example.com/post-1"), duration: nil, creator_identity: nil, tags: []) ]
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract_feed, contents, [ "https://example.com/blog" ])
+
+    Bridges::GenericList.stub(:detect, 5) do
+      Stray::BridgeRegistry.stub(:find_for, extractor, [ "https://example.com/blog" ]) do
+        perform_enqueued_jobs do
+          LinkIntakeJob.perform_later(@user.id, "https://example.com/blog")
+        end
+      end
+    end
+
+    source = Source.find_by(url: "https://example.com/blog")
+    assert source
+    assert_equal "generic_list", source.kind
     assert_equal 1, source.items.count
   end
 end

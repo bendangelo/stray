@@ -64,6 +64,7 @@ class LinkIntakeJob < ApplicationJob
       when :odysee_channel        then extract_channel_feed(:odysee_channel)
       when :peertube_channel_feed then extract_channel_feed(:peertube_channel)
       when :peertube_video        then extract_site_video(:peertube_channel)
+      when :generic_list          then extract_generic_list
       when :generic_page    then extract_generic_page
       else
         raise Stray::ExtractionError, "Unsupported URL: #{@url}"
@@ -234,6 +235,32 @@ class LinkIntakeJob < ApplicationJob
     extractor = Stray::BridgeRegistry.find_for(@url)
     content = extractor.extract(@url)
     create_generic_page_source(content)
+  end
+
+  def extract_generic_list
+    extractor = Stray::BridgeRegistry.find_for(@url)
+    contents = Array(extractor.extract_feed(@url))
+
+    source = create_source(
+      kind: :generic_list,
+      url: @url,
+      external_id: Digest::SHA256.hexdigest(@url)[0, 16],
+      name: extract_list_name(contents, @url)
+    )
+
+    create_items(source, contents)
+    enqueue_full_poll(source)
+    [ contents, source ]
+  end
+
+  def extract_list_name(contents, url)
+    creator = contents.map(&:creator_identity).compact.find { |c| c.name }
+    return creator.name if creator
+
+    uri = URI.parse(url)
+    uri.host&.sub(/^www\./, "")
+  rescue URI::InvalidURIError
+    nil
   end
 
   def create_video_source(content, creator)
