@@ -12,11 +12,13 @@ class PoliteCrawl
     end
 
     def get(url, http_client:)
+      raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
       sleep
       http_client.get(url)
     end
 
     def get_with_cache(url, http_client:, etag: nil, last_modified: nil)
+      raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
       sleep
       headers = {}
       headers["If-None-Match"] = etag if etag.present?

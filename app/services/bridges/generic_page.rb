@@ -42,8 +42,6 @@ module Bridges
       private
 
       def fetch(url)
-        raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
-
         response = PoliteCrawl.get(url, http_client: http_client)
         raise Stray::ExtractionError, "page fetch failed: #{response.status}" unless response.status == 200
 

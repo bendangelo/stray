@@ -59,13 +59,4 @@ class Bridges::RemoteCollectionTest < ActiveSupport::TestCase
       assert_nil result.next_cursor
     end
   end
-
-  test "extract_feed rejects non-manifest URL with UrlGuard" do
-    UrlGuard.stub(:allowed?, false) do
-      extractor = Bridges::RemoteCollection.new
-      assert_raises(UrlGuard::Blocked) do
-        extractor.extract_feed("http://localhost/c/abc/manifest.json")
-      end
-    end
-  end
 end

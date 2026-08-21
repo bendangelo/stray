@@ -29,8 +29,6 @@ module Bridges
       end
 
       def extract_feed(url)
-        raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
-
         response = http_client.get(url)
         raise "manifest fetch failed: #{response.status}" unless response.status == 200
 

@@ -83,4 +83,22 @@ class PoliteCrawlTest < ActiveSupport::TestCase
     end
     client.verify
   end
+
+  test "get raises UrlGuard::Blocked for localhost URLs" do
+    client = Minitest::Mock.new
+    assert_raises(UrlGuard::Blocked) do
+      PoliteCrawl.stub(:sleep, -> {}) do
+        PoliteCrawl.get("http://localhost:3000/admin", http_client: client)
+      end
+    end
+  end
+
+  test "get_with_cache raises UrlGuard::Blocked for private IP URLs" do
+    client = Minitest::Mock.new
+    assert_raises(UrlGuard::Blocked) do
+      PoliteCrawl.stub(:sleep, -> {}) do
+        PoliteCrawl.get_with_cache("http://192.168.1.1/secret", http_client: client)
+      end
+    end
+  end
 end
