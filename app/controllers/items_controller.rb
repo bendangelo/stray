@@ -1,7 +1,7 @@
 class ItemsController < ApplicationController
   include ApplicationHelper
 
-  ALLOWED_STATES = %w[ unseen saved hidden ].freeze
+  ALLOWED_STATES = %w[ unseen seen saved hidden ].freeze
   KIND_MAP = { "saved" => :starred, "hidden" => :hidden }.freeze
 
   def show

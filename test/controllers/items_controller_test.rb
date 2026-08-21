@@ -120,6 +120,24 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "marking an unseen item as seen changes state without creating an interaction" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    assert item.unseen?
+    follow = follows(:one)
+    assert_equal 1.0, follow.weight
+
+    assert_no_difference -> { Interaction.count } do
+      patch item_path(item), params: { state: "seen" }, as: :turbo_stream
+    end
+
+    assert_response :success
+    item.reload
+    assert item.seen?
+    follow.reload
+    assert_equal 1.0, follow.weight
+  end
+
   test "second save of same item does not nudge weight again" do
     sign_in_as(users(:one))
     item = items(:video_one)
