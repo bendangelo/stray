@@ -22,6 +22,7 @@ class SourcesTest < ApplicationSystemTestCase
     visit sources_path
 
     within "##{dom_id(sources(:youtube))}" do
+      find("button[aria-controls^='source-actions-']").click
       click_on "Edit"
     end
 
@@ -39,12 +40,14 @@ class SourcesTest < ApplicationSystemTestCase
     assert_text "Test Channel"
 
     within "##{dom_id(sources(:youtube))}" do
+      find("button[aria-controls^='source-actions-']").click
       click_on "Pause"
     end
 
     assert_text "Paused"
     within "##{dom_id(sources(:youtube))}" do
       assert_text "Test Channel"
+      find("button[aria-controls^='source-actions-']").click
       assert_text "Unpause"
     end
   end
@@ -54,6 +57,7 @@ class SourcesTest < ApplicationSystemTestCase
     visit sources_path
 
     within "##{dom_id(sources(:inactive))}" do
+      find("button[aria-controls^='source-actions-']").click
       click_on "Unpause"
     end
 
@@ -65,6 +69,7 @@ class SourcesTest < ApplicationSystemTestCase
     visit sources_path
 
     within "##{dom_id(sources(:bitchute))}" do
+      find("button[aria-controls^='source-actions-']").click
       accept_confirm do
         click_on "Delete"
       end

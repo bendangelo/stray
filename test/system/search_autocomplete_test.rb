@@ -14,7 +14,7 @@ class SearchAutocompleteTest < ApplicationSystemTestCase
     assert_selector "mark", wait: 5
   end
 
-  test "selecting a title fills input and submits search" do
+  test "selecting a title navigates to the item" do
     sign_in_as(users(:one))
     rebuild_full_search_index(Item)
     visit root_path
@@ -25,9 +25,8 @@ class SearchAutocompleteTest < ApplicationSystemTestCase
       find("li[role='option']", text: "First Video").click
     end
 
-    assert_equal "First Video", find_field("q").value
+    assert_current_path item_path(items(:video_one))
     assert_text "First Video"
-    assert_no_text "Second Video"
   end
 
   test "short query does not show dropdown" do

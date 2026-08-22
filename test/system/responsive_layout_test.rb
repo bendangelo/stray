@@ -150,7 +150,7 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
            visible: false, wait: 2
 
     # Open the actions menu and click "Add tag"
-    first("[data-controller='dropdown'] [data-dropdown-target='button']").click
+    first("button[aria-controls^='item-actions-']").click
     click_on "Add tag"
 
     # The form should appear, cloned from the template

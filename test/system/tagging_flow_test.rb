@@ -19,7 +19,8 @@ class TaggingFlowTest < ApplicationSystemTestCase
 
   test "item shows tag chips with provenance" do
     visit root_path
-    within first("#item_#{items(:video_one).id}_tags") do
+    within "##{dom_id(items(:video_one))}" do
+      find("button[aria-controls^='item-actions-']").click
       assert_text "ruby"
     end
   end
@@ -46,7 +47,7 @@ class TaggingFlowTest < ApplicationSystemTestCase
     sign_in_as(users(:one))
     visit root_path
 
-    first("[data-controller='dropdown'] [data-dropdown-target='button']").click
+    first("button[aria-controls^='item-actions-']").click
     click_on "Add tag"
 
     fill_in "tag name", with: "ru" # should match "ruby" fixture tag
