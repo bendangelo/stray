@@ -161,4 +161,50 @@ class ItemShowTest < ApplicationSystemTestCase
     end
     assert item.reload.saved?
   end
+
+  test "details page shows a star toggle in the meta row for an unsaved item" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    assert item.unseen?
+
+    visit item_path(item)
+
+    within "#item_star_#{item.id}" do
+      assert_selector "a[aria-label='Star']"
+      assert_selector "a[aria-pressed='false']"
+    end
+  end
+
+  test "clicking the details page star toggle saves the item and reflects after reload" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    assert item.unseen?
+
+    visit item_path(item)
+
+    within "#item_star_#{item.id}" do
+      find("a[aria-label='Star']").click
+      assert_selector "a[aria-label='Unstar']", wait: 3
+    end
+    assert item.reload.saved?
+
+    visit item_path(item)
+    within "#item_star_#{item.id}" do
+      assert_selector "a[aria-label='Unstar']"
+      assert_selector "a[aria-pressed='true']"
+    end
+  end
+
+  test "details page star toggle reflects saved state on initial load" do
+    sign_in_as(users(:one))
+    item = items(:video_saved)
+    assert item.saved?
+
+    visit item_path(item)
+
+    within "#item_star_#{item.id}" do
+      assert_selector "a[aria-label='Unstar']"
+      assert_selector "a[aria-pressed='true']"
+    end
+  end
 end
