@@ -8,11 +8,7 @@ module SessionTestHelper
       end[:session_id]
 
       visit "/"
-      page.driver.browser.manage.add_cookie(
-        name: "session_id",
-        value: cookie,
-        path: "/"
-      )
+      page.driver.set_cookie("session_id", cookie, path: "/")
       visit "/"
     else
       ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
@@ -26,7 +22,7 @@ module SessionTestHelper
     Current.session&.destroy!
 
     if respond_to?(:page) && page.is_a?(Capybara::Session)
-      page.driver.browser.manage.delete_cookie("session_id")
+      page.driver.remove_cookie("session_id")
     else
       cookies.delete("session_id")
     end

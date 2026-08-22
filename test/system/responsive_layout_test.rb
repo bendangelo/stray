@@ -70,7 +70,7 @@ class ResponsiveLayoutTest < ApplicationSystemTestCase
     visit root_path
 
     # XL viewport (1280px+)
-    page.driver.browser.manage.window.resize_to(1536, 1024)
+    page.driver.resize(1536, 1024)
 
     first_item = first("[data-player-target='video']")
     grid_column = first_item.evaluate_script("getComputedStyle(this).gridColumn")
