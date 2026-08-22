@@ -6,8 +6,9 @@
   wrapper_tag = variant == :menu ? :div : :span
   wrapper_class = variant == :menu ? "block" : "inline-flex"
   icon_size = variant == :menu ? "w-3.5 h-3.5" : "w-4 h-4"
+  wrapper_id = variant == :menu ? nil : "item_star_#{item.id}"
 %>
-<%= content_tag wrapper_tag, id: "item_star_#{item.id}", class: wrapper_class do %>
+<%= content_tag wrapper_tag, id: wrapper_id, class: wrapper_class do %>
   <%= action_link_to item_path(item), method: :patch,
         params: { state: item.saved? ? "unseen" : "saved" },
         data: { turbo_stream: true },
