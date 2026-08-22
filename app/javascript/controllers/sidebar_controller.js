@@ -13,6 +13,8 @@ export default class extends Controller {
   }
 
   openValueChanged() {
+    if (!this.hasSidebarTarget) return
+
     if (this.openValue) {
       this.sidebarTarget.classList.remove("-translate-x-full")
       this.backdropTarget.classList.remove("hidden")
