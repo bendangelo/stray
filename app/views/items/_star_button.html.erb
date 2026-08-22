@@ -1,0 +1,22 @@
+<%
+  variant = local_assigns.fetch(:variant, :button)
+  star_classes = variant == :menu ?
+    "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" :
+    "text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-2 min-w-9 min-h-9 inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
+  wrapper_tag = variant == :menu ? :div : :span
+  wrapper_class = variant == :menu ? "block" : "inline-flex"
+  icon_size = variant == :menu ? "w-3.5 h-3.5" : "w-4 h-4"
+%>
+<%= content_tag wrapper_tag, id: "item_star_#{item.id}", class: wrapper_class do %>
+  <%= action_link_to item_path(item), method: :patch,
+        params: { state: item.saved? ? "unseen" : "saved" },
+        data: { turbo_stream: true },
+        aria: { pressed: item.saved?, label: item.saved? ? "Unstar" : "Star" },
+        title: item.saved? ? "Unstar" : "Star",
+        class: star_classes do %>
+    <%= phosphor_icon "star", style: item.saved? ? :fill : :regular, class: icon_size %>
+    <% if variant == :menu %>
+      <%= item.saved? ? "Unstar" : "Star" %>
+    <% end %>
+  <% end %>
+<% end %>
