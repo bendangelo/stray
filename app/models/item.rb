@@ -52,7 +52,7 @@ class Item < ApplicationRecord
         title: row["title"],
         highlighted_title: row["highlighted_title"],
         url: row["url"],
-        published_at: row["published_at"],
+        published_at: row["published_at"] && Time.zone.parse(row["published_at"]),
         source_name: row["source_name"]
       )
     end

@@ -11,7 +11,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     rebuild_full_search_index(Item)
     get search_suggest_path(q: "first")
     assert_response :success
-    assert_includes response.body, "First Video"
+    assert_includes response.body, "<mark>First</mark> Video"
     assert_includes response.body, "<mark>"
   end
 

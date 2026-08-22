@@ -20,7 +20,7 @@
         <%= form_with url: root_path, method: :get, class: "w-full max-w-xl",
           data: { controller: "search-submit",
                   action: "autocomplete.change->search-submit#submit" } do |form| %>
-                  <div class="relative flex items-center w-full rounded-md border-3 border-charcoal bg-athens-400" data-controller="autocomplete" data-autocomplete-url-value="<%= search_suggest_path %>" >
+                  <div class="relative flex items-center w-full rounded-md border-3 border-charcoal bg-athens-400" data-controller="autocomplete" data-autocomplete-url-value="<%= search_suggest_path %>" data-autocomplete-selected-class="bg-athens-500" >
             <%= form.text_field :q,
               value: @q,
               placeholder: "Search your feed...",
