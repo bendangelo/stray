@@ -83,4 +83,28 @@ class ItemStateVisualsTest < ApplicationSystemTestCase
     end
     assert item.reload.seen?
   end
+
+  test "saved item shows a filled star badge in the top-left of the thumbnail" do
+    sign_in_as(users(:one))
+    item = items(:video_saved)
+    assert item.saved?
+
+    visit source_path(item.source)
+
+    within "##{dom_id(item)}" do
+      assert_selector "span[title='Starred'].absolute.top-2.left-2", count: 1
+    end
+  end
+
+  test "unsaved item does not show a star badge on the thumbnail" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+    assert_not item.saved?
+
+    visit source_path(item.source)
+
+    within "##{dom_id(item)}" do
+      assert_no_selector "span[title='Starred']"
+    end
+  end
 end

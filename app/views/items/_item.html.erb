@@ -22,6 +22,11 @@
           <%= pretty_duration(item.duration) %>
         </p>
       <% end %>
+      <% if item.saved? %>
+        <span class="absolute top-2 left-2 text-carrot-500 drop-shadow-sm" title="Starred">
+          <%= phosphor_icon "star", style: :fill, class: "w-4 h-4" %>
+        </span>
+      <% end %>
       <% if item.unseen? %>
         <span class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-mint ring-2 ring-charcoal/50"></span>
       <% end %>
