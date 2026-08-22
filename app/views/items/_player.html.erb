@@ -20,6 +20,7 @@
          href="<%= item.url %>" target="_blank" rel="noopener">
         <%= item.title %>
       </a>
+      <%= render "items/star_button", item: item %>
       <%= render "items/actions_menu", item: item %>
     </div>
 

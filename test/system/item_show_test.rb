@@ -129,4 +129,36 @@ class ItemShowTest < ApplicationSystemTestCase
     assert_text "WHY IS THIS HERE?"
     assert_text "Weight"
   end
+
+  test "inline player shows a star toggle button next to the title" do
+    sign_in_as(users(:one))
+    item = items(:video_three)
+    assert item.unseen?
+
+    visit root_path
+    first("[data-player-target='video'] a[data-action*='player#toggle']").click
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    within "#item_star_#{item.id}" do
+      assert_selector "a[aria-label='Star']"
+      assert_selector "a[aria-pressed='false']"
+    end
+  end
+
+  test "clicking the player star toggle saves the item and flips to filled" do
+    sign_in_as(users(:one))
+    item = items(:video_three)
+    assert item.unseen?
+
+    visit root_path
+    first("[data-action*='player#toggle']").click
+    assert_selector "[data-player-target='playerBox']:not(.hidden)"
+
+    within "#item_star_#{item.id}" do
+      find("a[aria-label='Star']").click
+      assert_selector "a[aria-label='Unstar']", wait: 3
+      assert_selector "a[aria-pressed='true']"
+    end
+    assert item.reload.saved?
+  end
 end
