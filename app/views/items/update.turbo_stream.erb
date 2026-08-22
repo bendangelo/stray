@@ -4,4 +4,7 @@
   <%= turbo_stream.replace dom_id(item) do %>
     <%= render "items/item", item: item %>
   <% end %>
+  <%= turbo_stream.replace "item_star_#{item.id}" do %>
+    <%= render "items/star_button", item: item %>
+  <% end %>
 <% end %>

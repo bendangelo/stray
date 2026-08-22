@@ -251,4 +251,24 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
   end
+
+  test "saved-state turbo stream response replaces the item_star element" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    patch item_path(item), params: { state: "saved" }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, %(turbo-stream action="replace" target="item_star_#{item.id}")
+  end
+
+  test "hidden-state turbo stream response does not replace item_star" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    patch item_path(item), params: { state: "hidden" }, as: :turbo_stream
+
+    assert_response :success
+    assert_not_includes response.body, %(target="item_star_#{item.id}")
+  end
 end
