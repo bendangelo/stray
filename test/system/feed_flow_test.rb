@@ -32,12 +32,12 @@ class FeedFlowTest < ApplicationSystemTestCase
 
     within "##{dom_id(items(:video_one))}" do
       find("button[aria-controls^='item-actions-']").click
-      click_on "Save"
+      click_on "Star"
     end
 
     within "##{dom_id(items(:video_one))}" do
       find("button[aria-controls^='item-actions-']").click
-      assert_text "Unsave"
+      assert_text "Unstar"
     end
   end
 
