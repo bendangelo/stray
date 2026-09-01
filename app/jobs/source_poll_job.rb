@@ -2,24 +2,16 @@ class SourcePollJob < ApplicationJob
   include ItemUpsert
   queue_as :polling
 
-  retry_on DomainMutex::LockTimeout, wait: 30.seconds, attempts: 3
-  retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2
-  retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3
-  retry_on Stray::RateBudgetExhausted, wait: 15.seconds, attempts: 4
-
-  discard_on DomainMutex::LockTimeout do |job, error|
+  retry_on DomainMutex::LockTimeout, wait: 30.seconds, attempts: 3 do |job, error|
     mark_source(job, error, :recovering)
   end
-
-  discard_on Stray::YtDlp::Error do |job, error|
+  retry_on Stray::YtDlp::Error, wait: 1.minute, attempts: 2 do |job, error|
     mark_source(job, error, :recovering)
   end
-
-  discard_on Stray::ExtractionError do |job, error|
+  retry_on Stray::ExtractionError, wait: 1.minute, attempts: 3 do |job, error|
     mark_source(job, error, :recovering)
   end
-
-  discard_on Stray::RateBudgetExhausted do |job, error|
+  retry_on Stray::RateBudgetExhausted, wait: 15.seconds, attempts: 4 do |job, error|
     mark_source(job, error, :recovering)
   end
 
@@ -117,7 +109,7 @@ class SourcePollJob < ApplicationJob
   rescue NotImplementedError => e
     Source::StatusMachine.mark_failed!(source, message: "Bridge missing extract_feed: #{e.message}")
     reschedule_on_failure!(source)
-  rescue Stray::YtDlp::Error, Stray::ExtractionError
+  rescue Stray::YtDlp::Error, Stray::ExtractionError, Stray::RateBudgetExhausted
     raise
   rescue UrlGuard::Blocked => e
     Source::StatusMachine.mark_failed!(source, message: e.message)

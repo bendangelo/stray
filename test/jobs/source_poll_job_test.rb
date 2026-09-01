@@ -17,6 +17,12 @@ class SourcePollJobTest < ActiveJob::TestCase
     @extractor.verify if @verify_extractor
   end
 
+  def drain_enqueued_jobs
+    until enqueued_jobs.empty?
+      perform_enqueued_jobs(at: 2.hours.from_now)
+    end
+  end
+
   def without_lock
     DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
       cached = PoliteCrawl::CachedResponse.new(
@@ -97,7 +103,8 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     Stray::BridgeRegistry.stub(:find_for_source, failing) do
       without_lock do
-        SourcePollJob.perform_now(@source.id)
+        SourcePollJob.perform_later(@source.id)
+        drain_enqueued_jobs
       end
     end
 
@@ -113,7 +120,8 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     Stray::BridgeRegistry.stub(:find_for_source, failing) do
       without_lock do
-        SourcePollJob.perform_now(@source.id)
+        SourcePollJob.perform_later(@source.id)
+        drain_enqueued_jobs
       end
     end
 
@@ -247,7 +255,8 @@ class SourcePollJobTest < ActiveJob::TestCase
 
     Stray::BridgeRegistry.stub(:find_for_source, failing) do
       without_lock do
-        SourcePollJob.perform_now(@source.id)
+        SourcePollJob.perform_later(@source.id)
+        drain_enqueued_jobs
       end
     end
 
@@ -930,10 +939,39 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_equal "ok", source.status
   end
 
+  test "retries DomainMutex::LockTimeout instead of discarding immediately" do
+    @source.update!(status: :pending)
+    calls = 0
+    DomainMutex.stub(:with_lock, ->(_domain, &_block) { calls += 1; raise DomainMutex::LockTimeout, "locked" }) do
+      SourcePollJob.perform_later(@source.id)
+      drain_enqueued_jobs
+    end
+    assert_equal 3, calls
+    @source.reload
+    assert @source.recovering?
+    assert_equal "locked", @source.last_error
+  end
+
+  test "retries Stray::RateBudgetExhausted instead of discarding immediately" do
+    @source.update!(status: :pending)
+    calls = 0
+    PoliteCrawl.stub(:get_with_cache, ->(_url, **_opts) { calls += 1; raise Stray::RateBudgetExhausted, "budget" }) do
+      DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
+        SourcePollJob.perform_later(@source.id)
+        drain_enqueued_jobs
+      end
+    end
+    assert_equal 4, calls
+    @source.reload
+    assert @source.recovering?
+    assert_equal "budget", @source.last_error
+  end
+
   test "marks source recovering when DomainMutex::LockTimeout escapes retries" do
     @source.update!(status: :pending)
     DomainMutex.stub(:with_lock, ->(_domain, &_block) { raise DomainMutex::LockTimeout, "locked" }) do
-      SourcePollJob.perform_now(@source.id)
+      SourcePollJob.perform_later(@source.id)
+      drain_enqueued_jobs
     end
 
     @source.reload
