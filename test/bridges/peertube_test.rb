@@ -57,4 +57,10 @@ class Bridges::PeertubeTest < ActiveSupport::TestCase
 
     assert_equal [], @results
   end
+
+  test "follow! normalizes peertube source url to api endpoint" do
+    source = Source.follow!(users(:one), kind: :peertube_channel,
+      url: "https://tilvids.com/video-channels/fedi", external_id: "fedi")
+    assert_equal "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100", source.url
+  end
 end

@@ -73,8 +73,9 @@ class Source < ApplicationRecord
   end
 
   def self.follow!(user, kind:, url:, external_id:, name: nil, icon_url: nil, channel_url: nil, active: true, status: :pending)
+    normalized_url = normalize_poll_url(kind, url)
     source = find_or_create_by!(user: user, external_id: external_id, kind: kind) do |s|
-      s.url = url
+      s.url = normalized_url
       s.name = name
       s.icon_url = icon_url
       s.channel_url = channel_url
@@ -85,10 +86,20 @@ class Source < ApplicationRecord
     source.update!(name: name) if name.present? && source.name != name
     source.update!(icon_url: icon_url) if icon_url.present? && source.icon_url != icon_url
     source.update!(channel_url: channel_url) if channel_url.present? && source.channel_url != channel_url
+    if kind.to_s == "peertube_channel" && source.url != normalized_url
+      source.update!(url: normalized_url)
+    end
     Follow.find_or_create_by!(user: user, source: source)
     enqueue_backfill(source)
     source
   end
+
+  def self.normalize_poll_url(kind, url)
+    return url unless kind.to_s == "peertube_channel"
+
+    Stray::Bridges::Peertube.api_url_for(url) || url
+  end
+  private_class_method :normalize_poll_url
 
   VIDEO_CHANNEL_KINDS = %w[youtube_channel video_channel rumble_channel bitchute_channel odysee_channel peertube_channel].freeze
 
