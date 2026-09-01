@@ -38,6 +38,10 @@ module Bridges
       extract_feed_from_html(html, url)
     end
 
+    def extract_feed_from_response(response, url)
+      extract_feed_from_html(response.body, url)
+    end
+
     def extract_feed_from_html(html, base_url)
       items = extract_json_ld_items(html, base_url)
       return items if items.any?

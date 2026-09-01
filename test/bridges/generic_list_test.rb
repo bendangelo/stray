@@ -56,4 +56,12 @@ class Bridges::GenericListTest < ActiveSupport::TestCase
       assert_equal Digest::SHA256.hexdigest("https://example.com/post-1"), results[0].external_id
     end
   end
+
+  test "extract_feed_from_response parses a pre-fetched HTML body" do
+    body = File.read(Rails.root.join("test/fixtures/files/pages/list.html"))
+    response = Struct.new(:status, :body, :headers).new(200, body, {})
+    items = Bridges::GenericList.new.extract_feed_from_response(response, "https://example.com/list")
+    assert items.any?
+    assert items.first.title.present?
+  end
 end

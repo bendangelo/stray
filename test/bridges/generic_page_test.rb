@@ -71,6 +71,14 @@ class Bridges::GenericPageTest < ActiveSupport::TestCase
     end
   end
 
+  test "extract_feed_from_response parses a pre-fetched HTML body" do
+    body = File.read(Rails.root.join("test/fixtures/files/pages/article.html"))
+    response = Struct.new(:status, :body, :headers).new(200, body, {})
+    items = Bridges::GenericPage.new.extract_feed_from_response(response, "https://example.com/article")
+    assert_equal 1, items.size
+    assert_equal "Example Article Title", items.first.title
+  end
+
   private
 
   def stub_get(response)

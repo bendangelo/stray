@@ -22,26 +22,15 @@ module Bridges
 
       def extract(url)
         response = fetch(url)
-        feed = Feedjira.parse(response.body)
-
-        feed.entries.map do |entry|
-          Stray::ExtractedContent.new(
-            url: entry.url,
-            title: entry.title,
-            content_text: entry.content || entry.summary,
-            content_html: nil,
-            thumbnail_url: entry.media_thumbnail_url,
-            published_at: entry.published,
-            external_id: entry.entry_id.sub("yt:video:", ""),
-            duration: nil,
-            creator_identity: extract_creator(feed),
-            tags: []
-          )
-        end
+        parse_feed(response.body, url)
       end
 
       def extract_feed(url)
         extract(url)
+      end
+
+      def extract_feed_from_response(response, url)
+        parse_feed(response.body, url)
       end
 
       def extract_backfill(url, limit:)
@@ -68,6 +57,25 @@ module Bridges
       end
 
       private
+
+      def parse_feed(body, url)
+        feed = Feedjira.parse(body)
+
+        feed.entries.map do |entry|
+          Stray::ExtractedContent.new(
+            url: entry.url,
+            title: entry.title,
+            content_text: entry.content || entry.summary,
+            content_html: nil,
+            thumbnail_url: entry.media_thumbnail_url,
+            published_at: entry.published,
+            external_id: entry.entry_id.sub("yt:video:", ""),
+            duration: nil,
+            creator_identity: extract_creator(feed),
+            tags: []
+          )
+        end
+      end
 
       def runner
         @runner ||= Stray::YtDlp::Runner.new

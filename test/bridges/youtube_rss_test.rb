@@ -66,6 +66,14 @@ class Bridges::YoutubeRssTest < ActiveSupport::TestCase
     end
   end
 
+  test "extract_feed_from_response parses a pre-fetched YouTube feed body" do
+    body = File.read(Rails.root.join("test/fixtures/files/feeds/youtube_sample.xml"))
+    response = Struct.new(:status, :body, :headers).new(200, body, {})
+    items = Bridges::YoutubeRss.new.extract_feed_from_response(response, "https://www.youtube.com/feeds/videos.xml?channel_id=UCtest")
+    assert items.any?
+    assert_equal "dQw4w9WgXcQ", items.first.external_id
+  end
+
   test "extract includes creator_identity from feed author" do
     VCR.use_cassette("extractors/youtube_rss_feed") do
       extractor = Bridges::YoutubeRss.new

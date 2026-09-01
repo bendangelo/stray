@@ -68,4 +68,12 @@ class Bridges::RssAtomTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "extract_feed_from_response parses a pre-fetched RSS body" do
+    body = File.read(Rails.root.join("test/fixtures/files/feeds/rss_sample.xml"))
+    response = Struct.new(:status, :body, :headers).new(200, body, {})
+    items = Bridges::RssAtom.new.extract_feed_from_response(response, "https://example.com/feed.xml")
+    assert_equal 2, items.size
+    assert_equal "First Post", items.first.title
+  end
 end

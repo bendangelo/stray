@@ -17,29 +17,37 @@ module Bridges
 
       def extract(url)
         response = fetch(url)
-        doc = Readability::Document.new(response.body)
-        content_html = doc.content
-        text = extract_text(content_html)
-
-        Stray::ExtractedContent.new(
-          url: url,
-          title: extract_title(response.body, doc.title),
-          content_text: text,
-          content_html: content_html,
-          thumbnail_url: extract_thumbnail(response.body),
-          published_at: extract_published_at(response.body),
-          external_id: Digest::SHA256.hexdigest(url)[0, 32],
-          duration: nil,
-          creator_identity: extract_creator(response.body, url),
-          tags: []
-        )
+        parse_page(response.body, url)
       end
 
       def extract_feed(url)
         [ extract(url) ]
       end
 
+      def extract_feed_from_response(response, url)
+        [ parse_page(response.body, url) ]
+      end
+
       private
+
+      def parse_page(body, url)
+        doc = Readability::Document.new(body)
+        content_html = doc.content
+        text = extract_text(content_html)
+
+        Stray::ExtractedContent.new(
+          url: url,
+          title: extract_title(body, doc.title),
+          content_text: text,
+          content_html: content_html,
+          thumbnail_url: extract_thumbnail(body),
+          published_at: extract_published_at(body),
+          external_id: Digest::SHA256.hexdigest(url)[0, 32],
+          duration: nil,
+          creator_identity: extract_creator(body, url),
+          tags: []
+        )
+      end
 
       def fetch(url)
         response = PoliteCrawl.get(url, http_client: http_client)

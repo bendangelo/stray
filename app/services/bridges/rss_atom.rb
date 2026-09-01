@@ -22,7 +22,21 @@ module Bridges
 
       def extract(url)
         response = PoliteCrawl.get(url, http_client: http_client)
-        feed = Feedjira.parse(response.body)
+        parse_feed(response.body, url)
+      end
+
+      def extract_feed(url)
+        extract(url)
+      end
+
+      def extract_feed_from_response(response, url)
+        parse_feed(response.body, url)
+      end
+
+      private
+
+      def parse_feed(body, url)
+        feed = Feedjira.parse(body)
 
         feed.entries.map do |entry|
           Stray::ExtractedContent.new(
@@ -39,12 +53,6 @@ module Bridges
           )
         end
       end
-
-      def extract_feed(url)
-        extract(url)
-      end
-
-      private
 
       def http_client
         Faraday.new do |conn|
