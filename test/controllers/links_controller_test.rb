@@ -134,6 +134,7 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
   test "create creates a pending source and enqueues job for a Peertube channel URL" do
     sign_in_as(users(:one))
     url = "https://tube.xy-space.de/a/voxpopuli"
+    api_url = "https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100"
 
     assert_difference -> { Source.count }, 1 do
       assert_difference -> { Follow.count }, 1 do
@@ -143,7 +144,7 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    source = Source.find_by(user: users(:one), url: url)
+    source = Source.find_by(user: users(:one), url: api_url)
     assert_not_nil source
     assert source.pending?
     assert_equal "peertube_channel", source.kind
@@ -154,18 +155,27 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
   test "failed extraction marks the pending source as failed with last_error" do
     sign_in_as(users(:one))
     url = "https://tube.debit-space.de/a/voxpopuli"
+    api_url = "https://tube.debit-space.de/api/v1/accounts/voxpopuli/videos?count=100"
 
     post links_path, params: { url: url }
 
-    source = Source.find_by(user: users(:one), url: url)
+    source = Source.find_by(user: users(:one), url: api_url)
     assert source.pending?
 
     failing = Object.new
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "Peertube fetch failed: 404" }
     failing.define_singleton_method(:extract) { |_url| raise Stray::ExtractionError, "Peertube fetch failed: 404" }
 
+    noop_poll = Object.new
+    noop_poll.define_singleton_method(:perform_later) { |*_args| nil }
+
     Stray::BridgeRegistry.stub(:find_for_source, failing) do
-      LinkIntakeJob.perform_now(users(:one).id, url, source.id)
+      SourcePollJob.stub(:set, noop_poll) do
+        LinkIntakeJob.perform_later(users(:one).id, api_url, source.id)
+        until enqueued_jobs.empty?
+          perform_enqueued_jobs(at: 2.hours.from_now)
+        end
+      end
     end
 
     source.reload
