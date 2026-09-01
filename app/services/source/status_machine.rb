@@ -32,6 +32,7 @@ class Source
       def mark_recovering!(source, message:)
         attempts = source.recovery_attempts + 1
         delay = BACKOFF_MINUTES.fetch(attempts - 1, BACKOFF_MINUTES.last).minutes
+        Rails.logger.warn("Source #{source.id} recovering (attempt #{attempts}): #{message}")
         source.update!(
           status: :recovering,
           last_error: message,
@@ -45,6 +46,7 @@ class Source
 
       # Hard error: requires manual pull to retry.
       def mark_failed!(source, message:)
+        Rails.logger.error("Source #{source.id} failed: #{message}")
         source.update!(
           status: :failed,
           last_error: message,

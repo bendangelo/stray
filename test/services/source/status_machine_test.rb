@@ -54,4 +54,32 @@ class Source::StatusMachineTest < ActiveSupport::TestCase
     assert_nil @source.last_error
     assert_nil @source.next_crawl_at
   end
+
+  test "mark_recovering! logs a warning with source id and message" do
+    logs = capture_log_output do
+      Source::StatusMachine.mark_recovering!(@source, message: "timeout")
+    end
+    assert_match(/Source #{@source.id} recovering/, logs)
+    assert_match(/timeout/, logs)
+  end
+
+  test "mark_failed! logs an error with source id and message" do
+    logs = capture_log_output do
+      Source::StatusMachine.mark_failed!(@source, message: "blocked")
+    end
+    assert_match(/Source #{@source.id} failed/, logs)
+    assert_match(/blocked/, logs)
+  end
+
+  private
+
+  def capture_log_output
+    original = Rails.logger
+    stringio = StringIO.new
+    Rails.logger = Logger.new(stringio)
+    yield
+    stringio.string
+  ensure
+    Rails.logger = original
+  end
 end
