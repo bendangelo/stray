@@ -136,6 +136,22 @@ class SourceBackfillJobTest < ActiveJob::TestCase
     assert_not_nil @source.backfilled_at
   end
 
+  test "sets backfilled_at when has_more true but next_cursor is blank" do
+    content = content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago)
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| Stray::Bridge::BackfillResult.new(items: [ content ], next_cursor: nil, has_more: true) }
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      assert_no_enqueued_jobs(only: SourceBackfillJob) do
+        SourceBackfillJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_equal 1, @source.items.count
+    assert_not_nil @source.backfilled_at
+  end
+
   test "skips when source is no longer active on continuation run" do
     @source.update!(active: false)
     extractor = Object.new
