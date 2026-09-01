@@ -20,9 +20,12 @@ class SourceBackfillJob < ApplicationJob
     contents, next_cursor, has_more = normalize_result(result)
 
     upsert_items(source, contents, extractor) if contents.any?
-    source.update!(backfilled_at: Time.current) unless has_more
 
-    enqueue_next(source_id, next_cursor) if has_more
+    if has_more && next_cursor.present?
+      enqueue_next(source_id, next_cursor)
+    else
+      source.update!(backfilled_at: Time.current)
+    end
   end
 
   private

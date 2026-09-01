@@ -106,6 +106,20 @@ class SourceBackfillJobTest < ActiveJob::TestCase
     assert_nil @source.reload.backfilled_at
   end
 
+  test "re-enqueues continuation with the rate-budget delay" do
+    content = content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago)
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| Stray::Bridge::BackfillResult.new(items: [ content ], next_cursor: 2, has_more: true) }
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      SourceBackfillJob.perform_now(@source.id)
+    end
+
+    job = enqueued_jobs.find { |j| j[:job] == SourceBackfillJob }
+    assert_not_nil job
+    assert_in_delta Time.current.to_f + PoliteCrawl::RATE_BUDGET_INTERVAL, job[:at].to_f, 1.0
+  end
+
   test "sets backfilled_at when BackfillResult reports no more pages" do
     content = content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago)
     extractor = Object.new
