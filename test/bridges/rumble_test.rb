@@ -67,6 +67,25 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
     assert_includes requested_url, "page=2"
   end
 
+  test "extract_backfill reports has_more true on a full page" do
+    items = (1..3).map do |i|
+      {
+        url: "https://rumble.com/v#{i}", title: "V#{i}", external_id: i.to_s, duration: 10,
+        published_at: Time.now, thumbnail_url: "https://img#{i}.jpg", tags: [], views: 1,
+        live: false, is_short: false, creator_identity: nil
+      }
+    end
+    core = Stray::Bridges::Rumble.new
+    core.define_singleton_method(:channel_feed) { |_url| items }
+    Stray::Bridges::Rumble.stub(:new, core) do
+      result = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 3, cursor: 1)
+      assert result.is_a?(Stray::Bridge::BackfillResult)
+      assert_equal 3, result.items.size
+      assert_equal 2, result.next_cursor
+      assert result.has_more
+    end
+  end
+
   test "extract_backfill stops when a page is empty" do
     core = Stray::Bridges::Rumble.new
     core.define_singleton_method(:channel_feed) { |_url| [] }

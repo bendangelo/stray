@@ -30,7 +30,7 @@ module Bridges
       if items.empty?
         Stray::Bridge::BackfillResult.new(items: [], next_cursor: nil, has_more: false)
       else
-        Stray::Bridge::BackfillResult.new(items: items, next_cursor: page + 1, has_more: items.size < limit)
+        Stray::Bridge::BackfillResult.new(items: items, next_cursor: page + 1, has_more: true)
       end
     end
 
