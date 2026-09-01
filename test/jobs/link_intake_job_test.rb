@@ -178,7 +178,8 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     Follow.create!(user: @user, source: source)
 
     Youtube::ChannelResolver.stub(:resolve, ->(_url) { raise Stray::YtDlp::Error, "yt-dlp failed" }) do
-      LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Unresolvable", source.id)
+      LinkIntakeJob.perform_later(@user.id, "https://www.youtube.com/@Unresolvable", source.id)
+      drain_enqueued_jobs
     end
 
     source.reload
@@ -235,8 +236,11 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::YtDlp::Error, "yt-dlp boom" }
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      Stray::BridgeRegistry.stub(:find_for_source, failing) do
-        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
+      SourcePollJob.stub(:set, noop_async_job) do
+        Stray::BridgeRegistry.stub(:find_for_source, failing) do
+          LinkIntakeJob.perform_later(@user.id, "https://www.youtube.com/@Handle", source.id)
+          drain_enqueued_jobs
+        end
       end
     end
 
@@ -262,8 +266,11 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "youtube rss fetch failed: 404" }
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
-      Stray::BridgeRegistry.stub(:find_for_source, failing) do
-        LinkIntakeJob.perform_now(@user.id, "https://www.youtube.com/@Handle", source.id)
+      SourcePollJob.stub(:set, noop_async_job) do
+        Stray::BridgeRegistry.stub(:find_for_source, failing) do
+          LinkIntakeJob.perform_later(@user.id, "https://www.youtube.com/@Handle", source.id)
+          drain_enqueued_jobs
+        end
       end
     end
 
@@ -559,6 +566,33 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     end
   end
 
+  test "retries Stray::ExtractionError during extract_for_existing_source" do
+    source = Source.create!(user: @user, kind: :youtube_channel,
+      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCretry",
+      external_id: "UCretry", status: :pending)
+
+    failing = Object.new
+    failing.define_singleton_method(:extract_feed) { |_url| raise Stray::ExtractionError, "boom" }
+
+    calls = 0
+    stub_extractor = ->(src) {
+      calls += 1
+      failing
+    }
+
+    SourcePollJob.stub(:set, noop_async_job) do
+      Stray::BridgeRegistry.stub(:find_for_source, stub_extractor) do
+        LinkIntakeJob.perform_later(@user.id, source.url, source.id)
+        drain_enqueued_jobs
+      end
+    end
+
+    assert_operator calls, :>=, 3
+    source.reload
+    assert source.failed?
+    assert_equal "boom", source.last_error
+  end
+
   test "creates a peertube channel source with the API URL as source.url" do
     contents = [
       Stray::ExtractedContent.new(
@@ -589,5 +623,17 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100", source.url
     assert_equal "https://tilvids.com/video-channels/fedi", source.channel_url
     assert_equal "Fedi", source.name
+  end
+
+  private
+
+  def noop_async_job
+    Object.new.tap { |o| o.define_singleton_method(:perform_later) { |*_args| nil } }
+  end
+
+  def drain_enqueued_jobs
+    until enqueued_jobs.empty?
+      perform_enqueued_jobs(at: 2.hours.from_now)
+    end
   end
 end
