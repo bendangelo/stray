@@ -35,17 +35,19 @@ class SourceTest < ActiveJob::TestCase
     assert other.valid?
   end
 
-  test "due_for_poll scope returns active sources with past or null next_crawl_at" do
+  test "due_for_poll scope returns active non-failed sources with past or null next_crawl_at" do
     due = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1", next_crawl_at: 1.hour.ago)
     not_due = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/2", external_id: "UC2", next_crawl_at: 1.hour.from_now)
     inactive = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/3", external_id: "UC3", next_crawl_at: 1.hour.ago, active: false)
     null_crawl = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/4", external_id: "UC4", next_crawl_at: nil)
+    failed = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com/5", external_id: "UC5", next_crawl_at: 1.hour.ago, status: :failed)
 
     result = Source.due_for_poll.to_a
     assert_includes result, due
     assert_includes result, null_crawl
     assert_not_includes result, not_due
     assert_not_includes result, inactive
+    assert_not_includes result, failed
   end
 
   test "recalculate_next_crawl! sets 1 hour from now when no items" do

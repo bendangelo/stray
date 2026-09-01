@@ -19,6 +19,7 @@ class Source < ApplicationRecord
   scope :due_for_poll, -> {
     where(active: true)
       .where.not(kind: :saved_video)
+      .where.not(status: :failed)
       .where("next_crawl_at <= ? OR next_crawl_at IS NULL", Time.current)
   }
   scope :active, -> { where(active: true) }

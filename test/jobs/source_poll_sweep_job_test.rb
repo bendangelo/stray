@@ -51,6 +51,17 @@ class SourcePollSweepJobTest < ActiveJob::TestCase
     end
   end
 
+  test "does not enqueue poll for failed sources" do
+    failed = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/f", external_id: "f", status: :failed,
+      next_crawl_at: 5.minutes.ago, polling: false)
+
+    SourcePollSweepJob.perform_now
+
+    poll_args = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" }.map { |j| j["arguments"].first }
+    assert_not_includes poll_args, failed.id
+  end
+
   test "clears stale polling flags older than 10 minutes" do
     stale = Source.create!(
       user: users(:one), kind: :youtube_channel,
