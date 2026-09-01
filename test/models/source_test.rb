@@ -70,15 +70,29 @@ class SourceTest < ActiveJob::TestCase
     assert_in_delta 30.minutes.from_now, source.next_crawl_at, 5.seconds
   end
 
-  test "recalculate_next_crawl! caps at 24 hours max" do
+  test "recalculate_next_crawl! caps youtube_channel at 6 hours max" do
     source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
     now = Time.current
-    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 1.hour)
-    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 30.minutes)
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 25.hours)
+    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 1.hour)
 
     source.recalculate_next_crawl!
-    # avg interval = 30min, last = now-30min, predicted = now. But cap min is 30min from now.
-    assert source.next_crawl_at <= 30.minutes.from_now + 5.seconds
+    # predicted = now + 23h, capped at 6h for a youtube_channel
+    assert_in_delta 6.hours.from_now, source.next_crawl_at, 5.seconds
+  end
+
+  test "recalculate_next_crawl! caps non-youtube video channels at 24 hours" do
+    source = Source.create!(user: users(:one), kind: :rumble_channel, url: "https://example.com", external_id: "R1")
+    now = Time.current
+    source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 25.hours)
+    source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 1.hour)
+
+    Setting.current.update!(publication_buffer_minutes: 120)
+    source.recalculate_next_crawl!
+    # predicted = now + 23h, +120m buffer = now + 25h, capped at 24h
+    assert_in_delta 24.hours.from_now, source.next_crawl_at, 5.seconds
+  ensure
+    Setting.current.update!(publication_buffer_minutes: 10)
   end
 
   test "recalculate_next_crawl! pauses dead sources" do
@@ -90,7 +104,7 @@ class SourceTest < ActiveJob::TestCase
   end
 
   test "recalculate_next_crawl! adds the publication buffer to the predicted time" do
-    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    source = Source.create!(user: users(:one), kind: :rumble_channel, url: "https://example.com", external_id: "R1")
     now = Time.current
     source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 26.hours)
     source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 2.hours)
@@ -104,7 +118,7 @@ class SourceTest < ActiveJob::TestCase
   end
 
   test "recalculate_next_crawl! respects the 24 hour ceiling after the buffer" do
-    source = Source.create!(user: users(:one), kind: :youtube_channel, url: "https://example.com", external_id: "UC1")
+    source = Source.create!(user: users(:one), kind: :rumble_channel, url: "https://example.com", external_id: "R1")
     now = Time.current
     source.items.create!(user: users(:one), external_id: "v1", title: "V1", url: "https://example.com/v1", published_at: now - 26.hours)
     source.items.create!(user: users(:one), external_id: "v2", title: "V2", url: "https://example.com/v2", published_at: now - 2.hours)

@@ -129,7 +129,8 @@ class Source < ApplicationRecord
     buffer = (Setting.get(:publication_buffer_minutes) || 10).minutes
     scheduled = predicted + buffer
     scheduled = [ scheduled, Time.current + 30.minutes ].max
-    scheduled = [ scheduled, Time.current + 24.hours ].min
+    max_interval = youtube_channel? ? 6.hours : 24.hours
+    scheduled = [ scheduled, Time.current + max_interval ].min
     update!(next_crawl_at: scheduled)
   end
 end
