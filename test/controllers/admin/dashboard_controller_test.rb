@@ -32,4 +32,17 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_match "Settings", response.body
     assert_match "Jobs", response.body
   end
+
+  test "shows recent poll errors to admin" do
+    failed = Source.create!(user: @admin, kind: :rss_feed,
+      url: "https://example.com/f", external_id: "f", status: :failed,
+      last_error: "blocked", last_error_at: 5.minutes.ago, name: "Failed Feed")
+
+    sign_in_as(@admin)
+    get admin_path
+
+    assert_response :success
+    assert_select "#poll-errors", /blocked/
+    assert_select "#poll-errors", /Failed Feed/
+  end
 end

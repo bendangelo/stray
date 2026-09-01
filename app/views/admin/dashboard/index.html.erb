@@ -45,4 +45,25 @@
       </ul>
     </div>
   </section>
+  <section class="mt-8">
+    <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1 mb-3">Poll errors</h2>
+    <% if @poll_errors.any? %>
+      <ul id="poll-errors" class="space-y-3">
+        <% @poll_errors.each do |source| %>
+          <li class="text-sm">
+            <div class="flex items-center justify-between">
+              <%= link_to source.display_name, source_path(source), class: "text-charcoal underline hover:no-underline" %>
+              <span class="text-xs text-charcoal-300"><%= time_ago_in_words(source.last_error_at) %> ago</span>
+            </div>
+            <p class="text-charcoal-300 truncate"><%= source.last_error %></p>
+            <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded <%= source.failed? ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800" %>">
+              <%= source.status %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p id="poll-errors" class="text-sm text-charcoal-300">No poll errors.</p>
+    <% end %>
+  </section>
 </main>
