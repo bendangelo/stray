@@ -11,6 +11,11 @@ class SourcePollJobTest < ActiveJob::TestCase
     )
     @verify_extractor = true
     @extractor = Minitest::Mock.new
+    @cached = PoliteCrawl::CachedResponse.new(
+      response: Struct.new(:status, :body, :headers).new(200, "<feed></feed>", {}),
+      etag: nil,
+      last_modified: nil
+    )
   end
 
   def teardown
@@ -25,12 +30,7 @@ class SourcePollJobTest < ActiveJob::TestCase
 
   def without_lock
     DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
-      cached = PoliteCrawl::CachedResponse.new(
-        response: Struct.new(:status, :body, :headers).new(200, "<html>feed</html>", {}),
-        etag: nil,
-        last_modified: nil
-      )
-      PoliteCrawl.stub(:get_with_cache, cached) do
+      PoliteCrawl.stub(:get_with_cache, @cached) do
         yield
       end
     end
@@ -52,7 +52,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -84,7 +84,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -146,7 +146,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -171,7 +171,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -198,7 +198,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -236,7 +236,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -281,7 +281,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -310,7 +310,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -332,7 +332,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -353,7 +353,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -374,7 +374,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
 
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
@@ -516,7 +516,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
     Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
       without_lock do
         SourcePollJob.perform_now(@source.id)
@@ -650,7 +650,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ resolver_result.rss_url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, resolver_result.rss_url ])
 
     Youtube::ChannelResolver.stub(:resolve, resolver_result) do
       Stray::BridgeRegistry.stub(:find_for_source, @extractor) do
@@ -678,7 +678,7 @@ class SourcePollJobTest < ActiveJob::TestCase
       )
     ]
 
-    @extractor.expect(:extract_feed, contents, [ @source.url ])
+    @extractor.expect(:extract_feed_from_response, contents, [ @cached.response, @source.url ])
     @extractor.expect(:enrich_tags, [ "Documentary", "information" ],
       [ "https://tube.xy-space.de/w/6aa95cf7-08af-4b22-86af-b7563e2ff4bd" ])
 
