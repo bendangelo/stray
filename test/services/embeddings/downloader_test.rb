@@ -23,7 +23,7 @@ class Embeddings::DownloaderTest < ActiveSupport::TestCase
   end
 
   test "raises on checksum mismatch" do
-    model_path = Rails.root.join("storage/embeddings/test_download.onnx")
+    model_path = Rails.root.join("storage/embeddings/test_download_mismatch.onnx")
     FileUtils.rm_f(model_path)
 
     downloader = Embeddings::Downloader.new
