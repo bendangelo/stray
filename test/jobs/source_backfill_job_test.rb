@@ -23,7 +23,7 @@ class SourceBackfillJobTest < ActiveJob::TestCase
   test "skips when source has already been backfilled" do
     @source.update!(backfilled_at: 1.day.ago)
     extractor = Object.new
-    extractor.define_singleton_method(:extract_backfill) { |_url, limit:| raise "should not be called" }
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| raise "should not be called" }
 
     Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       assert_no_enqueued_jobs(only: EmbeddingJob) do
@@ -34,7 +34,7 @@ class SourceBackfillJobTest < ActiveJob::TestCase
 
   test "skips when bridge does not support backfill" do
     extractor = Object.new
-    extractor.define_singleton_method(:extract_backfill) { |_url, limit:| nil }
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| nil }
 
     Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       SourceBackfillJob.perform_now(@source.id)
@@ -46,7 +46,7 @@ class SourceBackfillJobTest < ActiveJob::TestCase
   test "upserts backfilled items and sets backfilled_at" do
     contents = [ content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago) ]
     extractor = Object.new
-    extractor.define_singleton_method(:extract_backfill) { |_url, limit:| contents }
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| contents }
 
     Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       SourceBackfillJob.perform_now(@source.id)
@@ -63,7 +63,7 @@ class SourceBackfillJobTest < ActiveJob::TestCase
 
     contents = [ content("vid1", "New Title", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago) ]
     extractor = Object.new
-    extractor.define_singleton_method(:extract_backfill) { |_url, limit:| contents }
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| contents }
 
     Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       SourceBackfillJob.perform_now(@source.id)
@@ -76,7 +76,7 @@ class SourceBackfillJobTest < ActiveJob::TestCase
   test "enqueues MetadataEnrichmentJob for items missing metadata" do
     contents = [ content("vid1", "No Duration") ]
     extractor = Object.new
-    extractor.define_singleton_method(:extract_backfill) { |_url, limit:| contents }
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| contents }
 
     Stray::BridgeRegistry.stub(:find_for_source, extractor) do
       assert_enqueued_with(job: MetadataEnrichmentJob) do
@@ -88,6 +88,49 @@ class SourceBackfillJobTest < ActiveJob::TestCase
   test "skips non-existent source gracefully" do
     assert_nothing_raised do
       SourceBackfillJob.perform_now(99999)
+    end
+  end
+
+  test "re-enqueues itself with next cursor when bridge returns BackfillResult with has_more" do
+    content = content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago)
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| Stray::Bridge::BackfillResult.new(items: [ content ], next_cursor: 2, has_more: true) }
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      assert_enqueued_with(job: SourceBackfillJob, args: [ @source.id, 2 ]) do
+        SourceBackfillJob.perform_now(@source.id)
+      end
+    end
+
+    assert_equal 1, @source.items.count
+    assert_nil @source.reload.backfilled_at
+  end
+
+  test "sets backfilled_at when BackfillResult reports no more pages" do
+    content = content("vid1", "Video 1", duration: 120, thumbnail_url: "https://t.jpg", published_at: 1.day.ago)
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| Stray::Bridge::BackfillResult.new(items: [ content ], next_cursor: nil, has_more: false) }
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      assert_no_enqueued_jobs(only: SourceBackfillJob) do
+        SourceBackfillJob.perform_now(@source.id)
+      end
+    end
+
+    @source.reload
+    assert_equal 1, @source.items.count
+    assert_not_nil @source.backfilled_at
+  end
+
+  test "skips when source is no longer active on continuation run" do
+    @source.update!(active: false)
+    extractor = Object.new
+    extractor.define_singleton_method(:extract_backfill) { |_url, limit:, cursor: nil| raise "should not be called" }
+
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      assert_nothing_raised do
+        SourceBackfillJob.perform_now(@source.id, 2)
+      end
     end
   end
 end
