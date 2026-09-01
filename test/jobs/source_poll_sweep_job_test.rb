@@ -142,4 +142,15 @@ class SourcePollSweepJobTest < ActiveJob::TestCase
     assert_includes poll_args, due.id
     assert_not_includes poll_args, not_due.id
   end
+
+  test "does not enqueue duplicate SourcePollJob for a source matching multiple scopes" do
+    source = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/dup", external_id: "dup", status: :recovering,
+      next_crawl_at: 5.minutes.ago, last_polled_at: 10.minutes.ago, polling: false)
+
+    SourcePollSweepJob.perform_now
+
+    poll_jobs = enqueued_jobs.select { |j| j["job_class"] == "SourcePollJob" && j["arguments"].first == source.id }
+    assert_equal 1, poll_jobs.size
+  end
 end

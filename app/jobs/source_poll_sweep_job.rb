@@ -5,17 +5,21 @@ class SourcePollSweepJob < ApplicationJob
     clear_stale_polling_flags
     recover_abandoned_pending
 
-    enqueue_poll(Source.due_for_poll)
-    enqueue_poll(Source.recovering.where("next_crawl_at <= ? OR next_crawl_at IS NULL", Time.current))
-    enqueue_poll(Source.stuck)
+    enqueued_ids = Set.new
+    enqueue_poll(Source.due_for_poll, enqueued_ids)
+    enqueue_poll(Source.recovering.where("next_crawl_at <= ? OR next_crawl_at IS NULL", Time.current), enqueued_ids)
+    enqueue_poll(Source.stuck, enqueued_ids)
   end
 
   private
 
-  def enqueue_poll(scope)
+  def enqueue_poll(scope, enqueued_ids)
     scope.in_batches(of: 100) do |batch|
       batch.where(polling: false).each do |source|
+        next if enqueued_ids.include?(source.id)
+
         SourcePollJob.perform_later(source.id)
+        enqueued_ids.add(source.id)
       end
     end
   end
