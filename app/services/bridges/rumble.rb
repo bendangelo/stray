@@ -23,18 +23,15 @@ module Bridges
       Stray::Bridges::Rumble.new.channel_feed(url).map { |h| map(h) }
     end
 
-    def extract_backfill(url, limit:)
-      core = Stray::Bridges::Rumble.new
-      results = []
-      page = 1
-      while results.size < limit
-        items = core.channel_feed(page_url(url, page))
-        break if items.empty?
+    def extract_backfill(url, limit:, cursor: nil)
+      page = (cursor || 1).to_i
+      items = Stray::Bridges::Rumble.new.channel_feed(page_url(url, page)).map { |h| map(h) }
 
-        results.concat(items)
-        page += 1
+      if items.empty?
+        Stray::Bridge::BackfillResult.new(items: [], next_cursor: nil, has_more: false)
+      else
+        Stray::Bridge::BackfillResult.new(items: items, next_cursor: page + 1, has_more: true)
       end
-      results.first(limit).map { |h| map(h) }
     end
 
     private

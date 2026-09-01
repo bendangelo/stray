@@ -10,5 +10,6 @@ class Stray::BridgeTest < ActiveSupport::TestCase
 
   test "extract_backfill defaults to nil (unsupported)" do
     assert_nil FakeBridge.new.extract_backfill("https://example.com", limit: 50)
+    assert_nil FakeBridge.new.extract_backfill("https://example.com", limit: 50, cursor: 2)
   end
 end

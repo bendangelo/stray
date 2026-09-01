@@ -44,36 +44,57 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
     end
   end
 
-  test "extract_backfill loops pages until limit is reached" do
-    page1 = [ { url: "https://rumble.com/v1", title: "V1", external_id: "1", duration: 10, published_at: Time.now, thumbnail_url: "https://img1.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil },
-              { url: "https://rumble.com/v2", title: "V2", external_id: "2", duration: 10, published_at: Time.now, thumbnail_url: "https://img2.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ]
-    page2 = [ { url: "https://rumble.com/v3", title: "V3", external_id: "3", duration: 10, published_at: Time.now, thumbnail_url: "https://img3.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ]
-    pages = [ page1, page2, [] ]
-    requested = []
-
+  test "extract_backfill fetches a single page and returns BackfillResult" do
+    item = {
+      url: "https://rumble.com/v1", title: "V1", external_id: "1", duration: 10,
+      published_at: Time.now, thumbnail_url: "https://img1.jpg", tags: [], views: 1,
+      live: false, is_short: false, creator_identity: nil
+    }
     core = Stray::Bridges::Rumble.new
+    requested_url = nil
     core.define_singleton_method(:channel_feed) do |url|
-      requested << url
-      pages.shift
+      requested_url = url
+      [ item ]
     end
     Stray::Bridges::Rumble.stub(:new, core) do
-      @results = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 3)
+      result = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 50, cursor: 2)
+      assert result.is_a?(Stray::Bridge::BackfillResult)
+      assert_equal 1, result.items.size
+      assert_equal "1", result.items.first.external_id
+      assert_equal 3, result.next_cursor
+      assert result.has_more
     end
-
-    assert_equal 3, @results.size
-    assert_equal 2, requested.size
-    assert_includes requested[0], "page=1"
-    assert_includes requested[1], "page=2"
+    assert_includes requested_url, "page=2"
   end
 
-  test "extract_backfill stops at empty page" do
-    pages = [ [ { url: "https://rumble.com/v1", title: "V1", external_id: "1", duration: 10, published_at: Time.now, thumbnail_url: "https://img1.jpg", tags: [], views: 1, live: false, is_short: false, creator_identity: nil } ], [] ]
-    core = Stray::Bridges::Rumble.new
-    core.define_singleton_method(:channel_feed) { |_url| pages.shift }
-    Stray::Bridges::Rumble.stub(:new, core) do
-      @results = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 50)
+  test "extract_backfill reports has_more true on a full page" do
+    items = (1..3).map do |i|
+      {
+        url: "https://rumble.com/v#{i}", title: "V#{i}", external_id: i.to_s, duration: 10,
+        published_at: Time.now, thumbnail_url: "https://img#{i}.jpg", tags: [], views: 1,
+        live: false, is_short: false, creator_identity: nil
+      }
     end
+    core = Stray::Bridges::Rumble.new
+    core.define_singleton_method(:channel_feed) { |_url| items }
+    Stray::Bridges::Rumble.stub(:new, core) do
+      result = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 3, cursor: 1)
+      assert result.is_a?(Stray::Bridge::BackfillResult)
+      assert_equal 3, result.items.size
+      assert_equal 2, result.next_cursor
+      assert result.has_more
+    end
+  end
 
-    assert_equal 1, @results.size
+  test "extract_backfill stops when a page is empty" do
+    core = Stray::Bridges::Rumble.new
+    core.define_singleton_method(:channel_feed) { |_url| [] }
+    Stray::Bridges::Rumble.stub(:new, core) do
+      result = Bridges::Rumble.new.extract_backfill("https://rumble.com/c/Foo", limit: 50, cursor: 2)
+      assert result.is_a?(Stray::Bridge::BackfillResult)
+      assert_empty result.items
+      assert_nil result.next_cursor
+      assert_not result.has_more
+    end
   end
 end
