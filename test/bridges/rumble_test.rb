@@ -97,4 +97,23 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
       assert_not result.has_more
     end
   end
+
+  test "extract_feed_from_response maps a pre-fetched channel body" do
+    core = Minitest::Mock.new
+    core.expect(:feed_from_html, [ {
+      url: "https://rumble.com/vabc", title: "Video", external_id: "123",
+      duration: 100, published_at: Time.now, thumbnail_url: "https://img.jpg",
+      tags: [ "a" ], views: 5, live: false, is_short: false,
+      creator_identity: { name: "Chan", url: "https://rumble.com/c/C", external_id: "c1", thumbnail_url: nil }
+    } ], [ "body", "https://rumble.com/c/C" ])
+
+    response = Struct.new(:status, :body, :headers).new(200, "body", {})
+
+    Stray::Bridges::Rumble.stub(:new, core) do
+      result = Bridges::Rumble.new.extract_feed_from_response(response, "https://rumble.com/c/C")
+      assert_equal 1, result.size
+      assert_equal "123", result.first.external_id
+      assert_equal "Chan", result.first.creator_identity.name
+    end
+  end
 end

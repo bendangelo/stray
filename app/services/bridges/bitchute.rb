@@ -23,6 +23,10 @@ module Bridges
       Stray::Bridges::Bitchute.new.channel_feed(url).map { |h| map(h) }
     end
 
+    def extract_feed_from_response(response, url)
+      Stray::Bridges::Bitchute.new.feed_from_html(response.body, url).map { |h| map(h) }
+    end
+
     def extract_backfill(url, limit:)
       runner.channel_listings(url, limit: limit).map do |data|
         Stray::ExtractedContent.new(

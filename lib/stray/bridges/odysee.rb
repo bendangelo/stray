@@ -39,7 +39,12 @@ module Stray
         raise Stray::ExtractionError, "Odysee: not a channel URL: #{url}" unless rss
 
         response = fetch(rss)
-        feed = Feedjira.parse(response.body)
+        feed_from_rss(response.body, url)
+      end
+
+      # Parse a pre-fetched RSS body into Array<Hash>.
+      def feed_from_rss(body, url)
+        feed = Feedjira.parse(body)
         channel_thumbnail = feed.itunes_image
 
         feed.entries.map do |entry|

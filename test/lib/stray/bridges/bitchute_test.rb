@@ -36,4 +36,10 @@ class Stray::Bridges::BitchuteTest < ActiveSupport::TestCase
       assert first[:url].start_with?("https://www.bitchute.com/video/")
     end
   end
+
+  test "feed_from_html parses channel HTML without fetching" do
+    html = File.read(Rails.root.join("test/fixtures/files/bitchute_channel.html"))
+    items = Stray::Bridges::Bitchute.new.feed_from_html(html, "https://www.bitchute.com/channel/test")
+    assert items.any?
+  end
 end

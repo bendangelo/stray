@@ -23,6 +23,10 @@ module Bridges
       Stray::Bridges::Rumble.new.channel_feed(url).map { |h| map(h) }
     end
 
+    def extract_feed_from_response(response, url)
+      Stray::Bridges::Rumble.new.feed_from_html(response.body, url).map { |h| map(h) }
+    end
+
     def extract_backfill(url, limit:, cursor: nil)
       page = (cursor || 1).to_i
       items = Stray::Bridges::Rumble.new.channel_feed(page_url(url, page)).map { |h| map(h) }

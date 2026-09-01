@@ -22,5 +22,9 @@ module Bridges
     def extract_feed(url)
       Stray::Bridges::Odysee.new.channel_feed(url).map { |h| map(h) }
     end
+
+    def extract_feed_from_response(response, url)
+      Stray::Bridges::Odysee.new.feed_from_rss(response.body, url).map { |h| map(h) }
+    end
   end
 end

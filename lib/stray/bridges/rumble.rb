@@ -39,7 +39,12 @@ module Stray
       # Fetch a channel's videos. Returns Array<Hash>.
       def channel_feed(url)
         response = fetch(url)
-        doc = Nokogiri::HTML(response.body)
+        feed_from_html(response.body, url)
+      end
+
+      # Parse a pre-fetched channel HTML body into Array<Hash>.
+      def feed_from_html(html, url)
+        doc = Nokogiri::HTML(html)
         script = doc.at_css("rum-videos-grid script")
         raise Stray::ExtractionError, "Rumble: no rum-videos-grid data for #{url}" unless script
 

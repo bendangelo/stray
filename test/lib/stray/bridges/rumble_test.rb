@@ -52,4 +52,11 @@ class Stray::Bridges::RumbleTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "feed_from_html parses channel HTML without fetching" do
+    html = File.read(Rails.root.join("test/fixtures/files/rumble_channel.html"))
+    items = Stray::Bridges::Rumble.new.feed_from_html(html, "https://rumble.com/c/test")
+    assert items.any?
+    assert items.first[:title].present?
+  end
 end

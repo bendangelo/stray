@@ -33,4 +33,22 @@ class Bridges::BitchuteTest < ActiveSupport::TestCase
     assert_includes captured, "--playlist-end"
     assert_includes captured, "50"
   end
+
+  test "extract_feed_from_response maps a pre-fetched channel body" do
+    core = Minitest::Mock.new
+    core.expect(:feed_from_html, [ {
+      url: "https://www.bitchute.com/video/v1", title: "V1", external_id: "1", duration: 10,
+      published_at: Time.now, thumbnail_url: "https://img.jpg", content_text: nil,
+      content_html: nil, tags: [], views: nil, live: nil, is_short: nil,
+      creator_identity: { name: nil, url: "https://www.bitchute.com/channel/C1", external_id: "C1", thumbnail_url: nil }
+    } ], [ "body", "https://www.bitchute.com/channel/Foo" ])
+
+    response = Struct.new(:status, :body, :headers).new(200, "body", {})
+
+    Stray::Bridges::Bitchute.stub(:new, core) do
+      result = Bridges::Bitchute.new.extract_feed_from_response(response, "https://www.bitchute.com/channel/Foo")
+      assert_equal 1, result.size
+      assert_equal "1", result.first.external_id
+    end
+  end
 end

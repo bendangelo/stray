@@ -50,4 +50,10 @@ class Stray::Bridges::OdyseeTest < ActiveSupport::TestCase
       Stray::Bridges::Odysee.new.channel_feed("https://odysee.com/some-video")
     end
   end
+
+  test "feed_from_rss parses RSS body without fetching" do
+    body = File.read(Rails.root.join("test/fixtures/files/odysee_rss.xml"))
+    items = Stray::Bridges::Odysee.new.feed_from_rss(body, "https://odysee.com/@test:1")
+    assert items.any?
+  end
 end
