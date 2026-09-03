@@ -62,8 +62,7 @@ module ApplicationHelper
       uri = parse_url(item.url)
       "https://odysee.com/$/embed#{uri.path}" if uri&.host&.end_with?("odysee.com")
     when "rumble_channel"
-      uri = parse_url(item.url)
-      slug = uri&.path.to_s.match(%r{^/(v[a-z0-9]+)})&.match(1)
+      slug = item.embed_id.presence || rumble_slug_from_url(item.url)
       "https://rumble.com/embed/#{slug}/" if slug
     when "peertube_channel"
       uri = parse_url(item.url)
@@ -75,6 +74,11 @@ module ApplicationHelper
     URI.parse(url)
   rescue URI::InvalidURIError
     nil
+  end
+
+  def rumble_slug_from_url(url)
+    uri = parse_url(url)
+    uri&.path.to_s.match(%r{^/(v[a-z0-9]+)})&.match(1)
   end
 
   def missing_thumb

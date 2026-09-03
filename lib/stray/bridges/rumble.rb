@@ -57,13 +57,14 @@ module Stray
         response = fetch(url)
         doc = Nokogiri::HTML(response.body)
         ld = extract_video_object(doc)
-        return video_hash(ld) if ld
+        return video_hash(ld).merge(embed_id: embed_id_from(ld)) if ld
 
         # Fallback to OG meta if no ld+json VideoObject.
         {
           url: url,
           title: Helpers.find_title(doc),
           external_id: self.class.video_id(url),
+          embed_id: embed_id_from_links(doc),
           duration: Helpers.find_duration(doc),
           published_at: Helpers.find_publish_date(doc),
           thumbnail_url: Helpers.find_thumbnail(doc),
@@ -85,6 +86,7 @@ module Stray
           url: item["url"],
           title: item["title"],
           external_id: item["id"].to_s,
+          embed_id: item["permalink_id"],
           duration: item["duration"],
           published_at: parse_time(item["upload_date"]),
           thumbnail_url: item["thumb"],
@@ -111,6 +113,33 @@ module Stray
         entries = data.is_a?(Array) ? data : [ data ]
         entries.find { |e| e["@type"] == "VideoObject" }
       rescue JSON::ParserError
+        nil
+      end
+
+      def embed_id_from(video_object)
+        embed_url = video_object["embedUrl"]
+        return nil unless embed_url
+
+        uri = URI.parse(embed_url)
+        match = uri.path.to_s.match(%r{^/embed/([^/]+)})
+        match && match[1]
+      rescue URI::InvalidURIError
+        nil
+      end
+
+      def embed_id_from_links(doc)
+        link = doc.at('link[rel="alternate"][type="application/json+oembed"]')
+        return nil unless link
+
+        uri = URI.parse(link["href"])
+        query = URI.decode_www_form(uri.query).to_h
+        embed_url = query["url"]
+        return nil unless embed_url
+
+        embed_uri = URI.parse(embed_url)
+        match = embed_uri.path.to_s.match(%r{^/embed/([^/]+)})
+        match && match[1]
+      rescue URI::InvalidURIError
         nil
       end
 

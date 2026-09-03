@@ -15,7 +15,8 @@ module Bridges
         external_id: hash[:external_id],
         duration: hash[:duration],
         creator_identity: map_creator(hash[:creator_identity]),
-        tags: hash[:tags] || []
+        tags: hash[:tags] || [],
+        embed_id: hash[:embed_id]
       )
     end
 

@@ -82,7 +82,14 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "https://odysee.com/$/embed/@samtime:1/apple-reacts-framework:f0bfe667", url
   end
 
-  test "embed_url constructs Rumble embed URL from the URL slug" do
+  test "embed_url constructs Rumble embed URL from embed_id" do
+    source = Source.new(kind: :rumble_channel)
+    item = Item.new(source: source, url: "https://rumble.com/v7dngro-how-the-iran-war.html", embed_id: "v7bgxmg")
+    url = embed_url(item)
+    assert_equal "https://rumble.com/embed/v7bgxmg/", url
+  end
+
+  test "embed_url falls back to the URL slug when embed_id is missing" do
     source = Source.new(kind: :rumble_channel)
     item = Item.new(source: source, url: "https://rumble.com/v7a8neu-what-you-need-to-know.html")
     url = embed_url(item)

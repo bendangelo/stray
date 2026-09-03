@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_152659) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_074949) do
   create_table "collection_memberships", force: :cascade do |t|
     t.integer "collection_id", null: false
     t.datetime "created_at", null: false
@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_152659) do
     t.text "content_text"
     t.datetime "created_at", null: false
     t.integer "duration"
+    t.string "embed_id"
     t.binary "embedding"
     t.string "external_id", null: false
     t.datetime "fetched_at"

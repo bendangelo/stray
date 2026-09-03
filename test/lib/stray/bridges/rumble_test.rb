@@ -34,6 +34,7 @@ class Stray::Bridges::RumbleTest < ActiveSupport::TestCase
       first = items.first
       assert_equal "https://rumble.com/v7a8neu-what-you-need-to-know-about-second-great-sphinx-buried-under-giza.html", first[:url]
       assert_equal "436792702", first[:external_id]
+      assert_equal "v7a8neu", first[:embed_id]
       assert_equal 1046, first[:duration]
       assert_equal 2026, first[:published_at].year
       assert_equal 15335, first[:views]
@@ -58,5 +59,13 @@ class Stray::Bridges::RumbleTest < ActiveSupport::TestCase
     items = Stray::Bridges::Rumble.new.feed_from_html(html, "https://rumble.com/c/test")
     assert items.any?
     assert items.first[:title].present?
+  end
+
+  test "video_page extracts embed_id from JSON-LD embedUrl" do
+    body = File.read(Rails.root.join("test/fixtures/files/rumble_video_page.html"))
+    stub_html(body) do |extractor|
+      result = extractor.video_page("https://rumble.com/v7dngro-how-the-iran-war-and-ai-control-fundamentally-connect.html")
+      assert_equal "v7bgxmg", result[:embed_id]
+    end
   end
 end

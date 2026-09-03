@@ -357,6 +357,7 @@ class LinkIntakeJob < ApplicationJob
         source_id: source.id,
         user_id: @user.id,
         external_id: content.external_id,
+        embed_id: content.embed_id,
         title: content.title,
         url: content.url,
         content_text: content.content_text,

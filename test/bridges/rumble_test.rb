@@ -14,7 +14,7 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
   test "extract_feed maps core hashes to ExtractedContent" do
     core = Minitest::Mock.new
     core.expect(:channel_feed, [ {
-      url: "https://rumble.com/vabc", title: "Video", external_id: "123",
+      url: "https://rumble.com/vabc", title: "Video", external_id: "123", embed_id: "vabc",
       duration: 100, published_at: Time.now, thumbnail_url: "https://img.jpg",
       tags: [ "a" ], views: 5, live: false, is_short: false,
       creator_identity: { name: "Chan", url: "https://rumble.com/c/C", external_id: "c1", thumbnail_url: nil }
@@ -25,6 +25,7 @@ class Bridges::RumbleTest < ActiveSupport::TestCase
       assert_equal 1, result.size
       content = result.first
       assert_equal "123", content.external_id
+      assert_equal "vabc", content.embed_id
       assert_equal "Chan", content.creator_identity.name
     end
   end
