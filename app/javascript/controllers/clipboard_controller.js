@@ -18,10 +18,16 @@ export default class extends Controller {
 
   showCopied() {
     const btn = this.element.querySelector("button")
-    if (!btn) return
-    const original = btn.innerHTML
-    btn.innerHTML = "Copied!"
-    setTimeout(() => { btn.innerHTML = original }, this.copiedDurationValue)
+    if (btn) {
+      const original = btn.innerHTML
+      btn.innerHTML = "Copied!"
+      setTimeout(() => { btn.innerHTML = original }, this.copiedDurationValue)
+      return
+    }
+
+    const original = this.element.textContent
+    this.element.textContent = "Copied!"
+    setTimeout(() => { this.element.textContent = original }, this.copiedDurationValue)
   }
 
   fallbackCopy() {
