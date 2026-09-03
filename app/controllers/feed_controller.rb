@@ -19,7 +19,7 @@ class FeedController < ApplicationController
 
     @pagy, @items = pagy(
       scope.order(Arel.sql(Ranking.order_sql)).distinct,
-      limit: 20
+      limit: 48
     )
 
     @muted_count = current_user.follows.where(muted: true).count

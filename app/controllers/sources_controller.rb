@@ -19,7 +19,7 @@ class SourcesController < ApplicationController
     scope = @source.items.includes(source: :follows).order(published_at: :desc)
     scope = scope.where("published_at >= ?", cutoff) if cutoff
     @total_count = @source.items.count
-    @pagy, @items = pagy(scope, limit: 20)
+    @pagy, @items = pagy(scope, limit: 24)
   end
 
   def new
