@@ -2,7 +2,7 @@ require "stray"
 
 class SourceManifest
   DEFAULT_PAGE_SIZE = 100
-  NEXT_URL_PATH = "/s/%<slug>s/manifest.json"
+  NEXT_URL_PATH = "/s/%<slug>s/manifest"
 
   def self.build(source, cursor: nil, page_size: DEFAULT_PAGE_SIZE, base_url: nil)
     new(source, cursor, page_size, base_url).build

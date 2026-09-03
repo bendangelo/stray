@@ -59,11 +59,12 @@ class SourceManifestTest < ActiveSupport::TestCase
     assert_includes ids, "sm-2"
   end
 
-  test "pagination next_url uses /s/<slug>/manifest.json path" do
+  test "pagination next_url uses /s/<slug>/manifest path" do
     first = SourceManifest.build(@source, cursor: nil, page_size: 1)
     assert first[:pagination][:has_more]
     url = first[:pagination][:next_url]
-    assert_includes url, "/s/#{@source.slug}/manifest.json"
+    assert_includes url, "/s/#{@source.slug}/manifest"
+    assert_not_includes url, "/s/#{@source.slug}/manifest.json"
     assert_includes url, "cursor="
   end
 
