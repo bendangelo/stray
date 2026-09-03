@@ -721,4 +721,19 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     post rotate_slug_source_path(sources(:bitchute))
     assert_response :not_found
   end
+
+  test "show renders share card with manifest, RSS, and public preview URLs" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    get source_path(source)
+
+    assert_response :success
+    assert_includes response.body, "Share"
+    assert_includes response.body, source_manifest_path(slug: source.slug)
+    assert_includes response.body, source_feed_path(slug: source.slug)
+    assert_includes response.body, public_source_path(slug: source.slug)
+    assert_includes response.body, "data-controller=\"clipboard\""
+    assert_includes response.body, "Rotate slug"
+  end
 end
