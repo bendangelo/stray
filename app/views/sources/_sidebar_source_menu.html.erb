@@ -51,6 +51,18 @@
       <% end %>
     <% end %>
 
+    <div data-controller="clipboard" data-clipboard-text-value="<%= source_feed_url(slug: source.slug) %>"
+         data-action="click->clipboard#copy"
+         class="flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500">
+      <%= phosphor_icon "rss", class: "w-3.5 h-3.5" %> Copy RSS link
+    </div>
+
+    <div data-controller="clipboard" data-clipboard-text-value="<%= source_manifest_url(slug: source.slug) %>"
+         data-action="click->clipboard#copy"
+         class="flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500">
+      <%= phosphor_icon "share-network", class: "w-3.5 h-3.5" %> Copy manifest link
+    </div>
+
     <div class="border-t-3 border-charcoal/10 my-1"></div>
 
     <%= action_link_to source_path(source), method: :delete,
