@@ -42,3 +42,4 @@
 
 /config/*.local.yml
 /config/credentials/local.*
+/config/deploy.yml

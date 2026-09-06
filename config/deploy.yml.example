@@ -29,7 +29,7 @@ proxy:
 # Where you keep your container images.
 registry:
   # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: ghcr.io/your-user/stray
+  server: localhost:5555
 
   # Needed for authenticated registries.
   # username: your-user
