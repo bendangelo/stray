@@ -65,12 +65,12 @@ env:
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
-  logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
-
-# Run schema + data migrations together on deploy (data_migrate gem).
-migrate:
-  cmd: bin/rails db:migrate:with_data
+  db-migrate_with_data: app exec --interactive "bin/rails db:migrate:with_data"
+  db-seed: app exec --interactive "bin/rails db:seed"
+  search-rebuild: app exec -i "bin/rails full_search:rebuild"
+  search-reset: app exec -i "bin/rails full_search:reset"
+  logs: app logs -f
 
 # Use a persistent storage volume for sqlite database files and local Active Storage files.
 # Recommended to change this to a mounted volume path that is backed up off server.
