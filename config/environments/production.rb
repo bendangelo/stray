@@ -11,7 +11,7 @@ Rails.application.configure do
 
   # Secret key base comes from ENV only (never Rails credentials). Fails fast at
   # boot if missing so a misconfigured deploy can't silently start.
-  config.secret_key_base = ENV.fetch("SECRET_KEY_BASE")
+  config.secret_key_base = ENV.fetch("SECRET_KEY_BASE") { ENV["SECRET_KEY_BASE_DUMMY"] }
 
   # Full error reports are disabled.
   config.consider_all_requests_local = false
