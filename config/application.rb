@@ -2,15 +2,16 @@ require_relative "boot"
 
 require "rails/all"
 
+# AppConfig is a plain Ruby class needed during boot (before the Zeitwerk
+# autoloader is set up), so require it explicitly instead of autoload_paths.
+require_relative "configs/app_config"
+
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
 module Stray
   class Application < Rails::Application
-    # AppConfig is a plain Ruby class under config/configs. Autoload it so it's
-    # available in both the app and bin/ scripts without anyway_config.
-    config.autoload_paths << Rails.root.join("config/configs")
 
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
