@@ -71,25 +71,79 @@ module Stray
         end
       end
 
-      # Odysee has no single-video page extraction here; single video URLs
-      # fall through to generic_page. This raises for clarity.
-      def video_page(url)
-        raise Stray::ExtractionError, "Odysee: single video extraction not supported: #{url}"
-      end
+    # Fetch a single video page. Returns Hash.
+    def video_page(url)
+      data = runner.single_video(url)
 
-      private
+      channel_handle = extract_channel_handle(data, url)
+      channel_url = "https://odysee.com/@#{channel_handle}" if channel_handle
 
-      def parse_duration(entry)
-        return nil unless entry.respond_to?(:itunes_duration)
+      {
+        url: data["url"] || url,
+        title: data["title"],
+        external_id: data["id"],
+        duration: data["duration"],
+        published_at: parse_time(data["upload_date"]),
+        thumbnail_url: extract_thumbnail(data),
+        content_text: data["description"],
+        content_html: nil,
+        tags: extract_tags(data),
+        views: nil,
+        live: nil,
+        is_short: nil,
+        creator_identity: {
+          name: data["channel"],
+          url: channel_url,
+          external_id: channel_handle,
+          thumbnail_url: nil
+        }
+      }
+    end
 
-        Helpers.dehumanize(entry.itunes_duration)
-      end
+    private
 
-      def extract_thumbnail(entry)
-        content = entry.summary.to_s
-        match = content.match(/<img src="([^"]+)"/)
-        match && match[1]
-      end
+    def parse_duration(entry)
+      return nil unless entry.respond_to?(:itunes_duration)
+
+      Helpers.dehumanize(entry.itunes_duration)
+    end
+
+    def extract_thumbnail(entry)
+      content = entry.summary.to_s
+      match = content.match(/<img src="([^"]+)"/)
+      match && match[1]
+    end
+
+    def extract_channel_handle(data, url)
+      data["channel_id"] || data["channel"] ||
+        URI.parse(url).path.to_s.match(%r{^/@([^/]+:[^/]+)/})&.to_a&.last
+    rescue URI::InvalidURIError
+      nil
+    end
+
+    def extract_thumbnail(data)
+      thumbnails = data["thumbnails"]
+      first = thumbnails.is_a?(Array) ? thumbnails.first : nil
+      first.is_a?(Hash) ? first["url"] : first || data["thumbnail"]
+    end
+
+    def extract_tags(data)
+      cats = Array(data["categories"])
+      tags = Array(data["tags"])
+      (cats + tags).map { |t| t.to_s.downcase.strip }.reject(&:empty?).uniq.first(5)
+    end
+
+    def parse_time(value)
+      return nil if value.nil? || value.empty?
+
+      Time.strptime(value, "%Y%m%d")
+    rescue ArgumentError
+      nil
+    end
+
+    def runner
+      @runner ||= Stray::YtDlp::Runner.new
+    end
 
       def fetch(url)
         response = PoliteCrawl.get(url, http_client: http_client)
