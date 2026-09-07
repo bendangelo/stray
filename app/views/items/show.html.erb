@@ -20,7 +20,7 @@
       <% end %>
       <%= render "items/star_button", item: @item %>
       <%= render "items/actions_menu", item: @item %>
-      <% if @item.source.kind == "saved_video" && youtube_video_item?(@item) %>
+      <% if followable_video_item?(@item) %>
         <%= button_to follow_channel_item_path(@item), method: :post,
               class: "inline-flex items-center gap-1 text-xs font-semibold text-white bg-carrot-500 hover:bg-carrot-600 px-2 py-1 rounded-md border-3 border-charcoal cursor-pointer",
               data: { turbo_confirm: "Follow this channel and sync its videos?" } do %>

@@ -101,6 +101,18 @@ module ApplicationHelper
     uri&.host&.end_with?("youtube.com") || uri&.host == "youtu.be"
   end
 
+  FOLLOWABLE_VIDEO_CATEGORIES = %i[
+    youtube_video rumble_video bitchute_video odysee_video peertube_video video_channel
+  ].freeze
+
+  def followable_video_item?(item = nil)
+    item ||= @item
+    return false unless item&.source&.kind == "saved_video"
+
+    classification = UrlClassifier.classify(item.url)
+    classification && classification.category.in?(FOLLOWABLE_VIDEO_CATEGORIES)
+  end
+
   def yt_dlp_download_command(item)
     %(yt-dlp -f "bv*+ba/b" "#{item.url}")
   end

@@ -40,7 +40,7 @@ class ItemsController < ApplicationController
     item = Item.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless item
 
-    unless item.source.kind == "saved_video" && youtube_video_item?(item)
+    unless followable_video_item?(item)
       redirect_to item_path(item), alert: "This item can't follow a channel."
       return
     end
