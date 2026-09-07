@@ -22,6 +22,8 @@ class UrlClassifier
                       "bitchute_channel", Bridges::Bitchute)
       elsif odysee_channel?(uri)
         classification(:odysee_channel, "odysee_channel", Bridges::Odysee)
+      elsif odysee_video?(uri)
+        classification(:odysee_video, "odysee_channel", Bridges::Odysee)
       elsif peertube?(uri)
         classification(peertube_channel?(uri) ? :peertube_channel_feed : :peertube_video,
                       "peertube_channel", Bridges::Peertube)
@@ -91,6 +93,13 @@ class UrlClassifier
 
     def odysee_channel?(uri)
       uri.host&.end_with?("odysee.com") && uri.path.to_s.match?(%r{^/@})
+    end
+
+    def odysee_video?(uri)
+      return false unless uri.host&.end_with?("odysee.com")
+
+      path = uri.path.to_s
+      path.match?(%r{^/@[^/]+:[^/]+/[^/]+:[^/]+$}) || path.match?(%r{^/[^/]+:[^/]+$})
     end
 
     def peertube?(uri)

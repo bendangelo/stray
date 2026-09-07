@@ -49,6 +49,7 @@ class LinkIntakeJob < ApplicationJob
       when :bitchute_channel_feed then extract_channel_feed(:bitchute_channel)
       when :bitchute_video        then extract_site_video(:bitchute_channel)
       when :odysee_channel        then extract_channel_feed(:odysee_channel)
+      when :odysee_video        then extract_site_video(:odysee_channel)
       when :peertube_channel_feed then extract_channel_feed(:peertube_channel)
       when :peertube_video        then extract_site_video(:peertube_channel)
       when :generic_list          then extract_generic_list

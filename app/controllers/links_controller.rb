@@ -61,7 +61,7 @@ class LinksController < ApplicationController
   private
 
   SINGLE_VIDEO_CATEGORIES = %i[
-    peertube_video youtube_video rumble_video bitchute_video
+    peertube_video youtube_video rumble_video bitchute_video odysee_video
   ].freeze
 
   def single_video_url?(classification)
