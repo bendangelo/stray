@@ -12,7 +12,7 @@ module Bridges
 
     def self.trust_level = :scraped_html
     def self.site_homepage = "https://www.bitchute.com"
-    def self.last_tested_against = "2026-08"
+    def self.last_tested_against = "2026-09"
     def self.author = "Stray"
 
     def extract(url)
@@ -23,60 +23,12 @@ module Bridges
       Stray::Bridges::Bitchute.new.channel_feed(url).map { |h| map(h) }
     end
 
-    def extract_feed_from_response(response, url)
-      Stray::Bridges::Bitchute.new.feed_from_html(response.body, url).map { |h| map(h) }
+    def extract_feed_from_response(_response, url)
+      extract_feed(url)
     end
 
-    def extract_backfill(url, limit:)
-      runner.channel_listings(url, limit: limit).map do |data|
-        Stray::ExtractedContent.new(
-          url: canonicalize_url(data["url"], data),
-          title: data["title"],
-          content_text: nil,
-          content_html: nil,
-          thumbnail_url: extract_listing_thumbnail(data),
-          published_at: Stray::YtDlp::UploadDate.parse(data["upload_date"]),
-          external_id: data["id"],
-          duration: data["duration"],
-          creator_identity: extract_creator(data),
-          tags: []
-        )
-      end
-    end
-
-    private
-
-    def runner
-      @runner ||= Stray::YtDlp::Runner.new
-    end
-
-    def canonicalize_url(url, data)
-      candidate = data["url"] || data["webpage_url"] || url
-      parsed = URI.parse(candidate)
-      if parsed.host&.include?("bitchute.com") && data["id"]
-        "https://www.bitchute.com/video/#{data["id"]}"
-      else
-        candidate
-      end
-    rescue URI::InvalidURIError
-      candidate
-    end
-
-    def extract_listing_thumbnail(data)
-      thumbnails = data["thumbnails"]
-      first = thumbnails.is_a?(Array) ? thumbnails.first : nil
-      first.is_a?(Hash) ? first["url"] : first || data["thumbnail"]
-    end
-
-    def extract_creator(data)
-      return nil unless data["channel_id"] || data["channel"]
-
-      Stray::CreatorIdentity.new(
-        name: data["channel"],
-        url: data["channel_url"],
-        external_id: data["channel_id"],
-        thumbnail_url: nil
-      )
+    def extract_backfill(url, limit:, cursor: nil)
+      Stray::Bridges::Bitchute.new.channel_feed(url, limit: limit).map { |h| map(h) }
     end
   end
 end

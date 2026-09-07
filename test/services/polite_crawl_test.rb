@@ -93,6 +93,29 @@ class PoliteCrawlTest < ActiveSupport::TestCase
     end
   end
 
+  test "post sleeps then delegates to the http client with a json body" do
+    client = Minitest::Mock.new
+    body = { channel_id: "c1", limit: 50, offset: 0 }.to_json
+    client.expect(:post, :response, [ "https://api.example.com/videos", body, { "Content-Type" => "application/json" } ])
+
+    slept = false
+    PoliteCrawl.stub(:sleep, -> { slept = true }) do
+      result = PoliteCrawl.post("https://api.example.com/videos", http_client: client, json: { channel_id: "c1", limit: 50, offset: 0 })
+      assert_equal :response, result
+    end
+    assert slept
+    client.verify
+  end
+
+  test "post raises UrlGuard::Blocked for private IP URLs" do
+    client = Minitest::Mock.new
+    assert_raises(UrlGuard::Blocked) do
+      PoliteCrawl.stub(:sleep, -> {}) do
+        PoliteCrawl.post("http://192.168.1.1/videos", http_client: client, json: { a: 1 })
+      end
+    end
+  end
+
   test "get_with_cache raises UrlGuard::Blocked for private IP URLs" do
     client = Minitest::Mock.new
     assert_raises(UrlGuard::Blocked) do

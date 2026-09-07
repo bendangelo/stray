@@ -21,6 +21,13 @@ class PoliteCrawl
       http_client.get(url)
     end
 
+    def post(url, http_client:, json:)
+      raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
+      check_rate_budget(url)
+      sleep
+      http_client.post(url, json.to_json, { "Content-Type" => "application/json" })
+    end
+
     def get_with_cache(url, http_client:, etag: nil, last_modified: nil)
       raise UrlGuard::Blocked, "URL blocked by UrlGuard" unless UrlGuard.allowed?(url)
       check_rate_budget(url)

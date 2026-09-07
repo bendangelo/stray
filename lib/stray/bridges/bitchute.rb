@@ -1,14 +1,20 @@
 require "faraday"
-require "nokogiri"
+require "json"
+require "uri"
 require_relative "helpers"
 
 module Stray
   module Bridges
     # Bitchute channel feed + single video extraction.
-    # Ported from stray_video's BitchuteSpider.
+    # Channel listings come from the JSON API — channel pages are a JS SPA, not scrapable.
     class Bitchute
       HOSTS = %w[bitchute.com].freeze
       BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+      API_BASE = "https://api.bitchute.com"
+      CHANNEL_VIDEOS_PATH = "/api/beta/channel/videos"
+      VIDEO_PATH = "/api/beta/video"
+      PAGE_MIN = 10
+      PAGE_MAX = 50
 
       def self.matches?(url)
         uri = URI.parse(url)
@@ -33,92 +39,112 @@ module Stray
         nil
       end
 
-      # Fetch a channel's videos. Returns Array<Hash>.
-      def channel_feed(url)
-        response = fetch(url)
-        feed_from_html(response.body, url)
+      # Fetch a channel's latest videos from the JSON API. Returns Array<Hash>.
+      def channel_feed(url, limit: PAGE_MAX)
+        channel_id = self.class.channel_id(url)
+        return [] if channel_id.nil?
+
+        items = []
+        offset = 0
+        loop do
+          page = fetch_channel_videos(channel_id, offset: offset)
+          break if page.empty?
+
+          items.concat(page)
+          break if items.size >= limit
+          break if page.size < PAGE_MAX
+
+          offset += page.size
+        end
+
+        items.first(limit)
       end
 
-      # Parse a pre-fetched channel HTML body into Array<Hash>.
-      def feed_from_html(html, url)
-        doc = Nokogiri::HTML(html)
-        cards = doc.css(".channel-videos-container")
-
-        cards.map do |card|
-          title = card.at(".channel-videos-title a")&.text
-          next if title.nil? || title.empty?
-
-          thumbnail_url = card.at_css(".channel-videos-image img")&.[]("data-src")
-          eid, channel_eid = video_and_channel_eid(thumbnail_url)
-
-          {
-            url: "https://www.bitchute.com/video/#{eid}",
-            title: title,
-            external_id: eid,
-            duration: Helpers.dehumanize(card.at(".video-duration")&.text),
-            published_at: Helpers.dehumanize_time(card.at_css(".channel-videos-details")&.text),
-            thumbnail_url: thumbnail_url,
-            content_text: card.at_css(".channel-videos-text")&.text,
-            content_html: nil,
-            tags: [],
-            views: Helpers.dehumanize(card.at_css(".video-views")&.text),
-            live: nil,
-            is_short: nil,
-            creator_identity: {
-              name: nil,
-              url: "https://www.bitchute.com/channel/#{channel_eid}",
-              external_id: channel_eid,
-              thumbnail_url: nil
-            }
-          }
-        end.compact
+      # Fetch one API page (PAGE_MAX) of a channel's videos. Returns Array<Hash>.
+      def fetch_channel_videos(channel_id, offset:)
+        data = api_post(CHANNEL_VIDEOS_PATH, channel_id: channel_id, limit: PAGE_MAX, offset: offset, order_by: "latest")
+        Array(data["videos"]).map { |video| normalize_video(video, channel_id) }
       end
 
-      # Fetch a single video page. Returns Hash.
+      # Fetch a single video from the JSON API. Returns Hash.
       def video_page(url)
-        response = fetch(url)
-        doc = Nokogiri::HTML(response.body)
-        return nil unless doc.at("#video-title")
+        video_id = self.class.video_id(url)
+        return nil if video_id.nil?
 
-        thumbnail_url = Helpers.find_meta(doc, "og:image")
-        eid, channel_eid = video_and_channel_eid(thumbnail_url)
-
-        {
-          url: url,
-          title: doc.at("#video-title").text,
-          external_id: eid,
-          duration: Helpers.dehumanize(Helpers.find_meta(doc, "duration")),
-          published_at: Helpers.dehumanize_time(doc.at(".video-publish-date")&.text.to_s.split("at")[1]),
-          thumbnail_url: thumbnail_url,
-          content_text: doc.at("#video-description .full")&.text,
-          content_html: nil,
-          tags: doc.css(".tags a").map { |i| i.text[1..-1] }.first(5),
-          views: nil,
-          live: nil,
-          is_short: nil,
-          creator_identity: {
-            name: doc.at(".channel-banner p")&.text,
-            url: "https://www.bitchute.com/channel/#{channel_eid}",
-            external_id: channel_eid,
-            thumbnail_url: doc.at(".channel-banner img")&.[]("data-src")
-          }
-        }
+        data = api_post(VIDEO_PATH, video_id: video_id)
+        normalize_detail(data)
       end
 
       private
 
-      def video_and_channel_eid(thumbnail_url)
-        return [ nil, nil ] if thumbnail_url.nil?
-
-        matches = thumbnail_url.match(%r{images/(.+)/(.+)_})
-        matches ? [ matches[2], matches[1] ] : [ nil, nil ]
+      def normalize_video(video, channel_id)
+        {
+          url: "https://www.bitchute.com#{video["video_url"]}",
+          title: video["video_name"],
+          external_id: video["video_id"],
+          duration: Helpers.dehumanize(video["duration"]),
+          published_at: parse_iso8601(video["date_published"]),
+          thumbnail_url: video["thumbnail_url"],
+          content_text: video["description"],
+          content_html: nil,
+          tags: [],
+          views: video["view_count"],
+          live: nil,
+          is_short: nil,
+          creator_identity: {
+            name: nil,
+            url: "https://www.bitchute.com/channel/#{channel_id}",
+            external_id: channel_id,
+            thumbnail_url: nil
+          }
+        }
       end
 
-      def fetch(url)
-        response = PoliteCrawl.get(url, http_client: http_client)
-        raise Stray::ExtractionError, "Bitchute fetch failed: #{response.status}" unless response.status == 200
+      def normalize_detail(data)
+        channel = data["channel"] || {}
+        channel_id = channel["channel_id"]
 
-        response
+        {
+          url: "https://www.bitchute.com/video/#{data["video_id"]}/",
+          title: data["video_name"],
+          external_id: data["video_id"],
+          duration: Helpers.dehumanize(data["duration"]),
+          published_at: parse_iso8601(data["date_published"]),
+          thumbnail_url: data["thumbnail_url"],
+          content_text: data["description"],
+          content_html: nil,
+          tags: Array(data["hashtags"]),
+          views: data["view_count"],
+          live: nil,
+          is_short: nil,
+          creator_identity: {
+            name: channel["channel_name"],
+            url: channel_id ? "https://www.bitchute.com/channel/#{channel_id}" : nil,
+            external_id: channel_id,
+            thumbnail_url: channel["thumbnail_url"]
+          }
+        }
+      end
+
+      def parse_iso8601(value)
+        return nil if value.to_s.strip.empty?
+
+        Time.parse(value)
+      rescue ArgumentError
+        nil
+      end
+
+      def api_post(path, payload)
+        response = PoliteCrawl.post(
+          "#{API_BASE}#{path}",
+          http_client: http_client,
+          json: payload
+        )
+        raise Stray::ExtractionError, "Bitchute API failed: #{response.status}" unless response.status == 200
+
+        JSON.parse(response.body)
+      rescue JSON::ParserError => e
+        raise Stray::ExtractionError, "Bitchute API returned invalid JSON: #{e.message}"
       end
 
       def http_client
