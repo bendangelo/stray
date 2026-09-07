@@ -56,4 +56,38 @@ class Stray::Bridges::OdyseeTest < ActiveSupport::TestCase
     items = Stray::Bridges::Odysee.new.feed_from_rss(body, "https://odysee.com/@test:1")
     assert items.any?
   end
+
+  test "video_page extracts metadata from yt-dlp JSON" do
+    video_json = {
+      "id" => "some-video:49",
+      "title" => "Test Odysee Video",
+      "description" => "A test video",
+      "duration" => 600,
+      "upload_date" => "20240115",
+      "thumbnail" => "https://example.com/thumb.jpg",
+      "url" => "https://odysee.com/@SkyLight33:7/some-video:49",
+      "channel" => "SkyLight33",
+      "channel_id" => "SkyLight33:7"
+    }
+
+    runner = Stray::YtDlp::Runner.new
+    runner.define_singleton_method(:single_video) { |_url| video_json }
+
+    Stray::YtDlp::Runner.stub(:new, runner) do
+      result = Stray::Bridges::Odysee.new.video_page("https://odysee.com/@SkyLight33:7/some-video:49")
+
+      assert_equal "Test Odysee Video", result[:title]
+      assert_equal "some-video:49", result[:external_id]
+      assert_equal "https://odysee.com/@SkyLight33:7/some-video:49", result[:url]
+      assert_equal "https://example.com/thumb.jpg", result[:thumbnail_url]
+      assert_equal 600, result[:duration]
+      assert_equal Time.strptime("20240115", "%Y%m%d"), result[:published_at]
+      assert_equal "A test video", result[:content_text]
+
+      creator = result[:creator_identity]
+      assert_equal "SkyLight33", creator[:name]
+      assert_equal "SkyLight33:7", creator[:external_id]
+      assert_equal "https://odysee.com/@SkyLight33:7", creator[:url]
+    end
+  end
 end

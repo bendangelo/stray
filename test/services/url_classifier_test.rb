@@ -110,6 +110,19 @@ class UrlClassifierTest < ActiveSupport::TestCase
     assert_equal Bridges::Odysee, c.extractor_class
   end
 
+  test "classifies Odysee video URL with channel prefix" do
+    c = UrlClassifier.classify("https://odysee.com/@SkyLight33:7/Viols-d'enfants-La-fin-du-silence-par-Elise-Lucet:49")
+    assert_equal :odysee_video, c.category
+    assert_equal "odysee_channel", c.source_kind
+    assert_equal Bridges::Odysee, c.extractor_class
+  end
+
+  test "classifies bare Odysee video URL" do
+    c = UrlClassifier.classify("https://odysee.com/some-video:abc123")
+    assert_equal :odysee_video, c.category
+    assert_equal "odysee_channel", c.source_kind
+  end
+
   test "classifies peertube channel URL" do
     c = UrlClassifier.classify("https://tilvids.com/video-channels/fedi")
     assert_equal :peertube_channel_feed, c.category

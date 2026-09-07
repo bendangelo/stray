@@ -220,12 +220,12 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:alert], "can't follow a channel"
   end
 
-  test "follow_channel rejects a saved_video item that is not a YouTube video" do
+  test "follow_channel rejects a saved_video item that is not a recognized video" do
     sign_in_as(users(:one))
     source = Source.create!(user: users(:one), kind: :saved_video,
-      url: "https://bitchute.com/video/bcvid9", external_id: "bcvid9", name: "BC Saved")
-    item = Item.create!(source: source, user: users(:one), external_id: "bcvid9",
-      title: "BC Saved", url: "https://bitchute.com/video/bcvid9")
+      url: "https://example.com/blog/post", external_id: "post1", name: "Generic Saved")
+    item = Item.create!(source: source, user: users(:one), external_id: "post1",
+      title: "Generic Saved", url: "https://example.com/blog/post")
 
     assert_no_enqueued_jobs only: PromoteSavedVideoJob do
       post follow_channel_item_path(item)
@@ -233,6 +233,36 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to item_path(item)
     assert_includes flash[:alert], "can't follow a channel"
+  end
+
+  test "follow_channel enqueues promotion job for an Odysee saved_video item" do
+    sign_in_as(users(:one))
+    source = Source.create!(user: users(:one), kind: :saved_video,
+      url: "https://odysee.com/@SkyLight33:7/some-video:49", external_id: "some-video:49", name: "Odysee Saved")
+    item = Item.create!(source: source, user: users(:one), external_id: "some-video:49",
+      title: "Odysee Saved", url: "https://odysee.com/@SkyLight33:7/some-video:49")
+
+    assert_enqueued_with(job: PromoteSavedVideoJob, args: [ item.id ]) do
+      post follow_channel_item_path(item)
+    end
+
+    assert_redirected_to item_path(item)
+    assert_includes flash[:notice], "Following channel"
+  end
+
+  test "follow_channel enqueues promotion job for a Bitchute saved_video item" do
+    sign_in_as(users(:one))
+    source = Source.create!(user: users(:one), kind: :saved_video,
+      url: "https://bitchute.com/video/bcvid9", external_id: "bcvid9", name: "BC Saved")
+    item = Item.create!(source: source, user: users(:one), external_id: "bcvid9",
+      title: "BC Saved", url: "https://bitchute.com/video/bcvid9")
+
+    assert_enqueued_with(job: PromoteSavedVideoJob, args: [ item.id ]) do
+      post follow_channel_item_path(item)
+    end
+
+    assert_redirected_to item_path(item)
+    assert_includes flash[:notice], "Following channel"
   end
 
   test "follow_channel returns 404 for other user items" do

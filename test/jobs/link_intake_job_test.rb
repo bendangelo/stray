@@ -533,6 +533,61 @@ class LinkIntakeJobTest < ActiveJob::TestCase
     assert_equal "bitchute_channel", source.kind
   end
 
+  test "creates saved_video source for Odysee video URL when follow_channel is false" do
+    content = Stray::ExtractedContent.new(
+      url: "https://odysee.com/@SkyLight33:7/some-video:49",
+      title: "Odysee Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "some-video:49", duration: 300,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "SkyLight33", url: "https://odysee.com/@SkyLight33:7",
+        external_id: "SkyLight33:7", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://odysee.com/@SkyLight33:7/some-video:49" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_no_enqueued_jobs only: SourcePollJob do
+        LinkIntakeJob.perform_now(@user.id, "https://odysee.com/@SkyLight33:7/some-video:49", nil, follow_channel: false)
+      end
+    end
+
+    source = Source.find_by(external_id: "some-video:49", user_id: @user.id)
+    assert_not_nil source
+    assert_equal "saved_video", source.kind
+    assert_equal 1, source.items.count
+  end
+
+  test "follows Odysee channel when follow_channel is true" do
+    content = Stray::ExtractedContent.new(
+      url: "https://odysee.com/@SkyLight33:7/some-video:49",
+      title: "Odysee Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "some-video:49", duration: 300,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "SkyLight33", url: "https://odysee.com/@SkyLight33:7",
+        external_id: "SkyLight33:7", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://odysee.com/@SkyLight33:7/some-video:49" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        LinkIntakeJob.perform_now(@user.id, "https://odysee.com/@SkyLight33:7/some-video:49", nil, follow_channel: true)
+      end
+    end
+
+    source = Source.find_by(external_id: "SkyLight33:7", user_id: @user.id)
+    assert_equal "odysee_channel", source.kind
+    assert_equal "https://odysee.com/@SkyLight33:7", source.url
+  end
+
   test "creates generic_list source when list page detected" do
     contents = [ Stray::ExtractedContent.new(url: "https://example.com/post-1", title: "Post 1", content_text: nil, content_html: nil,
       thumbnail_url: nil, published_at: nil, external_id: Digest::SHA256.hexdigest("https://example.com/post-1"), duration: nil, creator_identity: nil, tags: []) ]

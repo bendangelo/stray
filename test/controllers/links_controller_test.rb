@@ -131,6 +131,17 @@ class LinksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to sources_path
   end
 
+  test "create defaults single Odysee video URL to follow_channel=false" do
+    sign_in_as(users(:one))
+    url = "https://odysee.com/@SkyLight33:7/some-video:49"
+
+    assert_enqueued_with(job: LinkIntakeJob, args: [ users(:one).id, url, nil, { follow_channel: false } ]) do
+      post links_path, params: { url: url }
+    end
+
+    assert_redirected_to sources_path
+  end
+
   test "create creates a pending source and enqueues job for a Peertube channel URL" do
     sign_in_as(users(:one))
     url = "https://tube.xy-space.de/a/voxpopuli"

@@ -54,26 +54,19 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
     assert_not Source.exists?(saved_source.id)
   end
 
-  test "promotes via yt-dlp fallback when oEmbed returns no author_url" do
+  test "promotes via channel resolver when oEmbed returns no author_url" do
     saved_source, item = saved_video_source_with_item
 
-    content = Stray::ExtractedContent.new(
-      url: "https://www.youtube.com/watch?v=savevid1",
-      title: "Saved Video", content_text: "Desc", content_html: nil,
-      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
-      external_id: "savevid1", duration: 200,
-      creator_identity: Stray::CreatorIdentity.new(
-        name: "YtDlp Channel", url: "https://www.youtube.com/channel/UC456",
-        external_id: "UC456", thumbnail_url: nil
-      ),
-      tags: []
+    resolver_result = Youtube::ChannelResolver::Result.new(
+      channel_id: "UC456",
+      rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC456",
+      channel_name: "Resolved Channel",
+      channel_url: "https://www.youtube.com/channel/UC456",
+      channel_avatar_url: nil
     )
 
-    extractor = Minitest::Mock.new
-    extractor.expect(:extract, content, [ "https://www.youtube.com/watch?v=jobvid1" ])
-
     Youtube::Oembed.stub(:fetch, nil) do
-      Bridges::YtDlp.stub(:new, extractor) do
+      Youtube::ChannelResolver.stub(:resolve, resolver_result) do
         assert_enqueued_with(job: SourcePollJob) do
           PromoteSavedVideoJob.perform_now(item.id)
         end
@@ -83,11 +76,143 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
     channel_source = Source.find_by(kind: "youtube_channel", user_id: @user.id, external_id: "UC456")
     assert_not_nil channel_source
     assert_equal "https://www.youtube.com/feeds/videos.xml?channel_id=UC456", channel_source.url
-    assert_equal "YtDlp Channel", channel_source.name
+    assert_equal "Resolved Channel", channel_source.name
 
     item.reload
     assert_equal channel_source.id, item.source_id
 
+    assert_not Source.exists?(saved_source.id)
+  end
+
+  test "promotes a Rumble saved_video to a rumble_channel" do
+    saved_source, item = saved_video_source_with_item(url: "https://rumble.com/vabc123.html", external_id: "abc123")
+
+    content = Stray::ExtractedContent.new(
+      url: "https://rumble.com/vabc123.html",
+      title: "Rumble Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "abc123", duration: 200,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "Bright Insight", url: "https://rumble.com/c/BrightInsight",
+        external_id: "BrightInsight", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://rumble.com/vabc123.html" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        PromoteSavedVideoJob.perform_now(item.id)
+      end
+    end
+
+    channel_source = Source.find_by(kind: "rumble_channel", user_id: @user.id, external_id: "BrightInsight")
+    assert_not_nil channel_source
+    assert_equal "https://rumble.com/c/BrightInsight", channel_source.url
+
+    item.reload
+    assert_equal channel_source.id, item.source_id
+    assert_not Source.exists?(saved_source.id)
+  end
+
+  test "promotes a Bitchute saved_video to a bitchute_channel" do
+    saved_source, item = saved_video_source_with_item(url: "https://bitchute.com/video/bcvid9", external_id: "bcvid9")
+
+    content = Stray::ExtractedContent.new(
+      url: "https://bitchute.com/video/bcvid9",
+      title: "Bitchute Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "bcvid9", duration: 200,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "BC Channel", url: "https://bitchute.com/channel/abc",
+        external_id: "abc", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://bitchute.com/video/bcvid9" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        PromoteSavedVideoJob.perform_now(item.id)
+      end
+    end
+
+    channel_source = Source.find_by(kind: "bitchute_channel", user_id: @user.id, external_id: "abc")
+    assert_not_nil channel_source
+    assert_equal "https://bitchute.com/channel/abc", channel_source.url
+
+    item.reload
+    assert_equal channel_source.id, item.source_id
+    assert_not Source.exists?(saved_source.id)
+  end
+
+  test "promotes an Odysee saved_video to an odysee_channel" do
+    saved_source, item = saved_video_source_with_item(url: "https://odysee.com/@SkyLight33:7/some-video:49", external_id: "some-video:49")
+
+    content = Stray::ExtractedContent.new(
+      url: "https://odysee.com/@SkyLight33:7/some-video:49",
+      title: "Odysee Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "some-video:49", duration: 200,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "SkyLight33", url: "https://odysee.com/@SkyLight33:7",
+        external_id: "SkyLight33:7", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://odysee.com/@SkyLight33:7/some-video:49" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        PromoteSavedVideoJob.perform_now(item.id)
+      end
+    end
+
+    channel_source = Source.find_by(kind: "odysee_channel", user_id: @user.id, external_id: "SkyLight33:7")
+    assert_not_nil channel_source
+    assert_equal "https://odysee.com/@SkyLight33:7", channel_source.url
+
+    item.reload
+    assert_equal channel_source.id, item.source_id
+    assert_not Source.exists?(saved_source.id)
+  end
+
+  test "promotes a Peertube saved_video to a peertube_channel" do
+    saved_source, item = saved_video_source_with_item(url: "https://tilvids.com/w/abc123", external_id: "abc123")
+
+    content = Stray::ExtractedContent.new(
+      url: "https://tilvids.com/w/abc123",
+      title: "Peertube Video", content_text: "Desc", content_html: nil,
+      thumbnail_url: "https://example.com/t.jpg", published_at: 1.day.ago,
+      external_id: "abc123", duration: 200,
+      creator_identity: Stray::CreatorIdentity.new(
+        name: "Fedi", url: "https://tilvids.com/video-channels/fedi",
+        external_id: "fedi", thumbnail_url: nil
+      ),
+      tags: []
+    )
+
+    extractor = Minitest::Mock.new
+    extractor.expect(:extract, content, [ "https://tilvids.com/w/abc123" ])
+
+    Stray::BridgeRegistry.stub(:find_for, extractor) do
+      assert_enqueued_with(job: SourcePollJob) do
+        PromoteSavedVideoJob.perform_now(item.id)
+      end
+    end
+
+    channel_source = Source.find_by(kind: "peertube_channel", user_id: @user.id, external_id: "fedi")
+    assert_not_nil channel_source
+    assert_equal "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100", channel_source.url
+
+    item.reload
+    assert_equal channel_source.id, item.source_id
     assert_not Source.exists?(saved_source.id)
   end
 
@@ -162,13 +287,8 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
   test "does not delete saved_video source when channel resolution fails" do
     saved_source, item = saved_video_source_with_item
 
-    failing_extractor = Object.new
-    def failing_extractor.extract(_url)
-      raise Stray::YtDlp::ExtractionFailed, "yt-dlp down"
-    end
-
     Youtube::Oembed.stub(:fetch, ->(_url) { raise Stray::ExtractionError, "oEmbed down" }) do
-      Bridges::YtDlp.stub(:new, failing_extractor) do
+      Youtube::ChannelResolver.stub(:resolve, ->(_url) { raise Stray::ExtractionError, "resolver down" }) do
         PromoteSavedVideoJob.perform_now(item.id)
       end
     end
@@ -176,6 +296,19 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
     assert Source.exists?(saved_source.id)
     item.reload
     assert_equal saved_source.id, item.source_id
+  end
+
+  test "leaves saved_video source untouched when URL is not a recognized video" do
+    source = Source.create!(user: @user, kind: :saved_video,
+      url: "https://example.com/blog/post", external_id: "post1", name: "Generic")
+    item = Item.create!(source: source, user: @user, external_id: "post1",
+      title: "Generic", url: "https://example.com/blog/post")
+
+    PromoteSavedVideoJob.perform_now(item.id)
+
+    assert Source.exists?(source.id)
+    item.reload
+    assert_equal source.id, item.source_id
   end
 
   test "returns early if item no longer exists" do

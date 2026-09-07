@@ -187,6 +187,30 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_not youtube_video_item?(item)
   end
 
+  test "followable_video_item? returns true for recognized video platform saved videos" do
+    %w[
+      https://www.youtube.com/watch?v=abc
+      https://youtu.be/abc
+      https://rumble.com/vabc123.html
+      https://bitchute.com/video/abc
+      https://odysee.com/@SkyLight33:7/some-video:49
+      https://tilvids.com/w/abc123
+    ].each do |url|
+      item = build_item(source_kind: "saved_video", url: url)
+      assert followable_video_item?(item), "expected #{url} to be followable"
+    end
+  end
+
+  test "followable_video_item? returns false for non-saved-video items" do
+    item = build_item(source_kind: "youtube_channel", url: "https://www.youtube.com/watch?v=abc")
+    assert_not followable_video_item?(item)
+  end
+
+  test "followable_video_item? returns false for unrecognized saved video URLs" do
+    item = build_item(source_kind: "saved_video", url: "https://example.com/blog/post")
+    assert_not followable_video_item?(item)
+  end
+
   test "embed_url returns YouTube embed for a saved_video item with a YouTube URL" do
     item = build_item(source_kind: "saved_video", url: "https://www.youtube.com/watch?v=abc", external_id: "abc")
     assert_equal "https://www.youtube.com/embed/abc", embed_url(item)
