@@ -1,9 +1,7 @@
 # Application configuration defaults.
 #
-# Development and test values are defined here. Production intentionally has
-# NO values for instance_domain and rails_log_level in this file: they must be
-# provided via STRAY_* environment variables at runtime, and AppConfig raises a
-# validation error at boot if any are missing.
+# Production ships with safe defaults so a fresh clone deploys with zero
+# STRAY_* env vars. Override any of them via environment variables at runtime.
 #
 # Secrets (e.g. SMTP credentials, AI provider API keys) must never live here.
 development:
@@ -21,6 +19,16 @@ test:
   instance_domain: localhost
   rails_log_level: warn
   polite_crawl_delay: 1.0
+  publication_buffer_minutes: 10
+  backfill_limit: 50
+  embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quint8_avx2.onnx"
+  embedding_model_sha256: "b941bf19f1f1283680f449fa6e7336bb5600bdcd5f84d10ddc5cd72218a0fd21"
+
+production:
+  instance_name: Stray
+  instance_domain: app.example.com
+  rails_log_level: info
+  polite_crawl_delay: 2.0
   publication_buffer_minutes: 10
   backfill_limit: 50
   embedding_model_url: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quint8_avx2.onnx"

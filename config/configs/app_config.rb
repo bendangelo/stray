@@ -65,7 +65,7 @@ class AppConfig
 
       value = setting.public_send(key)
       value if value.present?
-    rescue ActiveRecord::StatementInvalid
+    rescue ActiveRecord::StatementInvalid, NameError
       nil
     end
 
