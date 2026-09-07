@@ -304,7 +304,9 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
     item = Item.create!(source: source, user: @user, external_id: "post1",
       title: "Generic", url: "https://example.com/blog/post")
 
-    PromoteSavedVideoJob.perform_now(item.id)
+    Bridges::GenericList.stub(:detect, nil) do
+      PromoteSavedVideoJob.perform_now(item.id)
+    end
 
     assert Source.exists?(source.id)
     item.reload

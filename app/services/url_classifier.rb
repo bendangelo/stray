@@ -92,7 +92,9 @@ class UrlClassifier
     end
 
     def odysee_channel?(uri)
-      uri.host&.end_with?("odysee.com") && uri.path.to_s.match?(%r{^/@})
+      return false unless uri.host&.end_with?("odysee.com")
+
+      uri.path.to_s.match?(%r{^/@[^/]+:[^/]+$})
     end
 
     def odysee_video?(uri)

@@ -208,7 +208,9 @@ class ApplicationHelperTest < ActionView::TestCase
 
   test "followable_video_item? returns false for unrecognized saved video URLs" do
     item = build_item(source_kind: "saved_video", url: "https://example.com/blog/post")
-    assert_not followable_video_item?(item)
+    Bridges::GenericList.stub(:detect, nil) do
+      assert_not followable_video_item?(item)
+    end
   end
 
   test "embed_url returns YouTube embed for a saved_video item with a YouTube URL" do

@@ -227,8 +227,10 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     item = Item.create!(source: source, user: users(:one), external_id: "post1",
       title: "Generic Saved", url: "https://example.com/blog/post")
 
-    assert_no_enqueued_jobs only: PromoteSavedVideoJob do
-      post follow_channel_item_path(item)
+    Bridges::GenericList.stub(:detect, nil) do
+      assert_no_enqueued_jobs only: PromoteSavedVideoJob do
+        post follow_channel_item_path(item)
+      end
     end
 
     assert_redirected_to item_path(item)

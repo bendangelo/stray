@@ -110,6 +110,11 @@ class UrlClassifierTest < ActiveSupport::TestCase
     assert_equal Bridges::Odysee, c.extractor_class
   end
 
+  test "classifies odysee channel URL without video segment" do
+    c = UrlClassifier.classify("https://odysee.com/@samtime:1")
+    assert_equal :odysee_channel, c.category
+  end
+
   test "classifies Odysee video URL with channel prefix" do
     c = UrlClassifier.classify("https://odysee.com/@SkyLight33:7/Viols-d'enfants-La-fin-du-silence-par-Elise-Lucet:49")
     assert_equal :odysee_video, c.category
