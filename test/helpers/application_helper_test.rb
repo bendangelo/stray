@@ -75,6 +75,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "https://www.bitchute.com/embed/#{item.external_id}", url
   end
 
+  test "embed_url constructs Bitchute embed URL for a bitchute_channel kind" do
+    source = Source.new(kind: :bitchute_channel, url: "https://bitchute.com/channel/feedbc")
+    item = Item.new(source: source, url: "https://www.bitchute.com/video/vid3", external_id: "vid3")
+    url = embed_url(item)
+    assert_equal "https://www.bitchute.com/embed/vid3", url
+  end
+
   test "embed_url constructs Odysee embed URL" do
     source = Source.new(kind: :odysee_channel)
     item = Item.new(source: source, url: "https://odysee.com/@samtime:1/apple-reacts-framework:f0bfe667")

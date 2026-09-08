@@ -53,7 +53,7 @@ module ApplicationHelper
       if youtube_video_item?(item)
         "https://www.youtube.com/embed/#{item.external_id}"
       end
-    when "video_channel"
+    when "video_channel", "bitchute_channel"
       uri = parse_url(item.url)
       if uri&.host&.include?("bitchute.com")
         "https://www.bitchute.com/embed/#{item.external_id}"
