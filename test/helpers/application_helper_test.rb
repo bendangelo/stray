@@ -228,6 +228,25 @@ class ApplicationHelperTest < ActionView::TestCase
     assert video?(item)
   end
 
+  test "dropdown_menu_item_class returns the standard classes" do
+    classes = dropdown_menu_item_class
+    assert_includes classes, "flex"
+    assert_includes classes, "items-center"
+    assert_includes classes, "gap-2"
+    assert_includes classes, "px-2"
+    assert_includes classes, "py-1"
+    assert_includes classes, "text-xs"
+    assert_includes classes, "text-charcoal"
+    assert_includes classes, "rounded"
+    assert_includes classes, "cursor-pointer"
+  end
+
+  test "dropdown_menu_item_class with danger variant includes cerise" do
+    classes = dropdown_menu_item_class(danger: true)
+    assert_includes classes, "text-cerise"
+    refute_includes classes, "text-charcoal"
+  end
+
   private
 
   def build_item(source_kind:, url: "https://www.youtube.com/watch?v=abc", external_id: "abc")

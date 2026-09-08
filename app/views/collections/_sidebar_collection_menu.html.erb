@@ -18,12 +18,12 @@
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
 
     <%= link_to edit_collection_path(collection),
-          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+          class: "dropdown_menu_item_class" do %>
       <%= phosphor_icon "pencil", class: "w-3.5 h-3.5" %> Edit
     <% end %>
 
     <%= action_link_to mark_read_collection_path(collection), method: :post,
-          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+          class: "dropdown_menu_item_class" do %>
       <%= phosphor_icon "checks", class: "w-3.5 h-3.5" %> Mark all read
     <% end %>
 
@@ -31,7 +31,7 @@
 
     <%= action_link_to collection_path(collection), method: :delete,
           confirm: "Delete this collection?",
-          class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-cerise hover:bg-athens-300 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+          class: "dropdown_menu_item_class(danger: true)" do %>
       <%= phosphor_icon "trash", class: "w-3.5 h-3.5" %> Delete
     <% end %>
   </div>
