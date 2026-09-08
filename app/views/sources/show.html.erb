@@ -148,42 +148,15 @@
     </h2>
     <p class="text-xs text-charcoal-300 mb-2">Anyone with these links can view. The slug is the secret. Rotate to revoke.</p>
     <div class="space-y-2">
-      <div data-controller="clipboard" data-clipboard-text-value="<%= request.base_url %><%= source_manifest_path(slug: @source.slug) %>">
-        <label class="block text-xs font-bold text-charcoal mb-1">Manifest (Stray-to-Stray)</label>
-        <div class="flex gap-1">
-          <input type="text" readonly value="<%= request.base_url %><%= source_manifest_path(slug: @source.slug) %>"
-                 class="flex-1 h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
-                 onclick="this.select()">
-          <button type="button" data-action="click->clipboard#copy"
-                  class="shrink-0 px-2 h-9 border-2 border-charcoal rounded-md bg-white text-charcoal hover:bg-athens-500 text-xs font-bold cursor-pointer">
-            Copy
-          </button>
-        </div>
-      </div>
-      <div data-controller="clipboard" data-clipboard-text-value="<%= request.base_url %><%= source_feed_path(slug: @source.slug) %>">
-        <label class="block text-xs font-bold text-charcoal mb-1">RSS feed (any reader)</label>
-        <div class="flex gap-1">
-          <input type="text" readonly value="<%= request.base_url %><%= source_feed_path(slug: @source.slug) %>"
-                 class="flex-1 h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
-                 onclick="this.select()">
-          <button type="button" data-action="click->clipboard#copy"
-                  class="shrink-0 px-2 h-9 border-2 border-charcoal rounded-md bg-white text-charcoal hover:bg-athens-500 text-xs font-bold cursor-pointer">
-            Copy
-          </button>
-        </div>
-      </div>
-      <div data-controller="clipboard" data-clipboard-text-value="<%= request.base_url %><%= public_source_path(slug: @source.slug) %>">
-        <label class="block text-xs font-bold text-charcoal mb-1">Public preview page</label>
-        <div class="flex gap-1">
-          <input type="text" readonly value="<%= request.base_url %><%= public_source_path(slug: @source.slug) %>"
-                 class="flex-1 h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
-                 onclick="this.select()">
-          <button type="button" data-action="click->clipboard#copy"
-                  class="shrink-0 px-2 h-9 border-2 border-charcoal rounded-md bg-white text-charcoal hover:bg-athens-500 text-xs font-bold cursor-pointer">
-            Copy
-          </button>
-        </div>
-      </div>
+      <%= render "shared/clipboard_field",
+            label: "Manifest (Stray-to-Stray)",
+            value: "#{request.base_url}#{source_manifest_path(slug: @source.slug)}" %>
+      <%= render "shared/clipboard_field",
+            label: "RSS feed (any reader)",
+            value: "#{request.base_url}#{source_feed_path(slug: @source.slug)}" %>
+      <%= render "shared/clipboard_field",
+            label: "Public preview page",
+            value: "#{request.base_url}#{public_source_path(slug: @source.slug)}" %>
     </div>
     <div class="mt-3 pt-3 border-t-2 border-charcoal/10">
       <%= button_to rotate_slug_source_path(@source), method: :post,

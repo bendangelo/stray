@@ -1,0 +1,12 @@
+<div data-controller="clipboard" data-clipboard-text-value="<%= value %>">
+  <label class="block text-xs font-bold text-charcoal mb-1"><%= label %></label>
+  <div class="flex gap-1">
+    <input type="text" readonly value="<%= value %>"
+           class="flex-1 min-w-0 h-9 px-2 bg-athens-500 border-2 border-charcoal rounded-md text-xs text-charcoal"
+           onclick="this.select()">
+    <button type="button" data-action="click->clipboard#copy"
+            class="shrink-0 px-2 h-9 border-2 border-charcoal rounded-md bg-white text-charcoal hover:bg-athens-500 text-xs font-bold cursor-pointer">
+      Copy
+    </button>
+  </div>
+</div>
