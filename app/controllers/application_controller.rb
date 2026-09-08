@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
   prepend_before_action :redirect_to_setup_if_needed
   before_action :set_sidebar_sources, if: :authenticated?
   before_action :set_sidebar_collections, if: :authenticated?
+  before_action :set_sidebar_unseen_counts, if: :authenticated?
 
   private
 
@@ -22,6 +23,14 @@ class ApplicationController < ActionController::Base
 
   def set_sidebar_collections
     @collections = current_user.collections.order(:name)
+  end
+
+  def set_sidebar_unseen_counts
+    @unseen_counts = if @sources&.any?
+      Item.where(source_id: @sources.map(&:id), state: :unseen).group(:source_id).count
+    else
+      {}
+    end
   end
 
   def redirect_to_setup_if_needed
