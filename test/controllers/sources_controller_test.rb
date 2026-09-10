@@ -736,4 +736,23 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "data-controller=\"clipboard\""
     assert_includes response.body, "Rotate slug"
   end
+
+  test "show renders weight and share inside the source details panel" do
+    sign_in_as(users(:one))
+    source = sources(:youtube)
+
+    get source_path(source)
+
+    assert_response :success
+    doc = Nokogiri::HTML(response.body)
+    details = doc.at_css("details")
+    assert_not_nil details
+    assert_includes details.inner_html, "Weight:"
+    assert_includes details.inner_html, "1.0"
+    assert_includes details.inner_html, "Share"
+    assert_includes details.inner_html, source_manifest_path(slug: source.slug)
+    assert_includes details.inner_html, source_feed_path(slug: source.slug)
+    assert_includes details.inner_html, public_source_path(slug: source.slug)
+    assert_includes details.inner_html, "Rotate slug"
+  end
 end
