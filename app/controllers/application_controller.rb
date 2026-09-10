@@ -19,10 +19,11 @@ class ApplicationController < ActionController::Base
       .where(active: true)
       .includes(:follows)
       .order("follows.weight DESC, sources.name ASC")
+      .limit(15)
   end
 
   def set_sidebar_collections
-    @collections = current_user.collections.order(:name)
+    @collections = current_user.collections.order(:name).limit(10)
   end
 
   def set_sidebar_unseen_counts
