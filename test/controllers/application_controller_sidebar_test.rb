@@ -19,4 +19,14 @@ class ApplicationControllerSidebarTest < ActionDispatch::IntegrationTest
 
     assert_equal({}, assigns(:unseen_counts))
   end
+
+  test "sidebar sources are ordered by follow weight descending, then name" do
+    sign_in_as users(:one)
+    get root_path
+
+    assert_equal(
+      [ sources(:saved_youtube).id, sources(:youtube).id, sources(:bitchute).id ],
+      assigns(:sources).map(&:id)
+    )
+  end
 end

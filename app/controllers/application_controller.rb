@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
       .where(follows: { user_id: current_user.id })
       .where(active: true)
       .includes(:follows)
-      .order(:name)
+      .order("follows.weight DESC, sources.name ASC")
   end
 
   def set_sidebar_collections
