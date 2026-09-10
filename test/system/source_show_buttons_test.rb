@@ -41,4 +41,13 @@ class SourceShowButtonsTest < ApplicationSystemTestCase
     delete_link = find("[data-test='source-actions'] a", text: /Delete/i)
     assert_includes delete_link[:class], "cerise"
   end
+
+  test "collection menu button label renders icon and text inline" do
+    sign_in_as users(:one)
+    visit source_path(sources(:youtube))
+
+    frame = find("div[data-controller='dropdown'] > button turbo-frame", visible: false)
+    assert_includes frame[:class], "inline-flex"
+    assert_includes frame[:class], "items-center"
+  end
 end

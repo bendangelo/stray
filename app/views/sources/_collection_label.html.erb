@@ -1,4 +1,4 @@
-<%= turbo_frame_tag dom_id(source, :collection_label) do %>
+<%= turbo_frame_tag dom_id(source, :collection_label), class: "inline-flex items-center gap-1" do %>
   <% count = source.collection_memberships.count %>
   <% if count.positive? %>
     <%= phosphor_icon "folder-open", style: :fill, class: "w-3.5 h-3.5" %>
