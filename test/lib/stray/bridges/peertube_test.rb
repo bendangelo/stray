@@ -34,6 +34,21 @@ class Stray::Bridges::PeertubeTest < ActiveSupport::TestCase
     assert_equal "voxpopuli", Stray::Bridges::Peertube.channel_handle("https://tube.xy-space.de/a/voxpopuli")
   end
 
+  test "matches? returns true for API video URLs" do
+    assert Stray::Bridges::Peertube.matches?("https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100")
+    assert Stray::Bridges::Peertube.matches?("https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
+  end
+
+  test "channel_handle parses API video URLs" do
+    assert_equal "voxpopuli", Stray::Bridges::Peertube.channel_handle("https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100")
+    assert_equal "fedi", Stray::Bridges::Peertube.channel_handle("https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
+  end
+
+  test "api_url_for passes through already-API URLs" do
+    assert_equal "https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100",
+      Stray::Bridges::Peertube.api_url_for("https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100")
+  end
+
   test "channel_feed parses API videos" do
     stub_json(File.read(FIXTURE)) do |extractor|
       items = extractor.channel_feed("https://video.tkz.es/video-channels/fedi")
@@ -115,5 +130,14 @@ class Stray::Bridges::PeertubeTest < ActiveSupport::TestCase
     items = wrapper.extract_feed_from_response(resp, "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
     assert_equal 1, items.size
     assert_equal "8681e152-265f-42dc-80cd-7333fd4feb6d", items.first.external_id
+  end
+
+  test "extract_feed_from_response raises on non-200 API response" do
+    resp = OpenStruct.new(status: 404, body: "{}")
+    wrapper = Bridges::Peertube.new
+    error = assert_raises(Stray::ExtractionError) do
+      wrapper.extract_feed_from_response(resp, "https://tilvids.com/api/v1/video-channels/fedi/videos?count=100")
+    end
+    assert_equal "Peertube fetch failed: 404", error.message
   end
 end

@@ -142,6 +142,13 @@ class UrlClassifierTest < ActiveSupport::TestCase
     assert_equal Bridges::Peertube, c.extractor_class
   end
 
+  test "classifies peertube API URL as channel feed" do
+    c = UrlClassifier.classify("https://tube.xy-space.de/api/v1/accounts/voxpopuli/videos?count=100")
+    assert_equal :peertube_channel_feed, c.category
+    assert_equal "peertube_channel", c.source_kind
+    assert_equal Bridges::Peertube, c.extractor_class
+  end
+
   test "classifies peertube video URL" do
     c = UrlClassifier.classify("https://tilvids.com/w/abc123")
     assert_equal :peertube_video, c.category

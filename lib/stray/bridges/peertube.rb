@@ -11,18 +11,21 @@ module Stray
     class Peertube
       BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
 
+      API_PATH = %r{/api/v1/(?:video-channels|accounts)/([^/]+)/videos}
+
       def self.matches?(url)
         uri = URI.parse(url)
-        uri.host.present? && uri.path.to_s.match?(%r{/video-channels/|/c/|/a/})
+        uri.host.present? && (uri.path.to_s.match?(%r{/video-channels/|/c/|/a/}) || uri.path.to_s.match?(API_PATH))
       rescue URI::InvalidURIError
         false
       end
 
-      # Extract the channel handle from a URL like https://host/video-channels/fedi
-      # or https://host/c/fedi
+      # Extract the channel handle from a URL like https://host/video-channels/fedi,
+      # https://host/c/fedi, or an API URL like https://host/api/v1/accounts/fedi/videos
       def self.channel_handle(url)
         uri = URI.parse(url)
-        match = uri.path.to_s.match(%r{/(?:video-channels|c|a)/([^/]+)})
+        path = uri.path.to_s
+        match = path.match(API_PATH) || path.match(%r{/(?:video-channels|c|a)/([^/]+)})
         match && match[1]
       rescue URI::InvalidURIError
         nil
@@ -30,12 +33,14 @@ module Stray
 
       # Convert a channel page URL to the REST API endpoint used for polling.
       # The API URL becomes source.url so polls fetch it directly and can reuse
-      # the cached response via extract_feed_from_response.
+      # the cached response via extract_feed_from_response. Already-API URLs pass through.
       def self.api_url_for(url)
+        uri = URI.parse(url)
+        return url if uri.path.to_s.match?(API_PATH)
+
         handle = channel_handle(url)
         return nil unless handle
 
-        uri = URI.parse(url)
         scope = uri.path.to_s.match?(%r{/a/}) ? "accounts" : "video-channels"
         "#{uri.scheme}://#{uri.host}/api/v1/#{scope}/#{handle}/videos?count=100"
       rescue URI::InvalidURIError

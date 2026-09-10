@@ -18,12 +18,12 @@
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
 
     <%= link_to edit_collection_path(collection),
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "pencil", class: "w-3.5 h-3.5" %> Edit
     <% end %>
 
     <%= action_link_to mark_read_collection_path(collection), method: :post,
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "checks", class: "w-3.5 h-3.5" %> Mark all read
     <% end %>
 
@@ -31,7 +31,7 @@
 
     <%= action_link_to collection_path(collection), method: :delete,
           confirm: "Delete this collection?",
-          class: "dropdown_menu_item_class(danger: true)" do %>
+          class: dropdown_menu_item_class(danger: true) do %>
       <%= phosphor_icon "trash", class: "w-3.5 h-3.5" %> Delete
     <% end %>
   </div>

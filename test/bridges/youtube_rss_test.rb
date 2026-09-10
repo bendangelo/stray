@@ -74,6 +74,14 @@ class Bridges::YoutubeRssTest < ActiveSupport::TestCase
     assert_equal "dQw4w9WgXcQ", items.first.external_id
   end
 
+  test "extract_feed_from_response raises on non-200 response" do
+    response = Struct.new(:status, :body, :headers).new(404, "<html>not found</html>", {})
+    error = assert_raises(Stray::ExtractionError) do
+      Bridges::YoutubeRss.new.extract_feed_from_response(response, "https://www.youtube.com/feeds/videos.xml?channel_id=UCtest")
+    end
+    assert_equal "youtube rss fetch failed: 404", error.message
+  end
+
   test "extract includes creator_identity from feed author" do
     VCR.use_cassette("extractors/youtube_rss_feed") do
       extractor = Bridges::YoutubeRss.new

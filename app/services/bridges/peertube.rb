@@ -43,6 +43,8 @@ module Bridges
     # Reuse an already-fetched API response instead of re-requesting the feed.
     def extract_feed_from_response(response, url)
       if url.match?(%r{/api/v1/(video-channels|accounts)/[^/]+/videos})
+        raise Stray::ExtractionError, "Peertube fetch failed: #{response.status}" unless response.status == 200
+
         Stray::Bridges::Peertube.new.feed_from_response(response, url).map { |h| map(h) }
       else
         extract_feed(url)

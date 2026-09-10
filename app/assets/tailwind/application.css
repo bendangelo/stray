@@ -141,3 +141,8 @@ mark {
 .button_to {
   display: inline-flex;
 }
+
+[data-dropdown-target="menu"] .button_to {
+  display: block;
+  width: 100%;
+}

@@ -23,6 +23,14 @@ class Bridges::OdyseeTest < ActiveSupport::TestCase
     end
   end
 
+  test "extract_feed_from_response raises on non-200 response" do
+    response = Struct.new(:status, :body, :headers).new(404, "<html>not found</html>", {})
+    error = assert_raises(Stray::ExtractionError) do
+      Bridges::Odysee.new.extract_feed_from_response(response, "https://odysee.com/@c:1")
+    end
+    assert_equal "Odysee fetch failed: 404", error.message
+  end
+
   test "extract maps a single video page" do
     video_hash = {
       url: "https://odysee.com/@SkyLight33:7/some-video:49",

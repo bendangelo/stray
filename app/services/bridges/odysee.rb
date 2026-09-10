@@ -24,6 +24,8 @@ module Bridges
     end
 
     def extract_feed_from_response(response, url)
+      raise Stray::ExtractionError, "Odysee fetch failed: #{response.status}" unless response.status == 200
+
       Stray::Bridges::Odysee.new.feed_from_rss(response.body, url).map { |h| map(h) }
     end
   end

@@ -30,6 +30,8 @@ module Bridges
       end
 
       def extract_feed_from_response(response, url)
+        raise Stray::ExtractionError, "youtube rss fetch failed: #{response.status}" unless response.status == 200
+
         parse_feed(response.body, url)
       end
 

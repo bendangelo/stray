@@ -76,4 +76,12 @@ class Bridges::RssAtomTest < ActiveSupport::TestCase
     assert_equal 2, items.size
     assert_equal "First Post", items.first.title
   end
+
+  test "extract_feed_from_response raises on non-200 response" do
+    response = Struct.new(:status, :body, :headers).new(404, "<html>not found</html>", {})
+    error = assert_raises(Stray::ExtractionError) do
+      Bridges::RssAtom.new.extract_feed_from_response(response, "https://example.com/feed.xml")
+    end
+    assert_equal "rss fetch failed: 404", error.message
+  end
 end

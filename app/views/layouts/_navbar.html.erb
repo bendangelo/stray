@@ -59,13 +59,13 @@
           </div>
           <% if current_user.admin? %>
             <%= link_to admin_path,
-                  class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer" do %>
+                  class: dropdown_menu_item_class do %>
               <%= phosphor_icon "sliders", class: "w-3.5 h-3.5" %> Admin
             <% end %>
           <% end %>
           <div class="border-t-3 border-charcoal/10 my-1"></div>
           <%= action_link_to session_path, method: :delete,
-                class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer" do %>
+                class: dropdown_menu_item_class do %>
             <%= phosphor_icon "sign-out", class: "w-3.5 h-3.5" %> Log out
           <% end %>
         </div>

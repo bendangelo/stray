@@ -17,7 +17,7 @@
               data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
               data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
     <%= link_to item_path(item, context_params_for(item)),
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "arrow-square-out", class: "w-3.5 h-3.5" %> Open details
     <% end %>
 
@@ -26,20 +26,20 @@
     <% if item.unseen? %>
       <%= action_link_to item_path(item), method: :patch, params: { state: "seen" },
             data: { turbo_stream: true },
-            class: "dropdown_menu_item_class" do %>
+            class: dropdown_menu_item_class do %>
         <%= phosphor_icon "check", class: "w-3.5 h-3.5" %> Mark as seen
       <% end %>
     <% end %>
 
     <%= action_link_to item_path(item), method: :patch, params: { state: "hidden" },
           data: { turbo_stream: true },
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide from feed
     <% end %>
 
     <%= action_link_to "#",
           data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "tag", class: "w-3.5 h-3.5" %> Add tag
       <template data-tag-input-target="template">
         <div class="flex flex-col gap-1 mt-1">
@@ -60,7 +60,7 @@
 
     <%= action_link_to mute_source_path(item.source), method: :post,
           data: { turbo_stream: true },
-          class: "dropdown_menu_item_class" do %>
+          class: dropdown_menu_item_class do %>
       <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
     <% end %>
 

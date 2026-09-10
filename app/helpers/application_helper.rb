@@ -141,7 +141,7 @@ module ApplicationHelper
   end
 
   def dropdown_menu_item_class(danger: false)
-    base = "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500"
+    base = "flex items-center gap-2 w-full text-left px-2 py-1 text-xs rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500"
     if danger
       base + " text-cerise hover:bg-athens-300"
     else

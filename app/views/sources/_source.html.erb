@@ -73,14 +73,14 @@
                     data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
                     data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
           <% if source.polling? %>
-            <span class="flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-charcoal-300 rounded border-none bg-transparent">
+            <span class="<%= dropdown_menu_item_class %> cursor-wait text-charcoal-300">
               <%= phosphor_icon "spinner-gap", class: "w-3.5 h-3.5 animate-spin" %>
               Pulling…
             </span>
           <% else %>
             <%= button_to pull_source_path(source), method: :post,
                   form: { data: { turbo_frame: "_top" } },
-                  class: "flex items-center gap-2 w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+                  class: dropdown_menu_item_class do %>
               <%= phosphor_icon "arrows-clockwise", class: "w-3.5 h-3.5" %>
               Pull now
             <% end %>
@@ -89,27 +89,27 @@
           <% if source.active? %>
             <%= action_link_to source_path(source), method: :patch, params: { source: { active: false } },
                   data: { turbo_frame: "_top" },
-                  class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+                  class: dropdown_menu_item_class do %>
               <%= phosphor_icon "pause", class: "w-3.5 h-3.5" %> Pause
             <% end %>
           <% else %>
             <%= action_link_to source_path(source), method: :patch, params: { source: { active: true } },
                   data: { turbo_frame: "_top" },
-                  class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+                  class: dropdown_menu_item_class do %>
               <%= phosphor_icon "play", class: "w-3.5 h-3.5" %> Unpause
             <% end %>
           <% end %>
 
           <%= link_to edit_source_path(source),
                 data: { turbo_frame: "_top" },
-                class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500" do %>
+                class: dropdown_menu_item_class do %>
             <%= phosphor_icon "pencil-simple", class: "w-3.5 h-3.5" %> Edit
           <% end %>
 
           <%= action_link_to source_path(source), method: :delete,
                 confirm: "Delete this source and all its items?",
                 data: { turbo_frame: "_top" },
-                class: "flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-cerise hover:bg-cerise/10 hover:text-cerise rounded border-none bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-cerise" do %>
+                class: dropdown_menu_item_class(danger: true) do %>
             <%= phosphor_icon "trash", class: "w-3.5 h-3.5" %> Delete
           <% end %>
         </div>

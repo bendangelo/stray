@@ -2,7 +2,7 @@
 <% if follow %>
   <% exp = ranking_explanation_for(item, follow) %>
   <details>
-    <summary class="flex items-center gap-2 block w-full text-left px-2 py-1 text-xs text-charcoal hover:bg-athens-300 hover:text-carrot-600 rounded cursor-pointer select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500">
+    <summary class="<%= dropdown_menu_item_class %> select-none">
       <%= phosphor_icon "question", class: "w-3.5 h-3.5" %> Why?
     </summary>
     <div class="ml-5 pl-2 pr-2 pb-1 space-y-0.5 text-xs text-charcoal-300 border-l-2 border-charcoal">
