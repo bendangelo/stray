@@ -1,4 +1,7 @@
-<% if @tag %>
+<% if @saved %>
+  <% title "Saved" %>
+  <% description "Items you saved in your Stray feed." %>
+<% elsif @tag %>
   <% title "##{@tag}" %>
   <% description "Items tagged ##{@tag} in your Stray feed." %>
 <% elsif @q.present? %>
@@ -32,6 +35,10 @@
       <p class="text-charcoal-300">
         <% if @q.present? || @tag.present? %>
           No results<% if @q.present? %> for "<%= @q %>"<% end %><% if @tag.present? %> tagged "<%= @tag %>"<% end %>.
+        <% elsif @saved %>
+          No saved items yet.
+        <% elsif @browse_empty %>
+          You're all caught up. <%= link_to "View saved items", root_path(saved: 1), class: "underline hover:no-underline" %>.
         <% else %>
           Your feed is empty. Add a link above to start following sources.
         <% end %>
@@ -42,12 +49,12 @@
   <% if @pagy.pages > 1 %>
     <div class="mt-4 flex justify-center gap-2 text-sm">
       <% if @pagy.previous %>
-        <%= link_to "← Newer", root_path(page: @pagy.previous, q: @q, tag: @tag),
+        <%= link_to "← Newer", root_path(request.query_parameters.merge(page: @pagy.previous)),
           class: "text-charcoal underline hover:no-underline" %>
       <% end %>
       <span class="text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
       <% if @pagy.next %>
-        <%= link_to "Older →", root_path(page: @pagy.next, q: @q, tag: @tag),
+        <%= link_to "Older →", root_path(request.query_parameters.merge(page: @pagy.next)),
           class: "text-charcoal underline hover:no-underline" %>
       <% end %>
     </div>
