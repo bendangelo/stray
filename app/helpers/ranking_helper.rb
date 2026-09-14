@@ -3,21 +3,13 @@
 require "ostruct"
 
 module RankingHelper
-  def ranking_explanation_for(item, follow)
-    offset_hours = ((follow.weight - 1.0) * Ranking::BOOST_HOURS).round(1)
+  def ranking_explanation_for(item, follow, source_position: nil, mixed: false)
     OpenStruct.new(
-      published_at: item.published_at,
+      source_name: item.source.display_name,
       weight: follow.weight,
-      offset_hours: offset_hours,
-      effective_at: item.published_at&.then { |t| t + offset_hours.hours },
-      muted: follow.muted
+      muted: follow.muted,
+      source_position: source_position,
+      mixed: mixed
     )
-  end
-
-  def offset_label(hours)
-    return "no weight adjustment" if hours.zero?
-
-    sign = hours.positive? ? "+" : "−"
-    "#{sign}#{hours.abs}h"
   end
 end
