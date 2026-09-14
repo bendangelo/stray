@@ -82,4 +82,89 @@ class FeedInterleaverTest < ActiveSupport::TestCase
     entries = FeedInterleaver.interleave(queues: queues, weights: {}, result_limit: 4)
     assert_equal 4, entries.size
   end
+
+  def create_item(source, published_at:, state: :unseen, title: "Item")
+    Item.create!(
+      source: source,
+      user: source.user,
+      external_id: SecureRandom.hex(8),
+      title: title,
+      url: "https://example.com/#{SecureRandom.hex(8)}",
+      content_text: "x",
+      published_at: published_at,
+      state: state
+    )
+  end
+
+  test "call returns entries only for unseen items" do
+    user = users(:one)
+    source = sources(:youtube)
+    create_item(source, published_at: 1.hour.ago, title: "Unseen A")
+    create_item(source, published_at: 2.hours.ago, state: :seen, title: "Seen B")
+    create_item(source, published_at: 3.hours.ago, state: :saved, title: "Saved C")
+    create_item(source, published_at: 4.hours.ago, state: :hidden, title: "Hidden D")
+
+    entries = FeedInterleaver.call(user: user)
+
+    titles = entries.map { |e| e.item.title }
+    assert_includes titles, "Unseen A"
+    assert_not_includes titles, "Seen B"
+    assert_not_includes titles, "Saved C"
+    assert_not_includes titles, "Hidden D"
+  end
+
+  test "call excludes muted sources unless show_muted" do
+    user = users(:one)
+    source = sources(:bitchute)
+    follows(:two).update!(muted: true)
+    create_item(source, published_at: 1.hour.ago, title: "Muted Item")
+
+    assert_empty FeedInterleaver.call(user: user).select { |e| e.source_id == source.id }
+    refute_empty FeedInterleaver.call(user: user, show_muted: true).select { |e| e.source_id == source.id }
+  end
+
+  test "call caps each source at the per-source window" do
+    user = users(:one)
+    source = sources(:youtube)
+    35.times { |i| create_item(source, published_at: i.minutes.ago, title: "Bulk #{i}") }
+
+    entries = FeedInterleaver.call(user: user, window_per_source: 30)
+
+    assert_equal 30, entries.count { |e| e.source_id == source.id }
+  end
+
+  test "include_items forces a seen item into the mix" do
+    user = users(:one)
+    item = items(:video_one)
+    item.update!(state: :seen)
+
+    entries = FeedInterleaver.call(user: user, include_items: [ item ])
+
+    assert_includes entries.map { |e| e.item.id }, item.id
+  end
+
+  test "include_items ignores hidden items" do
+    user = users(:one)
+    item = items(:video_hidden)
+
+    entries = FeedInterleaver.call(user: user, include_items: [ item ])
+
+    assert_not_includes entries.map { |e| e.item.id }, item.id
+  end
+
+  test "call returns empty for a user with no follows" do
+    assert_empty FeedInterleaver.call(user: users(:two).tap { |u| u.follows.destroy_all })
+  end
+
+  test "source_position numbers each source's served items from 1" do
+    user = users(:one)
+    source = sources(:youtube)
+    create_item(source, published_at: 1.hour.ago, title: "P1")
+    create_item(source, published_at: 2.hours.ago, title: "P2")
+
+    entries = FeedInterleaver.call(user: user, show_muted: true)
+                 .select { |e| e.source_id == source.id }
+
+    assert_equal (1..entries.size).to_a, entries.map(&:source_position)
+  end
 end
