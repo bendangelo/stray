@@ -9,7 +9,7 @@
   wrapper_id = variant == :menu ? nil : "item_star_#{item.id}"
 %>
 <%= content_tag wrapper_tag, id: wrapper_id, class: wrapper_class do %>
-  <%= action_link_to item_path(item), method: :patch,
+  <%= action_link_to item_path(item, context_params_for(item)), method: :patch,
         params: { state: item.saved? ? "unseen" : "saved" },
         data: { turbo_stream: true },
         aria: { pressed: item.saved?, label: item.saved? ? "Unstar" : "Star" },

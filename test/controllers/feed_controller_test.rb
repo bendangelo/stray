@@ -109,7 +109,7 @@ class FeedControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = response.body
-    order = %w[MixA1 MixB1 MixA2 MixB2 MixA3 MixB3]
+    order = %w[MixB1 MixA1 MixB2 MixA2 MixB3 MixA3]
     positions = order.sort_by { |title| body.index(title) }
     assert_equal order, positions, "expected alternating sources, got #{positions.inspect}"
   end

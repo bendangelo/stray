@@ -1,8 +1,13 @@
 <% if state == "hidden" %>
   <%= turbo_stream.remove dom_id(item) %>
 <% else %>
-  <%= turbo_stream.replace dom_id(item) do %>
-    <%= render "items/item", item: item %>
+  <% leaves_browse = state == "saved" && !%w[source collection].include?(params[:from]) %>
+  <% if leaves_browse %>
+    <%= turbo_stream.remove dom_id(item) %>
+  <% else %>
+    <%= turbo_stream.replace dom_id(item) do %>
+      <%= render "items/item", item: item %>
+    <% end %>
   <% end %>
   <%= turbo_stream.replace "item_star_#{item.id}" do %>
     <%= render "items/star_button", item: item %>

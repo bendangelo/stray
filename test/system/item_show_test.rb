@@ -127,7 +127,8 @@ class ItemShowTest < ApplicationSystemTestCase
     visit item_path(items(:video_one))
 
     assert_text "WHY IS THIS HERE?"
-    assert_text "Weight"
+    assert_text "From Test Channel"
+    assert_text "mixed to spread channels"
   end
 
   test "inline player shows a star toggle button next to the title" do

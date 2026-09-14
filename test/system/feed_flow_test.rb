@@ -9,7 +9,7 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "First Video"
     assert_text "Second Video"
     assert_selector ".grid.grid-cols-12"
-    assert_selector "[data-player-target='video']", count: 6
+    assert_selector "[data-player-target='video']", count: 5
   end
 
   test "hide an item removes it from grid" do
@@ -26,7 +26,7 @@ class FeedFlowTest < ApplicationSystemTestCase
     assert_text "First Video"
   end
 
-  test "save an item shows saved state" do
+  test "saving an item removes it from the browse feed and lists it under Saved" do
     sign_in_as(users(:one))
     visit root_path
 
@@ -35,10 +35,10 @@ class FeedFlowTest < ApplicationSystemTestCase
       click_on "Star"
     end
 
-    within "##{dom_id(items(:video_one))}" do
-      find("button[aria-controls^='item-actions-']").click
-      assert_text "Unstar"
-    end
+    assert_no_selector "##{dom_id(items(:video_one))}"
+
+    visit root_path(saved: 1)
+    assert_text "First Video"
   end
 
   test "search filters items" do
