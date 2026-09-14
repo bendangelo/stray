@@ -80,16 +80,16 @@ class ItemsControllerShowTest < ActionDispatch::IntegrationTest
     assert item.reload.saved?
   end
 
-  test "neighbors from feed context: prev and next in ranking order" do
+  test "neighbors from feed context follow the interleaved unseen order" do
     sign_in_as(users(:one))
     item = items(:video_two)
 
     get item_path(item, from: "feed")
 
     assert_response :success
-    # Feed order (follows.weight 1.0 for youtube, so pure published_at DESC):
-    # video_three (5h ago) > video_four (6h ago) > video_two (1d ago) > video_one (2d ago) > ...
-    # So prev = video_four, next = video_one
+    # Browse candidates (weight 1.0): youtube video_three(5h), video_four(6h), video_two(1d), video_one(2d);
+    # saved_youtube video_saved_yt(3d). Interleaved: video_three, video_saved_yt, video_four, video_two, video_one.
+    # video_two is forced back in as the anchor; prev = video_four, next = video_one.
     assert_equal "Fourth Video", assigns(:neighbors)[0]&.title
     assert_equal "First Video", assigns(:neighbors)[1]&.title
   end

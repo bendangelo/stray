@@ -58,6 +58,8 @@ class ItemsController < ApplicationController
   end
 
   def find_neighbors(item)
+    return interleaved_feed_neighbors(item) if feed_browse_context?
+
     scope, order = neighbor_scope_and_order
     return [ nil, nil ] unless scope
 
@@ -65,6 +67,27 @@ class ItemsController < ApplicationController
     idx = ids.index(item.id)
     return [ nil, nil ] unless idx
 
+    prev_id = idx > 0 ? ids[idx - 1] : nil
+    next_id = idx < ids.length - 1 ? ids[idx + 1] : nil
+    [ prev_id && Item.find_by(id: prev_id), next_id && Item.find_by(id: next_id) ]
+  end
+
+  def feed_browse_context?
+    (params[:from].blank? || params[:from] == "feed") &&
+      params[:q].blank? && params[:tag].blank? && params[:saved] != "1"
+  end
+
+  def interleaved_feed_neighbors(item)
+    entries = FeedInterleaver.call(
+      user: current_user,
+      show_muted: params[:show_muted] == "1",
+      include_items: [ item ]
+    )
+    ids = entries.map { |entry| entry.item.id }
+    idx = ids.index(item.id)
+    return [ nil, nil ] unless idx
+
+    @rank_positions = { item.id => entries[idx].source_position }
     prev_id = idx > 0 ? ids[idx - 1] : nil
     next_id = idx < ids.length - 1 ? ids[idx + 1] : nil
     [ prev_id && Item.find_by(id: prev_id), next_id && Item.find_by(id: next_id) ]
@@ -87,18 +110,19 @@ class ItemsController < ApplicationController
         .where(collection_memberships: { collection_id: collection.id })
         .where(items: { user_id: current_user.id })
         .where.not(state: :hidden)
-      [ scope, Ranking.order_sql ]
-    else # "feed" or unspecified
+      [ scope, "items.published_at DESC" ]
+    else
       scope = Item.joins(source: :follows)
         .where(follows: { user_id: current_user.id })
         .where(items: { user_id: current_user.id })
         .where.not(state: :hidden)
       scope = scope.where(follows: { muted: false }) unless params[:show_muted] == "1"
+      scope = scope.where(items: { state: Item.states[:saved] }) if params[:saved] == "1"
       scope = scope.search(params[:q]) if params[:q].present?
       if params[:tag].present?
         scope = scope.joins(taggings: :tag).where(tags: { name: params[:tag] })
       end
-      [ scope, Ranking.order_sql ]
+      [ scope, "items.published_at DESC" ]
     end
   end
 end
