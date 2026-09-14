@@ -7,12 +7,6 @@ class RankingTest < ActiveSupport::TestCase
     assert_equal 1.5, Ranking.clamp(1.5)
   end
 
-  test "order_sql returns effective_time DESC with tiebreaker" do
-    sql = Ranking.order_sql
-    assert_includes sql, "datetime(items.published_at, printf('%+.1f hours', (follows.weight - 1.0) * 24)) DESC"
-    assert_includes sql, "items.published_at DESC"
-  end
-
   test "muted_enough returns true when 3+ hidden interactions in window" do
     user = users(:one)
     source = sources(:youtube)

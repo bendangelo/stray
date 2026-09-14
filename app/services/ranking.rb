@@ -22,10 +22,6 @@ module Ranking
       weight.clamp(WEIGHT_MIN, WEIGHT_MAX)
     end
 
-    def self.order_sql
-      "datetime(items.published_at, printf('%+.1f hours', (follows.weight - 1.0) * #{BOOST_HOURS})) DESC, items.published_at DESC"
-    end
-
     def self.muted_enough?(user:, source_id:)
       Interaction.joins(:item)
         .where(user_id: user.id, kind: :hidden)
