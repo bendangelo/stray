@@ -47,6 +47,13 @@
 
     <%= link_to "All Sources", sources_path, class: "block mt-4 text-sm text-charcoal underline hover:no-underline" %>
 
+    <% saved_active = defined?(@saved) && @saved %>
+    <%= link_to root_path(saved: 1),
+          class: "mt-2 flex items-center gap-2 rounded-md p-2 text-sm text-charcoal hover:bg-athens-400 #{saved_active ? 'bg-athens-400 font-bold border-l-3 border-carrot-500' : ''}" do %>
+      <%= phosphor_icon "star", style: :fill, class: "w-4 h-4" %>
+      Saved
+    <% end %>
+
     <h2 class="font-display text-sm font-bold text-charcoal mt-6 mb-3 uppercase tracking-wide">Collections</h2>
 
     <div class="space-y-1">

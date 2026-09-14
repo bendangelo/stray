@@ -1,14 +1,19 @@
 <% follow = item.source.follows.detect { |f| f.user_id == current_user.id } if defined?(current_user) && current_user %>
 <% if follow %>
-  <% exp = ranking_explanation_for(item, follow) %>
+  <% exp = ranking_explanation_for(item, follow, source_position: @rank_positions&.[](item.id), mixed: @mixed) %>
   <details>
     <summary class="<%= dropdown_menu_item_class %> select-none">
       <%= phosphor_icon "question", class: "w-3.5 h-3.5" %> Why?
     </summary>
     <div class="ml-5 pl-2 pr-2 pb-1 space-y-0.5 text-xs text-charcoal-300 border-l-2 border-charcoal">
-      <p>Published <%= time_ago(exp.published_at) %>.</p>
-      <p>Weight <%= exp.weight %> from <%= item.source.display_name %> — <%= offset_label(exp.offset_hours) %>.</p>
-      <p>Shown as if published <%= time_ago(exp.effective_at) %>.</p>
+      <p>From <span class="font-bold text-charcoal"><%= exp.source_name %></span> (weight <%= exp.weight %>).</p>
+      <% if exp.source_position %>
+        <p>Item <%= exp.source_position %> served from this source — mixed to spread channels.</p>
+      <% elsif exp.mixed %>
+        <p>Mixed with your other channels.</p>
+      <% else %>
+        <p>Sorted by newest.</p>
+      <% end %>
       <% if exp.muted %>
         <p class="text-cerise">Source muted (3+ hides in the last week).</p>
       <% end %>

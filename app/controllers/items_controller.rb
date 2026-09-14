@@ -9,6 +9,7 @@ class ItemsController < ApplicationController
     return head :not_found unless @item
 
     record_open!(@item)
+    @mixed = feed_browse_context?
     @neighbors = find_neighbors(@item)
   end
 

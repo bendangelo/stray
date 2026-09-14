@@ -86,13 +86,18 @@
   <% end %>
 
   <% if follow %>
-    <% exp = ranking_explanation_for(@item, follow) %>
+    <% exp = ranking_explanation_for(@item, follow, source_position: @rank_positions&.[](@item.id), mixed: @mixed) %>
     <section class="mb-6 border-3 border-charcoal rounded-md bg-athens-400 p-3">
       <h2 class="text-xs uppercase tracking-wide text-charcoal-300 mb-2">Why is this here?</h2>
       <div class="space-y-0.5 text-xs text-charcoal">
-        <p>Published <%= time_ago(exp.published_at) %>.</p>
-        <p>Weight <%= exp.weight %> from <%= @item.source.display_name %> — <%= offset_label(exp.offset_hours) %>.</p>
-        <p>Shown as if published <%= time_ago(exp.effective_at) %>.</p>
+        <p>From <span class="font-bold"><%= exp.source_name %></span> (weight <%= exp.weight %>).</p>
+        <% if exp.source_position %>
+          <p>Item <%= exp.source_position %> served from this source — mixed to spread channels.</p>
+        <% elsif exp.mixed %>
+          <p>Mixed with your other channels.</p>
+        <% else %>
+          <p>Sorted by newest.</p>
+        <% end %>
         <% if exp.muted %>
           <p class="text-cerise">Source muted (3+ hides in the last week).</p>
         <% end %>
