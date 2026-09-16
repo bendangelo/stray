@@ -98,6 +98,6 @@ group :test do
   gem "minitest-mock"
 end
 
-gem "onnxruntime", "~> 0.11.6"
+gem "onnxruntime", "~> 0.11.7"
 
 gem "ruby-readability", "~> 0.7.3"
