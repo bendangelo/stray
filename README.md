@@ -65,7 +65,7 @@ The app is fully functional with **zero AI configured**. LLM tagging and semanti
 
 ## Tech stack
 
-Rails 8 · SQLite · Solid Queue / Solid Cache / Solid Cable · Hotwire (Turbo + Stimulus) · SQLite FTS5 · Ruby 4.0.5
+Rails 8 · SQLite · Solid Queue / Solid Cache / Solid Cable · Hotwire (Turbo + Stimulus) · SQLite FTS5 · Ruby 4.0.6 (managed with [mise](https://mise.jdx.dev/))
 
 ## Roadmap
 

@@ -19,7 +19,7 @@ A self-hosted, personal feed you control. Stray pulls content from RSS feeds, ge
 
 | Layer | Choice |
 |---|---|
-| Framework | Rails 8, Ruby 4.0.5 (`.ruby-version`) |
+| Framework | Rails 8, Ruby 4.0.6 (mise-managed via `mise.toml` / `.ruby-version`) |
 | Database | SQLite |
 | Background jobs | Solid Queue |
 | Cache / WebSockets | Solid Cache / Solid Cable |
