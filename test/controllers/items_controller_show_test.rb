@@ -12,6 +12,27 @@ class ItemsControllerShowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "First Video"
   end
 
+  test "show renders the standalone why section once" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    get item_path(item)
+
+    assert_response :success
+    assert_equal 1, response.body.scan("Why is this here?").size
+    assert_includes response.body, "mixed to spread channels"
+  end
+
+  test "show renders tag chips with provenance" do
+    sign_in_as(users(:one))
+    item = items(:video_one)
+
+    get item_path(item)
+
+    assert_response :success
+    assert_includes response.body, "Tagged by"
+  end
+
   test "show returns 404 for other user items" do
     sign_in_as(users(:one))
     item = items(:video_user_two)
