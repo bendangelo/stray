@@ -1,5 +1,4 @@
 <% title @item.title %>
-<% follow = @item.source.follows.detect { |f| f.user_id == current_user.id } %>
 
 <div class="container mx-auto px-4 pt-4 max-w-screen-xl">
   <div class="max-w-3xl mx-auto">
@@ -72,38 +71,12 @@
     <section class="mb-6">
       <h2 class="text-xs uppercase tracking-wide text-charcoal-300 mb-2">Tags</h2>
       <div class="flex flex-wrap gap-2">
-        <% @item.taggings.includes(:tag).each do |tagging| %>
-          <div class="inline-flex items-center gap-1">
-            <%= link_to tagging.tag.name,
-                  root_path(request.query_parameters.except("page").merge(tag: tagging.tag.name)),
-                  class: "inline-flex items-center px-2 py-0.5 text-xs rounded bg-athens-300 text-charcoal hover:bg-carrot-500 hover:text-white" %>
-            <span title="Tagged by <%= tagging.source %>" class="text-charcoal-300">
-              <%= tagging_provenance_icon(tagging) %>
-            </span>          </div>
-        <% end %>
+        <%= render partial: "tags/tag_chip", collection: @item.taggings.includes(:tag), as: :tagging %>
       </div>
     </section>
   <% end %>
 
-  <% if follow %>
-    <% exp = ranking_explanation_for(@item, follow, source_position: @rank_positions&.[](@item.id), mixed: @mixed) %>
-    <section class="mb-6 border-3 border-charcoal rounded-md bg-athens-400 p-3">
-      <h2 class="text-xs uppercase tracking-wide text-charcoal-300 mb-2">Why is this here?</h2>
-      <div class="space-y-0.5 text-xs text-charcoal">
-        <p>From <span class="font-bold"><%= exp.source_name %></span> (weight <%= exp.weight %>).</p>
-        <% if exp.source_position %>
-          <p>Item <%= exp.source_position %> served from this source — mixed to spread channels.</p>
-        <% elsif exp.mixed %>
-          <p>Mixed with your other channels.</p>
-        <% else %>
-          <p>Sorted by newest.</p>
-        <% end %>
-        <% if exp.muted %>
-          <p class="text-cerise">Source muted (3+ hides in the last week).</p>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
+  <%= render "items/why", item: @item, standalone: true %>
 
   <% prev_item, next_item = @neighbors %>
   <nav class="flex justify-between items-center mt-8 pt-4 border-t-3 border-charcoal gap-2">
