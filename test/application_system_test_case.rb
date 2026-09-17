@@ -5,7 +5,8 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   driven_by :cuprite, using: :headless_chrome, screen_size: [ 1400, 1400 ], options: {
     js_errors: true,
     process_timeout: 20,
-    timeout: 15
+    timeout: 15,
+    url_blacklist: [ %r{\Ahttps?://(?!127\.0\.0\.1|localhost)} ]
   }
 
   def resize_to_mobile

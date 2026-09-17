@@ -20,16 +20,18 @@ class ItemsFollowChannelSystemTest < ApplicationSystemTestCase
     assert_no_text "Follow channel"
   end
 
-  test "follow channel button is not visible on a non-YouTube saved_video item" do
+  test "follow channel button is not visible on a non-video saved_video item" do
     sign_in_as(users(:one))
     source = Source.create!(user: users(:one), kind: :saved_video,
-      url: "https://bitchute.com/video/bcvid9", external_id: "bcvid9", name: "BC Saved")
-    item = Item.create!(source: source, user: users(:one), external_id: "bcvid9",
-      title: "BC Saved", url: "https://bitchute.com/video/bcvid9")
+      url: "https://example.com/blog/post", external_id: "post1", name: "Generic Saved")
+    item = Item.create!(source: source, user: users(:one), external_id: "post1",
+      title: "Generic Saved", url: "https://example.com/blog/post")
 
-    visit item_path(item)
+    Bridges::GenericList.stub(:detect, nil) do
+      visit item_path(item)
 
-    assert_no_text "Follow channel"
+      assert_no_text "Follow channel"
+    end
   end
 
   test "saved_video YouTube item renders the video embed on the show page" do
