@@ -29,12 +29,28 @@ class MobileHardeningTest < ApplicationSystemTestCase
 
   test "feed pagination links are 44px buttons" do
     sign_in_as users(:one)
-    visit root_path
 
-    if page.has_css?("a", text: "Older →")
-      older = find("a", text: "Older →")
-      height = older.evaluate_script("this.getBoundingClientRect().height")
-      assert_operator height, :>=, 44, "pagination link got #{height}"
+    %i[youtube saved_youtube].each_with_index do |source, si|
+      count = si.zero? ? 30 : 25
+      count.times do |i|
+        Item.create!(
+          source: sources(source),
+          user: users(:one),
+          external_id: "page_#{source}_#{i}",
+          title: "Pagination #{source} #{i}",
+          url: "https://example.com/#{source}/#{i}",
+          content_text: "Pagination item #{source} #{i}",
+          published_at: (i + 1).hours.ago,
+          state: :unseen
+        )
+      end
     end
+
+    visit root_path
+    resize_to_mobile
+
+    older = find("a", text: "Older →")
+    height = older.evaluate_script("this.getBoundingClientRect().height")
+    assert_operator height, :>=, 44, "pagination link got #{height}"
   end
 end

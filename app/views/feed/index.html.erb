@@ -50,12 +50,12 @@
     <div class="mt-4 flex justify-center items-center gap-3">
       <% if @pagy.previous %>
         <%= link_to "← Newer", root_path(request.query_parameters.merge(page: @pagy.previous)),
-          class: ui_button(variant: :secondary, size: :sm) %>
+          class: ui_button(variant: :secondary, size: :md) %>
       <% end %>
       <span class="text-sm text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
       <% if @pagy.next %>
         <%= link_to "Older →", root_path(request.query_parameters.merge(page: @pagy.next)),
-          class: ui_button(variant: :secondary, size: :sm) %>
+          class: ui_button(variant: :secondary, size: :md) %>
       <% end %>
     </div>
   <% end %>
