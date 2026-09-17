@@ -22,11 +22,11 @@
   <% if @pagy.pages > 1 %>
     <div class="mt-4 flex justify-center items-center gap-3">
       <% if @pagy.previous %>
-        <%= link_to "← Prev", tags_path(page: @pagy.previous), class: ui_button(variant: :secondary, size: :sm) %>
+        <%= link_to "← Prev", tags_path(page: @pagy.previous), class: ui_button(variant: :secondary, size: :md) %>
       <% end %>
       <span class="text-sm text-charcoal-300"><%= @pagy.page %> / <%= @pagy.pages %></span>
       <% if @pagy.next %>
-        <%= link_to "Next →", tags_path(page: @pagy.next), class: ui_button(variant: :secondary, size: :sm) %>
+        <%= link_to "Next →", tags_path(page: @pagy.next), class: ui_button(variant: :secondary, size: :md) %>
       <% end %>
     </div>
   <% end %>
