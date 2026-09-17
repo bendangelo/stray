@@ -21,6 +21,10 @@ export default class extends Controller {
     } else {
       this.sidebarTarget.classList.add("-translate-x-full")
       this.backdropTarget.classList.add("hidden")
+      const hamburger = document.querySelector("button[aria-label='Toggle sources']")
+      if (hamburger) {
+        hamburger.focus()
+      }
     }
   }
 }

@@ -1,9 +1,9 @@
 <nav style="--navbar-h: 57px" class="border-b-3 border-charcoal bg-champagne-50 backdrop-blur shadow-sm sticky top-0 z-50">
-  <div class="flex items-center gap-2 px-2 md:px-4 lg:px-16 py-2">
+  <div class="flex items-center gap-2 px-2 md:px-4 lg:px-16 py-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
 
     <% if authenticated? %>
       <button type="button"
-              class="md:hidden text-charcoal p-1"
+              class="md:hidden text-charcoal min-h-11 min-w-11 flex items-center justify-center rounded-md hover:bg-athens-400 cursor-pointer"
               data-action="click->sidebar#toggle"
               aria-label="Toggle sources">
         <%= phosphor_icon "list", class: "w-6 h-6" %>

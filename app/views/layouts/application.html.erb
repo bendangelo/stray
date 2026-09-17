@@ -39,6 +39,8 @@
             <%= render "sources/sidebar" %>
             <div data-sidebar-target="backdrop"
                  class="hidden fixed inset-0 bg-charcoal/50 z-30 md:hidden"
+                 role="button"
+                 aria-label="Close menu"
                  data-action="click->sidebar#close"></div>
           <% end %>
 

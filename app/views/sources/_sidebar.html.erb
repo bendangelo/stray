@@ -5,9 +5,9 @@
     <%= form_with url: links_path, class: "mb-4 flex gap-1" do |form| %>
       <%= form.url_field :url,
         placeholder: "Paste a link...",
-        class: "flex-1 h-9 min-w-0 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        class: "flex-1 h-11 min-w-0 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
       <%= form.submit "+",
-        class: "shrink-0 h-9 w-9 bg-carrot-500 hover:bg-carrot-600 text-white font-bold rounded-md cursor-pointer border-3 border-charcoal" %>
+        class: "shrink-0 h-11 w-11 bg-carrot-500 hover:bg-carrot-600 text-white font-bold rounded-md cursor-pointer border-3 border-charcoal" %>
     <% end %>
 
     <h2 class="font-display text-sm font-bold text-charcoal mb-3 uppercase tracking-wide">Sources</h2>
@@ -16,7 +16,7 @@
       <% @sources&.each do |source| %>
         <% active = @source.present? && source.id == @source.id %>
         <div class="flex items-center gap-1 rounded-md hover:bg-athens-400 <%= active ? "bg-athens-400 border-l-3 border-carrot-500" : "" %>">
-          <%= link_to source_path(source), class: "flex items-center gap-2 flex-1 min-w-0 p-2" do %>
+          <%= link_to source_path(source), class: "flex items-center gap-2 flex-1 min-w-0 min-h-11 p-2" do %>
             <%= source_icon_tag(source, size: "w-8 h-8", class: "shrink-0") %>
 
             <span class="flex-1 text-sm text-charcoal truncate <%= "font-bold" if active %>">
@@ -45,11 +45,11 @@
       <% end %>
     </div>
 
-    <%= link_to "All Sources", sources_path, class: "block mt-4 text-sm text-charcoal underline hover:no-underline" %>
+    <%= link_to "All Sources", sources_path, class: "flex items-center min-h-11 mt-4 text-sm text-charcoal underline hover:no-underline" %>
 
     <% saved_active = defined?(@saved) && @saved %>
     <%= link_to root_path(saved: 1),
-          class: "mt-2 flex items-center gap-2 rounded-md p-2 text-sm text-charcoal hover:bg-athens-400 #{saved_active ? 'bg-athens-400 font-bold border-l-3 border-carrot-500' : ''}" do %>
+          class: "mt-2 flex items-center gap-2 rounded-md min-h-11 p-2 text-sm text-charcoal hover:bg-athens-400 #{saved_active ? 'bg-athens-400 font-bold border-l-3 border-carrot-500' : ''}" do %>
       <%= phosphor_icon "star", style: :fill, class: "w-4 h-4" %>
       Saved
     <% end %>
@@ -60,7 +60,7 @@
       <% @collections&.each do |collection| %>
         <% active = @collection.present? && collection.id == @collection.id %>
         <div class="flex items-center gap-1 rounded-md hover:bg-athens-400 <%= active ? "bg-athens-400 border-l-3 border-carrot-500" : "" %>">
-          <%= link_to collection_path(collection), class: "flex items-center gap-2 flex-1 min-w-0 p-2" do %>
+          <%= link_to collection_path(collection), class: "flex items-center gap-2 flex-1 min-w-0 min-h-11 p-2" do %>
             <span class="flex-1 text-sm text-charcoal truncate <%= "font-bold" if active %>">
               <%= collection.name %>
             </span>
@@ -71,6 +71,6 @@
       <% end %>
     </div>
 
-    <%= link_to "All Collections", collections_path, class: "block mt-4 text-sm text-charcoal underline hover:no-underline" %>
+    <%= link_to "All Collections", collections_path, class: "flex items-center min-h-11 mt-4 text-sm text-charcoal underline hover:no-underline" %>
   </div>
 </aside>
