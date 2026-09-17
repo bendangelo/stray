@@ -46,7 +46,7 @@ export default class extends Controller {
     tags.slice(0, 5).forEach((tag, i) => {
       if (tag.name.toLowerCase() === query.toLowerCase()) hasExact = true
       const li = document.createElement("li")
-      li.className = "px-2 py-1 cursor-pointer hover:bg-athens-300 hover:text-carrot-600"
+      li.className = "ui-menu-item text-sm"
       li.dataset.action = "click->" + this.identifier + "#select"
       li.dataset.index = i
       li.textContent = tag.name
@@ -55,7 +55,7 @@ export default class extends Controller {
 
     if (!hasExact && query.length > 0) {
       const li = document.createElement("li")
-      li.className = "px-2 py-1 cursor-pointer hover:bg-athens-300 hover:text-carrot-600 border-t-3 border-charcoal"
+      li.className = "ui-menu-item text-sm border-t-3 border-charcoal"
       li.dataset.action = this.identifier + "#submit"
       li.dataset.index = tags.length
       li.textContent = `Create "${query}"`
