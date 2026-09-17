@@ -17,23 +17,23 @@
       <% end %>
 
       <div>
-        <%= form.text_field :username, required: true, autofocus: true, autocomplete: "username", placeholder: "Username", class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.text_field :username, required: true, autofocus: true, autocomplete: "username", placeholder: "Username", class: ui_input %>
       </div>
 
       <div>
-        <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "Email", class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "Email", class: ui_input %>
       </div>
 
       <div>
-        <%= form.password_field :password, required: true, autocomplete: "new-password", placeholder: "Password", maxlength: 72, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.password_field :password, required: true, autocomplete: "new-password", placeholder: "Password", maxlength: 72, class: ui_input %>
       </div>
 
       <div>
-        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", placeholder: "Confirm password", maxlength: 72, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", placeholder: "Confirm password", maxlength: 72, class: ui_input %>
       </div>
 
       <div>
-        <%= form.submit "Create account", class: "w-full h-12 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+        <%= form.submit "Create account", class: "w-full #{ui_button(size: :lg)}" %>
       </div>
     <% end %>
   </div>

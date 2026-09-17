@@ -1,8 +1,8 @@
-<main class="container mx-auto px-4 pt-4 max-w-screen-xl">
+<main class="container mx-auto px-4 pt-4 <%= ui_page(tier: :list) %>">
   <div class="flex items-center justify-between mb-6">
     <h1 class="font-display text-2xl font-bold text-charcoal">Tags</h1>
     <%= link_to "New tag", new_tag_path,
-      class: "h-10 px-4 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md border-3 border-charcoal" %>
+      class: ui_button %>
   </div>
 
   <table class="w-full border-3 border-charcoal rounded-md overflow-hidden">

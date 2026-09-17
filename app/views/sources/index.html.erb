@@ -1,12 +1,12 @@
 <% title "Sources" %>
 
-<main class="container mx-auto px-4 pt-4 max-w-screen-xl">
+<main class="container mx-auto px-4 pt-4 <%= ui_page(tier: :list) %>">
   <%= turbo_stream_from "user_#{current_user.id}_sources" %>
   <div class="flex items-center justify-between mb-4">
     <h1 class="font-display text-2xl font-bold text-charcoal">Sources</h1>
     <div class="flex items-center gap-2">
       <%= link_to "+ Add source", new_source_path,
-            class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal" %>
+            class: ui_button %>
     </div>
   </div>
 
@@ -15,7 +15,7 @@
     <%= form.text_field :q, placeholder: "Search sources...",
           value: params[:q],
           data: { source_search_target: "input", action: "input->source-search#submit" },
-          class: "h-9 w-full px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+          class: ui_input %>
   <% end %>
 
   <%= turbo_frame_tag "sources_list" do %>
@@ -28,9 +28,9 @@
         <%= form_with url: bulk_create_links_path, class: "flex flex-col gap-2" do |form| %>
           <%= form.text_area :urls, rows: 6,
                 placeholder: "One URL per line.\nYouTube videos/channels, RSS feeds, Stray /c/:slug or manifest.json URLs (auto-subscribed).",
-                class: "w-full px-3 py-2 bg-athens-200 border-2 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+                class: "w-full px-3 py-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
           <%= form.submit "Add all",
-                class: "self-start bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+                class: "self-start #{ui_button(size: :sm)}" %>
         <% end %>
       </div>
     </details>
@@ -40,9 +40,7 @@
         <%= render partial: "sources/source", collection: @active_sources, as: :source %>
       </div>
     <% else %>
-      <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center mb-8">
-        <p class="text-charcoal-300">No active sources yet. Paste a link in the navbar or click "Add source".</p>
-      </div>
+      <%= render "shared/ui/empty_state", message: 'No active sources yet. Paste a link in the navbar or click "Add source".' %>
     <% end %>
 
     <% if @inactive_sources.any? %>

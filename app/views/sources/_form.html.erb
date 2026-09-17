@@ -9,30 +9,30 @@
 
   <div class="space-y-3">
     <div>
-      <%= form.label :url, class: "block text-sm font-bold text-charcoal mb-1" %>
-      <%= form.url_field :url, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+      <%= form.label :url, class: ui_label %>
+      <%= form.url_field :url, class: ui_input %>
     </div>
 
     <div>
-      <%= form.label :kind, class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.label :kind, class: ui_label %>
       <%= form.select :kind, Source.kinds.keys.map { |k| [k.humanize, k] }, {},
-            class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+            class: ui_select %>
     </div>
 
     <div>
-      <%= form.label :name, class: "block text-sm font-bold text-charcoal mb-1" %>
-      <%= form.text_field :name, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+      <%= form.label :name, class: ui_label %>
+      <%= form.text_field :name, class: ui_input %>
     </div>
 
     <div>
-      <%= form.label :icon_url, "Icon URL (optional)", class: "block text-sm font-bold text-charcoal mb-1" %>
-      <%= form.url_field :icon_url, class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+      <%= form.label :icon_url, "Icon URL (optional)", class: ui_label %>
+      <%= form.url_field :icon_url, class: ui_input %>
     </div>
 
     <div>
-      <%= form.label :poll_interval, "Poll interval (seconds, optional)", class: "block text-sm font-bold text-charcoal mb-1" %>
+      <%= form.label :poll_interval, "Poll interval (seconds, optional)", class: ui_label %>
       <%= form.number_field :poll_interval, min: 60, placeholder: "e.g. 1800",
-            class: "w-full h-9 px-2 bg-athens-400 border-3 border-charcoal rounded-md text-sm text-charcoal focus:outline-none" %>
+            class: ui_input %>
       <p class="text-xs text-charcoal-300 mt-1">Leave blank for automatic adaptive scheduling.</p>
     </div>
 
@@ -42,8 +42,7 @@
     </div>
 
     <div class="flex items-center gap-3 pt-2">
-      <%= form.submit source.new_record? ? "Add source" : "Save",
-            class: "bg-carrot-500 hover:bg-carrot-600 text-white font-bold text-sm px-4 py-2 rounded-md border-3 border-charcoal cursor-pointer" %>
+      <%= form.submit source.new_record? ? "Add source" : "Save", class: ui_button %>
       <%= link_to "Cancel", sources_path,
             class: "text-sm text-charcoal underline hover:no-underline" %>
     </div>

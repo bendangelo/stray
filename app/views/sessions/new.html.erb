@@ -8,15 +8,15 @@
 
     <%= form_with url: session_url, class: "space-y-4" do |form| %>
       <div>
-        <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Email", value: params[:email], class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Email", value: params[:email], class: ui_input %>
       </div>
 
       <div>
-        <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Password", maxlength: 72, class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Password", maxlength: 72, class: ui_input %>
       </div>
 
       <div>
-        <%= form.submit "Sign in", class: "w-full h-12 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+        <%= form.submit "Sign in", class: "w-full #{ui_button(size: :lg)}" %>
       </div>
 
       <div class="text-center">

@@ -204,9 +204,7 @@
         </div>
       <% end %>
     <% else %>
-      <div class="border-3 border-charcoal rounded-md bg-athens-400 p-8 text-center">
-        <p class="text-charcoal-300">No items from this source yet.</p>
-      </div>
+      <%= render "shared/ui/empty_state", message: "No items from this source yet." %>
     <% end %>
   <% end %>
 </div>

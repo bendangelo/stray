@@ -19,15 +19,15 @@
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">Instance</h2>
 
       <div>
-        <%= form.label :instance_name, class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :instance_name, class: ui_label %>
         <%= form.text_field :instance_name,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :instance_domain, class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :instance_domain, class: ui_label %>
         <%= form.text_field :instance_domain,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
         <p class="text-xs text-charcoal-300 mt-1">Changes to instance domain require an app restart to take effect for host validation.</p>
       </div>
     </section>
@@ -36,24 +36,24 @@
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">AI Provider</h2>
 
       <div>
-        <%= form.label :ai_provider_name, "Provider", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :ai_provider_name, "Provider", class: ui_label %>
         <%= form.select :ai_provider_name,
           options_for_select(Setting::VALID_AI_PROVIDERS, @setting.ai_provider_name),
           {},
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_select %>
       </div>
 
       <div>
-        <%= form.label :ai_provider_url, "URL", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :ai_provider_url, "URL", class: ui_label %>
         <%= form.text_field :ai_provider_url,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :ai_provider_api_key, "API key", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :ai_provider_api_key, "API key", class: ui_label %>
         <%= form.password_field :ai_provider_api_key,
           placeholder: @setting.ai_provider_api_key.present? ? "••••••••" : "",
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
     </section>
 
@@ -61,35 +61,35 @@
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">Tagging</h2>
 
       <div>
-        <%= form.label :llm_tagging_enabled, "Enable LLM tagging", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :llm_tagging_enabled, "Enable LLM tagging", class: ui_label %>
         <%= form.check_box :llm_tagging_enabled,
           class: "h-6 w-6 border-3 border-charcoal" %>
         <p class="text-xs text-charcoal-300 mt-1">When AI provider is set, uses LLM to suggest tags. Off by default.</p>
       </div>
 
       <div>
-        <%= form.label :llm_tagging_model, "LLM model", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :llm_tagging_model, "LLM model", class: ui_label %>
         <%= form.text_field :llm_tagging_model,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :zero_shot_threshold, "Zero-shot threshold", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :zero_shot_threshold, "Zero-shot threshold", class: ui_label %>
         <%= form.number_field :zero_shot_threshold, step: 0.01, min: 0, max: 1,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
         <p class="text-xs text-charcoal-300 mt-1">Cosine similarity required to auto-assign a tag. Lower = more tags.</p>
       </div>
 
       <div>
-        <%= form.label :zero_shot_top_n, "Max tags per item", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :zero_shot_top_n, "Max tags per item", class: ui_label %>
         <%= form.number_field :zero_shot_top_n, min: 1, max: 20,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :embedding_model, "Embedding model (provider)", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :embedding_model, "Embedding model (provider)", class: ui_label %>
         <%= form.text_field :embedding_model,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <% if @setting.ai_provider_name == "NONE" %>
@@ -100,7 +100,7 @@
           <% else %>
             <p class="text-charcoal-300 text-sm mb-2">Model not downloaded. Auto-tagging needs this.</p>
             <%= button_to "Download model", download_model_admin_settings_path,
-              class: "h-10 px-4 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md border-3 border-charcoal" %>
+              class: ui_button(size: :sm) %>
           <% end %>
         </div>
       <% end %>
@@ -110,16 +110,16 @@
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">Crawling</h2>
 
       <div>
-        <%= form.label :polite_crawl_delay, "Delay between requests (seconds)", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :polite_crawl_delay, "Delay between requests (seconds)", class: ui_label %>
         <%= form.number_field :polite_crawl_delay, step: 0.1, min: 0,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
         <p class="text-xs text-charcoal-300 mt-1">Be polite to sites you pull from. Applied before each request. 0 = no delay.</p>
       </div>
 
       <div>
-        <%= form.label :publication_buffer_minutes, "Publication buffer (minutes)", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :publication_buffer_minutes, "Publication buffer (minutes)", class: ui_label %>
         <%= form.number_field :publication_buffer_minutes, min: 0,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
         <p class="text-xs text-charcoal-300 mt-1">Adaptive sources are polled this long after the predicted publish time, so content is available before we fetch.</p>
       </div>
     </section>
@@ -128,34 +128,34 @@
       <h2 class="font-display text-lg font-bold text-charcoal border-b-3 border-charcoal pb-1">SMTP</h2>
 
       <div>
-        <%= form.label :smtp_host, "Host", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :smtp_host, "Host", class: ui_label %>
         <%= form.text_field :smtp_host,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :smtp_port, "Port", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :smtp_port, "Port", class: ui_label %>
         <%= form.number_field :smtp_port,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :smtp_username, "Username", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :smtp_username, "Username", class: ui_label %>
         <%= form.text_field :smtp_username,
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
 
       <div>
-        <%= form.label :smtp_password, "Password", class: "block text-sm font-medium text-charcoal mb-1" %>
+        <%= form.label :smtp_password, "Password", class: ui_label %>
         <%= form.password_field :smtp_password,
           placeholder: @setting.smtp_password.present? ? "••••••••" : "",
-          class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal focus:outline-none" %>
+          class: ui_input %>
       </div>
     </section>
 
     <div>
       <%= form.submit "Save settings",
-        class: "h-12 px-6 bg-carrot-500 hover:bg-carrot-600 text-white font-medium rounded-md cursor-pointer border-3 border-charcoal" %>
+        class: ui_button(size: :lg) %>
     </div>
   <% end %>
 </main>

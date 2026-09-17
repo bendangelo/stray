@@ -56,7 +56,7 @@
               <span class="text-xs text-charcoal-300"><%= time_ago_in_words(source.last_error_at) %> ago</span>
             </div>
             <p class="text-charcoal-300 truncate"><%= source.last_error %></p>
-            <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded <%= source.failed? ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800" %>">
+            <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded <%= source.failed? ? "border-3 border-cerise text-cerise bg-athens-400" : "border-3 border-amber-500 text-amber-700 bg-athens-400" %>">
               <%= source.status %>
             </span>
           </li>
