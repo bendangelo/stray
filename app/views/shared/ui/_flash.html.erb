@@ -1,0 +1,8 @@
+<% alert = flash[:alert] %>
+<% notice = flash[:notice] %>
+<% if alert %>
+  <div class="mb-4 px-4 py-3 <%= ui_flash(:alert) %>" id="alert" role="alert"><%= alert %></div>
+<% end %>
+<% if notice %>
+  <div class="mb-4 px-4 py-3 <%= ui_flash(:notice) %>" id="notice" role="status"><%= notice %></div>
+<% end %>

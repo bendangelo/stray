@@ -45,11 +45,10 @@
           <% end %>
 
           <main class="flex-1 min-w-0">
-            <% if flash[:alert] %>
-              <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-cerise text-cerise text-sm"><%= flash[:alert] %></div>
-            <% end %>
-            <% if flash[:notice] %>
-              <div class="mx-auto max-w-md mt-4 px-4 py-3 border-3 border-mint-500 text-mint-700 text-sm"><%= flash[:notice] %></div>
+            <% if flash[:alert] || flash[:notice] %>
+              <div class="mx-auto max-w-md mt-4">
+                <%= render "shared/ui/flash" %>
+              </div>
             <% end %>
             <%= yield %>
           </main>

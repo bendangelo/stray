@@ -6,10 +6,6 @@
   <div class="w-full max-w-md">
     <h1 class="font-display text-2xl font-bold text-charcoal text-center mb-6">Forgot your password?</h1>
 
-    <% if alert = flash[:alert] %>
-      <div class="mb-4 px-4 py-3 border-3 border-cerise text-cerise text-sm" id="alert"><%= alert %></div>
-    <% end %>
-
     <%= form_with url: passwords_path, class: "space-y-4" do |form| %>
       <div>
         <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Email", value: params[:email], class: "w-full h-12 px-3 bg-athens-400 border-3 border-charcoal rounded-md text-charcoal placeholder:text-charcoal-300 focus:outline-none" %>

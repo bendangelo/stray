@@ -7,14 +7,6 @@
     <h1 class="font-display text-2xl font-bold text-charcoal text-center mb-2">Welcome to Stray</h1>
     <p class="text-sm text-charcoal text-center mb-6">Create your account to get started.</p>
 
-    <% if alert = flash[:alert] %>
-      <div class="mb-4 px-4 py-3 border-3 border-cerise text-cerise text-sm" id="alert"><%= alert %></div>
-    <% end %>
-
-    <% if notice = flash[:notice] %>
-      <div class="mb-4 px-4 py-3 border-3 border-mint-500 text-mint-700 text-sm" id="notice"><%= notice %></div>
-    <% end %>
-
     <%= form_with model: @user, url: setup_path, class: "space-y-4" do |form| %>
       <% if @user.errors.any? %>
         <div class="px-4 py-3 border-3 border-cerise text-cerise text-sm">
