@@ -148,6 +148,36 @@ mark {
   padding: 0 2px;
 }
 
+.ui-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.ui-menu-item:hover,
+.ui-menu-item:focus-visible {
+  background-color: var(--color-carrot-100);
+  color: var(--color-carrot-700);
+  outline: 2px solid var(--color-carrot-500);
+  outline-offset: -2px;
+}
+
+.ui-menu-item--danger { color: var(--color-cerise); }
+.ui-menu-item--danger:hover,
+.ui-menu-item--danger:focus-visible {
+  background-color: var(--color-cerise-100);
+  color: var(--color-cerise-600);
+  outline-color: var(--color-cerise-500);
+}
+
 .button_to {
   display: inline-flex;
 }
