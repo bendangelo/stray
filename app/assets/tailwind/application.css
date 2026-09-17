@@ -137,9 +137,9 @@
   --color-cotton-900: #2a1230;
 }
 
-.dot-ai_embedding { background-color: #3b82f6; }
-.dot-ai_llm { background-color: #22c55e; }
-.dot-user { background-color: #9ca3af; }
+.dot-ai_embedding { background-color: var(--color-sky-500); }
+.dot-ai_llm { background-color: var(--color-mint-500); }
+.dot-user { background-color: var(--color-charcoal-300); }
 
 mark {
   background-color: var(--color-carrot-200);

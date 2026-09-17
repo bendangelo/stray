@@ -1,6 +1,4 @@
 module ApplicationHelper
-  include UiHelper
-
   def time_ago(time)
     return "" if time.nil?
 
@@ -140,10 +138,6 @@ module ApplicationHelper
     else
       root_path(qp.slice(:q, :tag, :show_muted))
     end
-  end
-
-  def dropdown_menu_item_class(danger: false)
-    ui_menu_item(danger: danger)
   end
 
   private

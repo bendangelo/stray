@@ -235,11 +235,6 @@ class ApplicationHelperTest < ActionView::TestCase
     assert video?(item)
   end
 
-  test "dropdown_menu_item_class is aliased to ui_menu_item" do
-    assert_equal "ui-menu-item", dropdown_menu_item_class
-    assert_equal "ui-menu-item ui-menu-item--danger", dropdown_menu_item_class(danger: true)
-  end
-
   private
 
   def build_item(source_kind:, url: "https://www.youtube.com/watch?v=abc", external_id: "abc")
