@@ -7,16 +7,16 @@ class SourceShowButtonsTest < ApplicationSystemTestCase
 
     action_cluster = find("[data-test='source-actions']")
 
-    # Every action button/link should have border-2 class
+    # Every action button/link should have border-3 class
     action_cluster.all(":scope > button, :scope > a", visible: false).each do |child|
       classes = child[:class] || ""
-      assert_includes(classes, "border-2",
-             "button should have border-2 class for consistent style, got: #{classes}")
+      assert_includes(classes, "border-3",
+             "button should have border-3 class for consistent style, got: #{classes}")
     end
     # The collection menu button (inside its dropdown wrapper) should also be bordered
     collection_button = action_cluster.find("div[data-controller='dropdown'] > button", visible: false)
-    assert_includes(collection_button[:class], "border-2",
-           "collection menu button should have border-2 class")
+    assert_includes(collection_button[:class], "border-3",
+           "collection menu button should have border-3 class")
   end
 
   test "source action buttons have icons" do
