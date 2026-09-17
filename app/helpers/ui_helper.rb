@@ -3,6 +3,11 @@ module UiHelper
     danger ? "ui-menu-item ui-menu-item--danger" : "ui-menu-item"
   end
 
+  def ui_dropdown_trigger(expand: false)
+    base = "flex items-center justify-center rounded-md bg-transparent border-none cursor-pointer min-h-11 min-w-11 p-2 text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
+    expand ? base + " w-full h-11" : base
+  end
+
   def ui_button(variant: :primary, size: :md)
     size_class = { sm: "h-9 px-3 text-xs", md: "h-11 px-4 text-sm", lg: "h-12 px-6 text-base" }.fetch(size)
     variant_class = case variant

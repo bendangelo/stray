@@ -2,7 +2,7 @@
 <% if follow %>
   <% exp = ranking_explanation_for(item, follow, source_position: @rank_positions&.[](item.id), mixed: @mixed) %>
   <details>
-    <summary class="<%= dropdown_menu_item_class %> select-none">
+    <summary class="<%= ui_menu_item %> select-none">
       <%= phosphor_icon "question", class: "w-3.5 h-3.5" %> Why?
     </summary>
     <div class="ml-5 pl-2 pr-2 pb-1 space-y-0.5 text-xs text-charcoal-300 border-l-2 border-charcoal">

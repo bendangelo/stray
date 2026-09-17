@@ -1,3 +1,4 @@
+<% alignment = local_assigns.fetch(:alignment, "right-0") %>
 <div data-controller="dropdown" class="relative shrink-0">
   <button type="button"
           data-dropdown-target="button"
@@ -11,8 +12,8 @@
 
   <div id="<%= menu_id %>"
        data-dropdown-target="menu"
-       class="hidden absolute <%= alignment %> mt-1 z-20 min-w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1.5 shadow-lg
-             transition transform <%= alignment == "left-0" ? "origin-top-left" : "origin-top-right" %>
+       class="hidden absolute <%= local_assigns.fetch(:alignment, "right-0") %> mt-1 z-20 min-w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1.5 shadow-lg
+             transition transform <%= (local_assigns.fetch(:alignment, "right-0")) == "left-0" ? "origin-top-left" : "origin-top-right" %>
              data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
              data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0
              <%= local_assigns[:menu_class] %>">

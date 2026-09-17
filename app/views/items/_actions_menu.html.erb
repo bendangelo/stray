@@ -1,80 +1,70 @@
-<div data-controller="dropdown" class="relative shrink-0">
-  <button type="button"
-          data-dropdown-target="button"
-          data-action="dropdown#toggle click@window->dropdown#hide"
-          aria-expanded="false"
-          aria-controls="item-actions-<%= item.id %>"
-          class="text-charcoal-300 hover:text-carrot-500 hover:bg-athens-500 rounded-md bg-transparent border-none cursor-pointer p-2 -mr-1 min-w-9 min-h-9 flex items-center justify-center
-                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-carrot-500 focus-visible:outline-offset-1"
-          aria-label="Item actions">
-    <%= phosphor_icon "dots-three-vertical", class: "w-4 h-4" %>
-  </button>
+<% menu = capture do %>
+  <%= link_to item_path(item, context_params_for(item)), class: ui_menu_item do %>
+    <%= phosphor_icon "arrow-square-out", class: "w-3.5 h-3.5" %> Open details
+  <% end %>
 
-  <div id="item-actions-<%= item.id %>"
-       data-dropdown-target="menu"
-       class="hidden absolute right-0 mt-1 z-20 w-44 max-w-[calc(100vw-1.5rem)] rounded-md border-3 border-charcoal bg-athens-400 p-1 shadow-lg
-              transition transform origin-top-right
-              data-[transition-enter-from]:opacity-0 data-[transition-enter-to]:opacity-100
-              data-[transition-leave-from]:opacity-100 data-[transition-leave-to]:opacity-0">
-    <%= link_to item_path(item, context_params_for(item)),
-          class: dropdown_menu_item_class do %>
-      <%= phosphor_icon "arrow-square-out", class: "w-3.5 h-3.5" %> Open details
-    <% end %>
+  <%= render "items/star_button", item: item, variant: :menu %>
 
-    <%= render "items/star_button", item: item, variant: :menu %>
-
-    <% if item.unseen? %>
-      <%= action_link_to item_path(item), method: :patch, params: { state: "seen" },
-            data: { turbo_stream: true },
-            class: dropdown_menu_item_class do %>
-        <%= phosphor_icon "check", class: "w-3.5 h-3.5" %> Mark as seen
-      <% end %>
-    <% end %>
-
-    <%= action_link_to item_path(item), method: :patch, params: { state: "hidden" },
+  <% if item.unseen? %>
+    <%= action_link_to item_path(item), method: :patch, params: { state: "seen" },
           data: { turbo_stream: true },
-          class: dropdown_menu_item_class do %>
-      <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide from feed
+          class: ui_menu_item do %>
+      <%= phosphor_icon "check", class: "w-3.5 h-3.5" %> Mark as seen
     <% end %>
+  <% end %>
 
-    <%= action_link_to "#",
-          data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
-          class: dropdown_menu_item_class do %>
-      <%= phosphor_icon "tag", class: "w-3.5 h-3.5" %> Add tag
-      <template data-tag-input-target="template">
-        <div class="flex flex-col gap-1 mt-1">
-          <div class="flex gap-1">
-            <input type="text" placeholder="tag name"
-              data-tag-input-target="input"
-              data-action="keydown.esc->tag-input#close keydown.enter->tag-input#submit keydown ArrowDown->tag-input#moveHighlight:prevent keydown ArrowUp->tag-input#moveHighlight:prevent input->tag-input#search"
-              class="flex-1 h-8 px-2 text-xs border-3 border-charcoal rounded-md bg-athens-400 text-charcoal focus:outline-none"
-              autocomplete="off">
-            <button data-action="tag-input#submit"
-              class="h-8 px-3 bg-carrot-500 text-white text-xs rounded-md border-3 border-charcoal">Add</button>
-          </div>
-          <ul data-tag-input-target="results"
-            class="hidden border-3 border-charcoal rounded-md bg-athens-400 text-xs max-h-32 overflow-y-auto"></ul>
+  <%= action_link_to item_path(item), method: :patch, params: { state: "hidden" },
+        data: { turbo_stream: true },
+        class: ui_menu_item do %>
+    <%= phosphor_icon "x", class: "w-3.5 h-3.5" %> Hide from feed
+  <% end %>
+
+  <%= action_link_to "#",
+        data: { controller: "tag-input", action: "tag-input#toggle click@window->dropdown#hide", tag_input_item_id_value: item.id },
+        class: ui_menu_item do %>
+    <%= phosphor_icon "tag", class: "w-3.5 h-3.5" %> Add tag
+    <template data-tag-input-target="template">
+      <div class="flex flex-col gap-1 mt-1">
+        <div class="flex gap-1">
+          <input type="text" placeholder="tag name"
+            data-tag-input-target="input"
+            data-action="keydown.esc->tag-input#close keydown.enter->tag-input#submit keydown ArrowDown->tag-input#moveHighlight:prevent keydown ArrowUp->tag-input#moveHighlight:prevent input->tag-input#search"
+            class="flex-1 min-h-11 px-3 text-sm border-3 border-charcoal rounded-md bg-athens-400 text-charcoal focus:outline-none"
+            autocomplete="off">
+          <button data-action="tag-input#submit"
+            class="min-h-11 px-4 bg-carrot-500 text-white text-sm font-bold rounded-md border-3 border-charcoal cursor-pointer">Add</button>
         </div>
-      </template>
-    <% end %>
-
-    <%= action_link_to mute_source_path(item.source), method: :post,
-          data: { turbo_stream: true },
-          class: dropdown_menu_item_class do %>
-      <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
-    <% end %>
-
-    <% if item.taggings.includes(:tag).any? %>
-      <div class="border-t-3 border-charcoal/10 my-1"></div>
-      <div class="px-2 py-1">
-        <p class="text-[10px] uppercase tracking-wide text-charcoal-300 mb-1">Tags</p>
-        <div class="flex flex-wrap gap-1">
-          <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
-        </div>
+        <ul data-tag-input-target="results"
+          class="hidden border-3 border-charcoal rounded-md bg-athens-400 text-sm max-h-48 overflow-y-auto"></ul>
       </div>
-    <% end %>
+    </template>
+  <% end %>
 
-    <div class="border-t-3 border-charcoal/10 my-1"></div>
-    <%= render "items/why", item: item %>
-  </div>
-</div>
+  <%= action_link_to mute_source_path(item.source), method: :post,
+        data: { turbo_stream: true },
+        class: ui_menu_item do %>
+    <%= phosphor_icon "speaker-slash", class: "w-3.5 h-3.5" %> Mute source
+  <% end %>
+
+  <% if item.taggings.includes(:tag).any? %>
+    <div class="border-t-3 border-charcoal/10 my-1.5"></div>
+    <div class="px-3 py-1">
+      <p class="text-[10px] uppercase tracking-wide text-charcoal-300 mb-1">Tags</p>
+      <div class="flex flex-wrap gap-1">
+        <%= render partial: "tags/tag_chip", collection: item.taggings.includes(:tag), as: :tagging %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="border-t-3 border-charcoal/10 my-1.5"></div>
+  <%= render "items/why", item: item %>
+<% end %>
+
+<%= render "shared/ui/dropdown",
+      menu_id: "item-actions-#{item.id}",
+      trigger_label: "Item actions",
+      trigger_class: ui_dropdown_trigger,
+      trigger: phosphor_icon("dots-three-vertical", class: "w-4 h-4"),
+      menu_class: "w-56",
+      alignment: "right-0",
+      menu: menu %>
