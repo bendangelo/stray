@@ -5,6 +5,12 @@ class Bridges::OdyseeTest < ActiveSupport::TestCase
     assert_nil Bridges::Odysee.new.extract_backfill("https://odysee.com/@samtime:1", limit: 50)
   end
 
+  test "follow! normalizes odysee source url to the rss endpoint" do
+    source = Source.follow!(users(:one), kind: :odysee_channel,
+      url: "https://odysee.com/@samtime:1", external_id: "samtime:1")
+    assert_equal "https://odysee.com/$/rss/@samtime:1", source.url
+  end
+
   test "extract_feed_from_response maps a pre-fetched RSS body" do
     core = Minitest::Mock.new
     core.expect(:feed_from_rss, [ {

@@ -23,6 +23,22 @@ class Stray::Bridges::OdyseeTest < ActiveSupport::TestCase
     assert_equal "samtime:1", Stray::Bridges::Odysee.channel_handle("https://odysee.com/@samtime:1")
   end
 
+  test "channel_handle parses the rss feed URL" do
+    assert_equal "samtime:1", Stray::Bridges::Odysee.channel_handle("https://odysee.com/$/rss/@samtime:1")
+  end
+
+  test "rss_url is idempotent for rss feed URLs" do
+    assert_equal "https://odysee.com/$/rss/@samtime:1",
+                 Stray::Bridges::Odysee.rss_url("https://odysee.com/$/rss/@samtime:1")
+  end
+
+  test "feed_from_rss raises a clear error for non-RSS bodies" do
+    error = assert_raises(Stray::ExtractionError) do
+      Stray::Bridges::Odysee.new.feed_from_rss("<html>not a feed</html>", "https://odysee.com/$/rss/@samtime:1")
+    end
+    assert_match(/not a valid RSS feed/, error.message)
+  end
+
   test "rss_url builds the feed URL" do
     assert_equal "https://odysee.com/$/rss/@samtime:1",
                  Stray::Bridges::Odysee.rss_url("https://odysee.com/@samtime:1")

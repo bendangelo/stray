@@ -86,18 +86,21 @@ class Source < ApplicationRecord
     source.update!(name: name) if name.present? && source.name != name
     source.update!(icon_url: icon_url) if icon_url.present? && source.icon_url != icon_url
     source.update!(channel_url: channel_url) if channel_url.present? && source.channel_url != channel_url
-    if kind.to_s == "peertube_channel" && source.url != normalized_url
-      source.update!(url: normalized_url)
-    end
+    source.update!(url: normalized_url) if normalized_url != url && source.url != normalized_url
     Follow.find_or_create_by!(user: user, source: source)
     enqueue_backfill(source)
     source
   end
 
   def self.normalize_poll_url(kind, url)
-    return url unless kind.to_s == "peertube_channel"
-
-    Stray::Bridges::Peertube.api_url_for(url) || url
+    case kind.to_s
+    when "peertube_channel"
+      Stray::Bridges::Peertube.api_url_for(url) || url
+    when "odysee_channel"
+      Stray::Bridges::Odysee.rss_url(url) || url
+    else
+      url
+    end
   end
   private_class_method :normalize_poll_url
 

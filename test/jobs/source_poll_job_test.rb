@@ -69,6 +69,36 @@ class SourcePollJobTest < ActiveJob::TestCase
     assert_nil @source.last_error
   end
 
+  test "skips the pre-fetched GET when the bridge fetches its own response" do
+    contents = [
+      Stray::ExtractedContent.new(
+        url: "https://example.com/watch?v=vid1",
+        title: "Video 1", content_text: "Desc 1", content_html: nil,
+        thumbnail_url: "https://example.com/t1.jpg", published_at: 1.day.ago,
+        external_id: "vid1", duration: 120, creator_identity: nil, tags: []
+      )
+    ]
+
+    extractor = Class.new(Stray::Bridge) do
+      def self.uses_prefetched_response? = false
+
+      define_method(:extract_feed) { |_url| contents }
+      define_method(:extract_feed_from_response) { |_response, _url| raise "should not be used" }
+    end.new
+
+    prefetched = false
+    Stray::BridgeRegistry.stub(:find_for_source, extractor) do
+      DomainMutex.stub(:with_lock, ->(_domain, &block) { block.call }) do
+        PoliteCrawl.stub(:get_with_cache, ->(*_args, **_kwargs) { prefetched = true; @cached }) do
+          SourcePollJob.perform_now(@source.id)
+        end
+      end
+    end
+
+    assert_not prefetched
+    assert_equal 1, @source.reload.items.count
+  end
+
   test "does not create duplicate items on re-poll" do
     @source.items.create!(
       user: @user, external_id: "vid1", title: "Old Title", url: "https://example.com/v1",

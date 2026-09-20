@@ -7,6 +7,8 @@ module Stray
     def enrich_tags(url)          = nil
     def extract_backfill(url, limit:, cursor: nil) = nil
 
+    def self.uses_prefetched_response? = true
+
     def extract_feed_from_response(response, url)
       extract_feed(url)
     end

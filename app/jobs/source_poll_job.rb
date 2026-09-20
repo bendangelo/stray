@@ -80,12 +80,7 @@ class SourcePollJob < ApplicationJob
       extractor.secrets = secrets
     end
 
-    cached = PoliteCrawl.get_with_cache(
-      source.url,
-      http_client: http_client,
-      etag: source.etag,
-      last_modified: source.last_modified
-    )
+    cached = fetch_cached(source, extractor)
 
     if cached == :not_modified
       source.recalculate_next_crawl!
@@ -93,7 +88,7 @@ class SourcePollJob < ApplicationJob
       return
     end
 
-    contents = extract_contents(extractor, cached.response, source.url)
+    contents = extract_contents(extractor, cached&.response, source.url)
     contents = Array(contents)
 
     new_count = upsert_items(source, contents, extractor)
@@ -101,10 +96,10 @@ class SourcePollJob < ApplicationJob
     backfill_source_metadata(source, contents)
     source.recalculate_next_crawl!
     if new_count > 0 || source.consecutive_empty_polls < 3
-      Source::StatusMachine.mark_ok!(source, etag: cached.etag, last_modified: cached.last_modified)
+      Source::StatusMachine.mark_ok!(source, etag: cached&.etag, last_modified: cached&.last_modified)
     else
       Source::StatusMachine.mark_degraded!(source)
-      source.update!(etag: cached.etag, last_modified: cached.last_modified)
+      source.update!(etag: cached&.etag, last_modified: cached&.last_modified)
     end
   rescue NotImplementedError => e
     Source::StatusMachine.mark_failed!(source, message: "Bridge missing extract_feed: #{e.message}")
@@ -130,11 +125,28 @@ class SourcePollJob < ApplicationJob
   end
 
   def extract_contents(extractor, response, url)
-    if extractor.respond_to?(:extract_feed_from_response)
+    if response.present? && extractor.respond_to?(:extract_feed_from_response)
       extractor.extract_feed_from_response(response, url)
     else
       extractor.extract_feed(url)
     end
+  end
+
+  def fetch_cached(source, extractor)
+    return nil unless prefetch_response?(extractor)
+
+    PoliteCrawl.get_with_cache(
+      source.url,
+      http_client: http_client,
+      etag: source.etag,
+      last_modified: source.last_modified
+    )
+  end
+
+  def prefetch_response?(extractor)
+    return true unless extractor.class.respond_to?(:uses_prefetched_response?)
+
+    extractor.class.uses_prefetched_response?
   end
 
   def http_client

@@ -176,7 +176,7 @@ class PromoteSavedVideoJobTest < ActiveJob::TestCase
 
     channel_source = Source.find_by(kind: "odysee_channel", user_id: @user.id, external_id: "SkyLight33:7")
     assert_not_nil channel_source
-    assert_equal "https://odysee.com/@SkyLight33:7", channel_source.url
+    assert_equal "https://odysee.com/$/rss/@SkyLight33:7", channel_source.url
 
     item.reload
     assert_equal channel_source.id, item.source_id

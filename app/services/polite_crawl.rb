@@ -53,12 +53,9 @@ class PoliteCrawl
       return unless domain
 
       key = "stray:rate:#{domain}"
-      last = Rails.cache.read(key)
-      now = Time.current.to_f
-      if last && (now - last) < RATE_BUDGET_INTERVAL
-        raise Stray::RateBudgetExhausted, "Rate budget exhausted for #{domain}"
-      end
-      Rails.cache.write(key, now, expires_in: 1.hour)
+      elapsed = Time.current.to_f - Rails.cache.read(key).to_f
+      Kernel.sleep(RATE_BUDGET_INTERVAL - elapsed) if elapsed < RATE_BUDGET_INTERVAL
+      Rails.cache.write(key, Time.current.to_f, expires_in: 1.hour)
     end
   end
 end

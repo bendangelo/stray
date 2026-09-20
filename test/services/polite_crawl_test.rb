@@ -125,22 +125,28 @@ class PoliteCrawlTest < ActiveSupport::TestCase
     end
   end
 
-  test "rate budget blocks request when domain bucket is exhausted" do
+  test "rate budget waits for the interval when domain bucket is exhausted" do
     cache = ActiveSupport::Cache::MemoryStore.new
     Rails.stub(:cache, cache) do
       DomainMutex.stub(:domain_for, "example.com") do
         client = Minitest::Mock.new
         client.expect(:get, :response, [ "https://example.com/1" ])
+        client.expect(:get, :response, [ "https://example.com/2" ])
 
         PoliteCrawl.stub(:sleep, -> {}) do
           PoliteCrawl.get("https://example.com/1", http_client: client)
         end
 
-        assert_raises(Stray::RateBudgetExhausted) do
+        slept = []
+        Kernel.stub(:sleep, ->(secs) { slept << secs }) do
           PoliteCrawl.stub(:sleep, -> {}) do
-            PoliteCrawl.get("https://example.com/2", http_client: client)
+            assert_equal :response, PoliteCrawl.get("https://example.com/2", http_client: client)
           end
         end
+
+        assert_equal 1, slept.size
+        assert_in_delta PoliteCrawl::RATE_BUDGET_INTERVAL, slept.first, 0.5
+        client.verify
       end
     end
   end

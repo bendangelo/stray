@@ -75,4 +75,8 @@ class Bridges::BitchuteTest < ActiveSupport::TestCase
     assert Bridges::Bitchute.handles_kind?("bitchute_channel")
     assert_not Bridges::Bitchute.handles_kind?("rumble_channel")
   end
+
+  test "does not use the pre-fetched response (channel pages are a JS SPA)" do
+    assert_not Bridges::Bitchute.uses_prefetched_response?
+  end
 end

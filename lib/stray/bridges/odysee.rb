@@ -17,10 +17,10 @@ module Stray
         false
       end
 
-      # Extract the @handle:id from a channel URL like https://odysee.com/@samtime:1
+      # Extract the @handle:id from a channel URL or RSS URL.
       def self.channel_handle(url)
         uri = URI.parse(url)
-        match = uri.path.to_s.match(%r{^/@([^/]+)})
+        match = uri.path.to_s.match(%r{@([^/?]+)})
         match && match[1]
       rescue URI::InvalidURIError
         nil
@@ -69,6 +69,8 @@ module Stray
             }
           }
         end
+      rescue Feedjira::NoParserAvailable => e
+        raise Stray::ExtractionError, "Odysee: response is not a valid RSS feed (#{url}): #{e.message}"
       end
 
     # Fetch a single video page. Returns Hash.

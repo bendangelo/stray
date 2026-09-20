@@ -15,6 +15,10 @@ module Bridges
     def self.last_tested_against = "2026-09"
     def self.author = "Stray"
 
+    # Channel pages are a JS SPA; the feed comes from the JSON API, so the
+    # poll's pre-fetched GET is useless and would waste the rate budget.
+    def self.uses_prefetched_response? = false
+
     def extract(url)
       map(Stray::Bridges::Bitchute.new.video_page(url))
     end

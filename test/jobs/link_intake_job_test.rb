@@ -585,7 +585,7 @@ class LinkIntakeJobTest < ActiveJob::TestCase
 
     source = Source.find_by(external_id: "SkyLight33:7", user_id: @user.id)
     assert_equal "odysee_channel", source.kind
-    assert_equal "https://odysee.com/@SkyLight33:7", source.url
+    assert_equal "https://odysee.com/$/rss/@SkyLight33:7", source.url
   end
 
   test "creates generic_list source when list page detected" do
