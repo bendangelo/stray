@@ -38,6 +38,28 @@ class Source < ApplicationRecord
       .where.not(id: Item.select(:source_id).distinct)
   }
 
+  def self.suggest(user:, query:, limit: 5)
+    q = query.to_s.strip
+    return [] if q.length < 2
+
+    pattern = "%#{sanitize_sql_like(q)}%"
+    prefix = "#{sanitize_sql_like(q)}%"
+
+    joins(:follows)
+      .where(follows: { user_id: user.id })
+      .where.not(kind: :saved_video)
+      .where(
+        "sources.name LIKE :pattern ESCAPE '\\' OR " \
+        "sources.url LIKE :pattern ESCAPE '\\' OR " \
+        "sources.external_id LIKE :pattern ESCAPE '\\'",
+        pattern: pattern
+      )
+      .order(Arel.sql(sanitize_sql_array(
+        [ "CASE WHEN sources.name LIKE ? ESCAPE '\\' THEN 0 ELSE 1 END, sources.name", prefix ]
+      )))
+      .limit(limit)
+  end
+
   def display_name
     name.presence || path_segment || begin
       base = channel_url.presence || url

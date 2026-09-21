@@ -7,6 +7,10 @@ class FeedController < ApplicationController
     @show_muted = params[:show_muted] == "1"
     @saved = params[:saved] == "1"
 
+    if @q && !@tag && !@saved && (source = exact_source_match(@q))
+      return redirect_to source_path(source)
+    end
+
     if @saved
       index_saved
     elsif @q || @tag
@@ -27,6 +31,14 @@ class FeedController < ApplicationController
   end
 
   private
+
+  def exact_source_match(query)
+    needle = query.strip
+    current_user.follows.includes(:source)
+      .where.not(sources: { kind: :saved_video })
+      .map(&:source)
+      .find { |source| source.display_name.to_s.casecmp?(needle) }
+  end
 
   def index_browse
     entries = FeedInterleaver.call(user: current_user, show_muted: @show_muted)

@@ -22,6 +22,22 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, '<li role="option"'
   end
 
+  test "returns source suggestions linking to the source" do
+    sign_in_as(users(:one))
+    get search_suggest_path(q: "Test Channel")
+    assert_response :success
+    assert_includes response.body, "Test Channel"
+    assert_includes response.body, "/sources/#{sources(:youtube).id}"
+  end
+
+  test "search input and results expose combobox and listbox roles" do
+    sign_in_as(users(:one))
+    get root_path
+    assert_response :success
+    assert_select "input[role='combobox'][aria-autocomplete='list'][aria-controls='search-suggestions']"
+    assert_select "ul#search-suggestions[role='listbox']"
+  end
+
   test "returns no suggestions for no matches" do
     sign_in_as(users(:one))
     rebuild_full_search_index(Item)

@@ -1,4 +1,8 @@
-<% @suggestions[:term_hints].each do |word| %>
+<% hints = @suggestions[:term_hints] %>
+<% items = @suggestions[:items] %>
+<% sources = @suggestions[:sources] || [] %>
+
+<% hints.each do |word| %>
   <li role="option" class="ui-menu-item text-sm"
      data-autocomplete-value="<%= word %>">
     <div class="flex items-center gap-2">
@@ -8,19 +12,41 @@
   </li>
 <% end %>
 
-<% if @suggestions[:term_hints].any? && @suggestions[:items].any? %>
-  <li role="separator" aria-hidden="true" class="border-b border-charcoal-100"></li>
+<% if hints.any? && items.any? %>
+  <li role="presentation" aria-hidden="true" class="border-b border-charcoal-100"></li>
 <% end %>
 
-<% @suggestions[:items].each do |item| %>
+<% items.each do |item| %>
   <li role="option" class="ui-menu-item text-sm"
      data-autocomplete-href="/items/<%= item.id %>">
-    <div class="text-charcoal font-medium"><%= sanitize(item.highlighted_title, tags: %w[mark], attributes: []) %></div>
-    <div class="text-charcoal-300 text-xs">
-      <%= item.source_name %><%= " · #{time_ago(item.published_at)}" if item.published_at %>
+    <div class="flex w-full min-w-0 flex-col gap-0.5">
+      <div class="truncate text-charcoal font-medium"><%= sanitize(item.highlighted_title, tags: %w[mark], attributes: []) %></div>
+      <div class="flex min-w-0 items-center gap-1 text-xs text-charcoal-300">
+        <span class="truncate"><%= item.source_name %></span>
+        <% if item.published_at %>
+          <span class="shrink-0">· <%= time_ago(item.published_at) %></span>
+        <% end %>
+      </div>
     </div>
   </li>
 <% end %>
-<% if @suggestions[:term_hints].empty? && @suggestions[:items].empty? %>
+
+<% if sources.any? %>
+  <% if hints.any? || items.any? %>
+    <li role="presentation" aria-hidden="true" class="border-b border-charcoal-100"></li>
+  <% end %>
+  <% sources.each do |source| %>
+    <li role="option" class="ui-menu-item text-sm"
+       data-autocomplete-href="<%= source_path(source) %>">
+      <div class="flex w-full min-w-0 items-center gap-2">
+        <%= phosphor_icon "broadcast", class: "h-4 w-4 shrink-0 text-charcoal-300" %>
+        <span class="truncate text-charcoal font-medium"><%= source.display_name %></span>
+        <span class="ml-auto shrink-0 text-xs uppercase tracking-wide text-charcoal-300">Source</span>
+      </div>
+    </li>
+  <% end %>
+<% end %>
+
+<% if hints.empty? && items.empty? && sources.empty? %>
   <li class="px-3 py-2 text-charcoal-300 text-sm">No suggestions</li>
 <% end %>

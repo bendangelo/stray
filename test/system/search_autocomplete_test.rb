@@ -29,6 +29,20 @@ class SearchAutocompleteTest < ApplicationSystemTestCase
     assert_text "First Video"
   end
 
+  test "selecting a source suggestion navigates to the source" do
+    sign_in_as(users(:one))
+    rebuild_full_search_index(Item)
+    visit root_path
+
+    fill_in "q", with: "Channel"
+
+    within "ul[data-autocomplete-target='results']" do
+      find("li[role='option']", text: "Test Channel").click
+    end
+
+    assert_current_path source_path(sources(:youtube))
+  end
+
   test "short query does not show dropdown" do
     sign_in_as(users(:one))
     visit root_path

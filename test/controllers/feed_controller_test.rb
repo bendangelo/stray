@@ -52,6 +52,20 @@ class FeedControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "No results"
   end
 
+  test "searching an exact source name redirects to that source" do
+    sign_in_as(users(:one))
+    get root_path, params: { q: "Test Channel" }
+
+    assert_redirected_to source_path(sources(:youtube))
+  end
+
+  test "searching a source name case-insensitively redirects to that source" do
+    sign_in_as(users(:one))
+    get root_path, params: { q: "test channel" }
+
+    assert_redirected_to source_path(sources(:youtube))
+  end
+
   test "tag filter shows only items with that tag" do
     sign_in_as(users(:one))
     get root_path, params: { tag: "ruby" }

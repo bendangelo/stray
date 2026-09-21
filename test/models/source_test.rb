@@ -205,6 +205,59 @@ class SourceTest < ActiveJob::TestCase
     assert_empty Source.matching("nonexistent-source-xyz")
   end
 
+  test "suggest returns followed sources matching the query" do
+    results = Source.suggest(user: users(:one), query: "Test")
+    assert_includes results, sources(:youtube)
+    assert_not_includes results, sources(:bitchute)
+  end
+
+  test "suggest matches substrings case-insensitively" do
+    results = Source.suggest(user: users(:one), query: "channel")
+    assert_includes results, sources(:youtube)
+    assert_includes results, sources(:bitchute)
+  end
+
+  test "suggest excludes sources the user does not follow" do
+    source = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/feed.xml", external_id: "unfollowed", name: "Unfollowed Feed")
+    assert_not_includes Source.suggest(user: users(:one), query: "Unfollowed"), source
+  end
+
+  test "suggest excludes saved_video sources" do
+    assert_not_includes Source.suggest(user: users(:one), query: "Saved"), sources(:saved_youtube)
+  end
+
+  test "suggest matches a nameless source by its display name fallback" do
+    source = Source.create!(user: users(:one), kind: :youtube_channel,
+      url: "https://www.youtube.com/@StreetOfSilence", external_id: "pending:silence")
+    Follow.create!(user: users(:one), source: source)
+    assert_includes Source.suggest(user: users(:one), query: "StreetOfSilence"), source
+  end
+
+  test "suggest matches two-character queries" do
+    assert_includes Source.suggest(user: users(:one), query: "BC"), sources(:bitchute)
+  end
+
+  test "suggest ranks prefix matches before substring matches" do
+    channel = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/channel", external_id: "chan", name: "Channel One")
+    blog = Source.create!(user: users(:one), kind: :rss_feed,
+      url: "https://example.com/blog", external_id: "blog", name: "The Channel")
+    Follow.create!(user: users(:one), source: channel)
+    Follow.create!(user: users(:one), source: blog)
+
+    results = Source.suggest(user: users(:one), query: "channel")
+    assert_equal "Channel One", results.first.name
+  end
+
+  test "suggest returns empty for a one-character query" do
+    assert_empty Source.suggest(user: users(:one), query: "T")
+  end
+
+  test "suggest escapes LIKE wildcards" do
+    assert_empty Source.suggest(user: users(:one), query: "Tes%")
+  end
+
   test "display_name returns name when present" do
     source = sources(:youtube)
     assert_equal "Test Channel", source.display_name
